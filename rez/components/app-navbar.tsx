@@ -6,8 +6,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function AppNavbar({
-  className,
-  ...props
 }: React.HTMLAttributes<HTMLElement>) {
   return (
     <div className="bg-background sticky top-0 z-50 w-full">
