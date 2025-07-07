@@ -1,9 +1,8 @@
 "use client";
 
-import type { Metadata } from "next";
 import { Sen } from "next/font/google";
 import "./globals.css";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AppNavbar } from "@/components/app-navbar";
 import { usePathname } from "next/navigation";

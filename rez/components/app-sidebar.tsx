@@ -1,12 +1,8 @@
 import {
   BookOpen,
-  Calendar,
   ChartArea,
-  ChartBarIcon,
   FileText,
   Home,
-  Inbox,
-  Search,
   Settings,
 } from "lucide-react";
 import Image from "next/image";
@@ -16,7 +12,6 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
