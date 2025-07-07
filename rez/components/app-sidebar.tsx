@@ -1,4 +1,15 @@
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react"
+import {
+  BookOpen,
+  Calendar,
+  ChartArea,
+  ChartBarIcon,
+  FileText,
+  Home,
+  Inbox,
+  Search,
+  Settings,
+} from "lucide-react";
+import Image from "next/image";
 
 import {
   Sidebar,
@@ -9,7 +20,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 // Menu items.
 const items = [
@@ -19,34 +30,35 @@ const items = [
     icon: Home,
   },
   {
-    title: "Inbox",
+    title: "Survey",
     url: "#",
-    icon: Inbox,
+    icon: FileText,
   },
   {
-    title: "Calendar",
+    title: "Analytics",
     url: "#",
-    icon: Calendar,
+    icon: ChartArea,
   },
   {
-    title: "Search",
+    title: "Resources",
     url: "#",
-    icon: Search,
+    icon: BookOpen,
   },
   {
-    title: "Settings",
+    title: "Account",
     url: "#",
     icon: Settings,
   },
-]
+];
 
 export function AppSidebar() {
   return (
-    <Sidebar>
+    <Sidebar variant="sidebar" collapsible="offcanvas">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
-          <SidebarGroupContent>
+          <SidebarGroupContent className="">
+            <Image src="/rez-logo.svg" alt="Rez" width={100} height={100} />
+
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
@@ -63,5 +75,5 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
-  )
+  );
 }
