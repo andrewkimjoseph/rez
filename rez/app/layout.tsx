@@ -52,7 +52,14 @@ export default function RootLayout({
         {/* Custom Support Button */}
         <button
           type="button"
-          onClick={() => (window as any).Tally && (window as any).Tally.openPopup && (window as any).Tally.openPopup('wMZLL0')}
+          onClick={() => {
+            if (
+              typeof window !== "undefined" &&
+              typeof (window as { Tally?: { openPopup?: (id: string) => void } }).Tally?.openPopup === "function"
+            ) {
+              (window as { Tally: { openPopup: (id: string) => void } }).Tally.openPopup('wMZLL0');
+            }
+          }}
           className="fixed bottom-4 right-4 z-[100] bg-[#363062] text-white p-3 rounded-full shadow-lg hover:bg-[#2d254c] transition-colors flex items-center justify-center"
           title="Get Support"
         >
