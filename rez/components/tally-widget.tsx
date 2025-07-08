@@ -3,6 +3,15 @@
 import { useEffect, useRef } from "react";
 import { MessageCircle } from "lucide-react";
 
+// Add global declaration for window.Tally
+declare global {
+  interface Window {
+    Tally?: {
+      openPopup: (id: string, options?: Record<string, unknown>) => void;
+    };
+  }
+}
+
 export function TallyWidget() {
   const scriptLoaded = useRef(false);
 
@@ -28,8 +37,8 @@ export function TallyWidget() {
   }, []);
 
   const handleOpenPopup = () => {
-    if (scriptLoaded.current && typeof (window as any).Tally !== "undefined") {
-      (window as any).Tally.openPopup("wMZLL0", {
+    if (scriptLoaded.current && typeof window.Tally !== "undefined") {
+      window.Tally.openPopup("wMZLL0", {
         emojiText: "👋",
         emojiAnimation: "wave"
       });
