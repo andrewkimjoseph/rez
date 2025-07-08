@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { toast, Toaster } from "sonner";
 import { z } from "zod";
 import {
   Form,
@@ -17,21 +17,28 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { CountryDropdown } from "@/components/country-dropdown";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const FormSchema = z.object({
-  username: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
+  organizationName: z.string().min(2, {
+    message: "Organization name must be at least 2 characters.",
   }),
+  organizationCountry: z.string().min(2, {
+    message: "Please select a country.",
+  }),
+  organizationTeamSize: z.enum(["< 2", "2 - 5", "5 - 10", "10 - 50", "50+"]),
 });
 
 export default function OrganizationOnboardingPage() {
-
-    const router = useRouter();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      username: "",
+      organizationName: "",
+      organizationCountry: "",
+      organizationTeamSize: "< 2",
     },
   });
   function onSubmit(data: z.infer<typeof FormSchema>) {
@@ -44,10 +51,10 @@ export default function OrganizationOnboardingPage() {
     });
 
     router.push("/");
-
   }
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
+      <Toaster />
       {/* Left Side */}
       <div className="flex-1 flex items-center justify-center bg-white py-8 md:py-0">
         <div className="p-[2px] rounded-2xl  w-full max-w-md mx-4 md:mx-0">
@@ -62,48 +69,62 @@ export default function OrganizationOnboardingPage() {
               >
                 <FormField
                   control={form.control}
-                  name="username"
+                  name="organizationName"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Organization Name</FormLabel>
                       <FormControl>
                         <Input placeholder="ACME Inc." {...field} />
                       </FormControl>
-
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 <FormField
                   control={form.control}
-                  name="username"
+                  name="organizationCountry"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Organization Country</FormLabel>
                       <FormControl>
-                        <Input placeholder="United States" {...field} />
+                        <CountryDropdown
+                          placeholder="Select country"
+                          defaultValue="USA"
+                          value={field.value}
+                          onChange={(country) => field.onChange(country?.name)}
+                        />
                       </FormControl>
-                  
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
-                  name="username"
+                  name="organizationTeamSize"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Organization Team Size</FormLabel>
                       <FormControl>
-                        <Input placeholder="10" {...field} />
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select team size" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="< 2">&lt; 2</SelectItem>
+                            <SelectItem value="2 - 5">2 - 5</SelectItem>
+                            <SelectItem value="5 - 10">5 - 10</SelectItem>
+                            <SelectItem value="10 - 50">10 - 50</SelectItem>
+                            <SelectItem value="50+">50+</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </FormControl>
-              
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button type="submit">Complete organization registration</Button>
+                <Button type="submit" className="bg-[#363062] text-white mx-auto">
+                  Complete registration
+                </Button>
               </form>
             </Form>
           </div>
