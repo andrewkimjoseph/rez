@@ -1,8 +1,8 @@
 import {
   BookOpen,
-  ChartArea,
+  ChartBar,
   FileText,
-  Home,
+  LayoutDashboard,
   Settings,
 } from "lucide-react";
 import Image from "next/image";
@@ -20,9 +20,9 @@ import {
 // Menu items.
 const items = [
   {
-    title: "Home",
+    title: "Dashboard",
     url: "#",
-    icon: Home,
+    icon: LayoutDashboard,
   },
   {
     title: "Survey",
@@ -32,7 +32,7 @@ const items = [
   {
     title: "Analytics",
     url: "#",
-    icon: ChartArea,
+    icon: ChartBar,
   },
   {
     title: "Resources",
@@ -48,7 +48,7 @@ const items = [
 
 export function AppSidebar() {
   return (
-    <Sidebar variant="sidebar" collapsible="offcanvas">
+    <Sidebar variant="sidebar" collapsible="offcanvas" className="font-[family-name:var(--font-sen)]">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent className="">
