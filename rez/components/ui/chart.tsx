@@ -110,7 +110,7 @@ type TooltipPayload = {
   dataKey?: string
   payload?: {
     fill?: string
-    [key: string]: any
+    [key: string]: unknown
   }
   color?: string
 }
@@ -139,9 +139,9 @@ function ChartTooltipContent({
   nameKey?: string
   labelKey?: string
   label?: string
-  labelFormatter?: (value: any, payload: TooltipPayload[]) => React.ReactNode
+  labelFormatter?: (value: unknown, payload: TooltipPayload[]) => React.ReactNode
   labelClassName?: string
-  formatter?: (value: any, name: string, props: any, index: number, payload: any) => React.ReactNode
+  formatter?: (value: unknown, name: string, props: TooltipPayload, index: number, payload: unknown) => React.ReactNode
   color?: string
 }) {
   const { config } = useChart()
