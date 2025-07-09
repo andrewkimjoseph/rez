@@ -44,6 +44,9 @@ export default function RootLayout({
         <SidebarProvider>
           {!isSignInPageOrOnboarding && <AppSidebar />}
           <main className="flex flex-col w-full font-[family-name:var(--font-sen)]">
+
+          
+            
             {!isSignInPageOrOnboarding && <AppNavbar />}
             <div className="bg-[#ECECEC]">{children}</div>
           </main>
