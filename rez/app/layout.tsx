@@ -40,12 +40,12 @@ export default function RootLayout({
         <meta property="og:image" content="/rez-favicon.svg" />
         
       </head>
-      <body className={`${sen.variable} antialiased`}>
+      <body className={`${sen.variable} antialiased `}>
         <SidebarProvider>
           {!isSignInPageOrOnboarding && <AppSidebar />}
           <main className="flex flex-col w-full font-[family-name:var(--font-sen)]">
             {!isSignInPageOrOnboarding && <AppNavbar />}
-            <div>{children}</div>
+            <div className="bg-[#ECECEC]">{children}</div>
           </main>
         </SidebarProvider>
         <Script src="https://tally.so/widgets/embed.js" strategy="afterInteractive" />
