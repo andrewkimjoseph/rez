@@ -1,8 +1,8 @@
 import {
   BookOpen,
   ChartBar,
-  FileText,
   LayoutDashboard,
+  ListTodo,
   Settings,
 } from "lucide-react";
 import Image from "next/image";
@@ -21,13 +21,13 @@ import {
 const items = [
   {
     title: "Dashboard",
-    url: "#",
+    url: "/dashboard",
     icon: LayoutDashboard,
   },
   {
-    title: "Survey",
+    title: "Tasks",
     url: "#",
-    icon: FileText,
+    icon: ListTodo,
   },
   {
     title: "Analytics",
@@ -36,7 +36,7 @@ const items = [
   },
   {
     title: "Resources",
-    url: "#",
+    url: "/resources",
     icon: BookOpen,
   },
   {
