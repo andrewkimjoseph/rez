@@ -33,7 +33,7 @@ const chartConfig = {
 
 export function TaskCompletionsOverTime() {
   return (
-    <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+    <ChartContainer config={chartConfig} className="min-h-[200px] w-full bg-white rounded-lg border p-6">
       <LineChart accessibilityLayer data={chartData}>
         <CartesianGrid vertical={false} />
 
