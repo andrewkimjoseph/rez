@@ -26,12 +26,12 @@ const items = [
   },
   {
     title: "Tasks",
-    url: "#",
+    url: "/tasks",
     icon: ListTodo,
   },
   {
     title: "Analytics",
-    url: "#",
+    url: "/analytics",
     icon: ChartBar,
   },
   {
@@ -41,7 +41,7 @@ const items = [
   },
   {
     title: "Account",
-    url: "#",
+    url: "/account",
     icon: Settings,
   },
 ];

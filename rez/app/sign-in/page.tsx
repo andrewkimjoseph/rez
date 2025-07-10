@@ -10,8 +10,8 @@ export default function SignInPage() {
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Left Side */}
       <div className="flex-1 flex items-center justify-center bg-white py-8 md:py-0">
-        <div className="p-[2px] rounded-2xl bg-gradient-to-br from-[#ff9966] via-[#f857a6] to-[#ff5858] w-full max-w-md mx-4 md:mx-0">
-          <div className="bg-white rounded-2xl p-6 md:p-10 flex flex-col items-center gap-6 w-full">
+        <div className="p-[4px] rounded-[2.5rem] overflow-hidden bg-gradient-to-br from-[#ff9966] via-[#f857a6] to-[#ff5858] w-full max-w-md mx-4 md:mx-0">
+          <div className="bg-white rounded-[2.5rem] p-6 md:p-10 flex flex-col items-center gap-6 w-full">
             <Image src="/rez-logo.svg" alt="Rez Logo" width={100} height={100} className="w-20 h-20 md:w-32 md:h-32" />
             <h1 className="text-2xl md:text-4xl font-bold text-center">
               <span className="text-[#2d254c]">Welcome </span>

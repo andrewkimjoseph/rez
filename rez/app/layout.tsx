@@ -8,6 +8,7 @@ import { AppNavbar } from "@/components/app-navbar";
 import { usePathname } from "next/navigation";
 import Script from "next/script";
 import { MessageCircle } from "lucide-react";
+import { TallyWidget } from "@/components/tally-widget";
 
 const sen = Sen({
   variable: "--font-sen",
@@ -53,21 +54,7 @@ export default function RootLayout({
         </SidebarProvider>
         <Script src="https://tally.so/widgets/embed.js" strategy="afterInteractive" />
         {/* Custom Support Button */}
-        <button
-          type="button"
-          onClick={() => {
-            if (
-              typeof window !== "undefined" &&
-              typeof (window as { Tally?: { openPopup?: (id: string) => void } }).Tally?.openPopup === "function"
-            ) {
-              (window as { Tally: { openPopup: (id: string) => void } }).Tally.openPopup('wMZLL0');
-            }
-          }}
-          className="fixed bottom-4 right-4 z-[100] bg-[#363062] text-white p-3 rounded-full shadow-lg hover:bg-[#2d254c] transition-colors flex items-center justify-center"
-          title="Get Support"
-        >
-          <MessageCircle size={24} />
-        </button>
+        <TallyWidget />
       </body>
     </html>
   );
