@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 import Script from "next/script";
 import { MessageCircle } from "lucide-react";
 import { TallyWidget } from "@/components/tally-widget";
+import { AmplitudeProvider } from "@/providers/AmplitudeProvider";
 
 const sen = Sen({
   variable: "--font-sen",
@@ -39,22 +40,23 @@ export default function RootLayout({
         <meta property="og:title" content="Rez" />
         <meta property="og:description" content="Rez, by Canvassing" />
         <meta property="og:image" content="/rez-favicon.svg" />
-        
       </head>
       <body className={`${sen.variable} antialiased `}>
-        <SidebarProvider>
-          {!isSignInPageOrOnboarding && <AppSidebar />}
-          <main className="flex flex-col w-full font-[family-name:var(--font-sen)]">
-
-          
-            
-            {!isSignInPageOrOnboarding && <AppNavbar />}
-            <div className="bg-[#ECECEC]">{children}</div>
-          </main>
-        </SidebarProvider>
-        <Script src="https://tally.so/widgets/embed.js" strategy="afterInteractive" />
-        {/* Custom Support Button */}
-        <TallyWidget />
+        <AmplitudeProvider>
+          <SidebarProvider>
+            {!isSignInPageOrOnboarding && <AppSidebar />}
+            <main className="flex flex-col w-full font-[family-name:var(--font-sen)]">
+              {!isSignInPageOrOnboarding && <AppNavbar />}
+              <div className="bg-[#ECECEC]">{children}</div>
+            </main>
+          </SidebarProvider>
+          <Script
+            src="https://tally.so/widgets/embed.js"
+            strategy="afterInteractive"
+          />
+          {/* Custom Support Button */}
+          <TallyWidget />
+        </AmplitudeProvider>
       </body>
     </html>
   );
