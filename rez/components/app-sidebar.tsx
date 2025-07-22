@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import React from "react";
+import Link from "next/link";
 
 import {
   Sidebar,
@@ -66,12 +67,14 @@ export function AppSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      {typeof item.icon === "function"
-                        ? item.icon({ className: "w-5 h-5" })
-                        : React.createElement(item.icon, { className: "w-5 h-5" })}
-                      <span>{item.title}</span>
-                    </a>
+                    <Link href={item.url} passHref>
+                      <a>
+                        {typeof item.icon === "function"
+                          ? item.icon({ className: "w-5 h-5" })
+                          : React.createElement(item.icon, { className: "w-5 h-5" })}
+                        <span>{item.title}</span>
+                      </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
