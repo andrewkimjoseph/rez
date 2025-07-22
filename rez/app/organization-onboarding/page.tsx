@@ -19,8 +19,14 @@ import {
 } from "@/components/ui/form";
 import { CountryDropdown } from "@/components/country-dropdown";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getCurrentUser } from "@/firebase/auth";
 import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/firebase/firebaseConfig";
+import { createOrganizationInFirestore } from "@/firebase/firestore/services/createOrganizationInFirestore";
+import { useOrganizationStore } from "@/stores/organization-store";
+import { useTaskMasterStore } from "@/stores/taskmaster-store";
+import { Loader2Icon } from "lucide-react";
+import { updateTaskMasterOrganizationId } from "@/firebase/firestore/services/updateTaskMasterOrganizationId";
 
 const FormSchema = z.object({
   organizationName: z.string().min(2, {
@@ -35,10 +41,16 @@ const FormSchema = z.object({
 export default function OrganizationOnboardingPage() {
   const router = useRouter();
   const [userName, setUserName] = useState<string | null>(null);
+  const setOrganization = useOrganizationStore((state) => state.setOrganization);
+  const setTaskMasterUser = useTaskMasterStore((state) => state.setUser);
+  const taskMasterUser = useTaskMasterStore((state) => state.user);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const user = getCurrentUser();
-    setUserName(user?.displayName || null);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUserName(user?.displayName || null);
+    });
+    return () => unsubscribe();
   }, []);
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -49,16 +61,43 @@ export default function OrganizationOnboardingPage() {
       organizationTeamSize: "< 2",
     },
   });
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    toast("You submitted the following values", {
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    setLoading(true);
+    // Get current user
+    const user = auth.currentUser;
+    if (!user) {
+      toast("User not found. Please sign in again.");
+      setLoading(false);
+      return;
+    }
+    const orgData = {
+      taskMasterId: user.uid,
+      name: data.organizationName,
+      country: data.organizationCountry,
+      teamSize: data.organizationTeamSize,
+      timeCreated: null,
+      timeUpdated: null,
+    };
+    const orgId = await createOrganizationInFirestore(orgData);
+    const org = { ...orgData, id: orgId };
+    setOrganization(org);
+    document.cookie = `organizationId=${orgId}; path=/;`;
+    // Update organizationId in Firestore task_master and zustand store
+    if (user.uid) {
+      await updateTaskMasterOrganizationId(user.uid, orgId);
+      if (taskMasterUser) {
+        setTaskMasterUser({ ...taskMasterUser, organizationId: orgId });
+      }
+    }
+    toast("Organization created!", {
       description: (
         <pre className="mt-2 w-[320px] rounded-md bg-neutral-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+          <code className="text-white">{JSON.stringify(org, null, 2)}</code>
         </pre>
       ),
     });
-
-    router.push("/");
+    setLoading(false);
+    router.push("/dashboard");
   }
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
@@ -132,8 +171,15 @@ export default function OrganizationOnboardingPage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="bg-[#363062] text-white mx-auto">
-                  Complete registration
+                <Button type="submit" className="bg-[#363062] text-white mx-auto" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2Icon className="animate-spin mr-2" />
+                      Please wait
+                    </>
+                  ) : (
+                    "Complete registration"
+                  )}
                 </Button>
               </form>
             </Form>

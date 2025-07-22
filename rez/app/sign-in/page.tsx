@@ -3,29 +3,58 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { signInWithGoogle } from "@/firebase/auth";
+import { signInTaskMasterWithGoogle } from "@/firebase/auth/auth";
 import { useState } from "react";
 import { Loader2Icon } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { useEffect } from "react";
+import { createTaskMasterInFirestore } from "@/firebase/firestore/services/createTaskMasterInFirestore";
+import { useTaskMasterStore } from "@/stores/taskmaster-store";
 
 export default function SignInPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const pathname = usePathname();
+  const setTaskMasterUser = useTaskMasterStore((state) => state.setUser);
+
+  useEffect(() => {
+    setLoading(false);
+  }, [pathname]);
 
   async function handleGoogleSignIn() {
     setError(null);
     setLoading(true);
     try {
-      await signInWithGoogle();
+      const user = await signInTaskMasterWithGoogle();
+      if (user) {
+        const token = await user.getIdToken();
+        document.cookie = `firebaseToken=${token}; path=/;`;
+        const taskMaster = {
+          id: user.uid,
+          name: user.displayName || null,
+          emailAddress: user.email || null,
+          profilePictureURI: user.photoURL || null,
+          organizationId: null,
+          privyDid: null,
+        };
+        await createTaskMasterInFirestore(taskMaster);
+        setTaskMasterUser(taskMaster);
+      }
       router.push("/organization-onboarding");
+      // setLoading(false); // Let loading be handled by useEffect on route change
     } catch (err: any) {
       if (err?.code === "auth/popup-closed-by-user") {
         setError("Sign-in was cancelled.");
         setLoading(false);
         return;
       }
+      if (err?.code === "auth/email-not-allowed") {
+        setError("This email is not allowed to sign in.");
+        setLoading(false);
+        return;
+      }
       setError("Google sign-in failed. Please try again.");
-    } finally {
       setLoading(false);
     }
   }
