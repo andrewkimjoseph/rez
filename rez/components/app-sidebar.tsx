@@ -3,9 +3,10 @@ import {
   ChartBar,
   LayoutDashboard,
   ListTodo,
-  Settings,
+  Settings
 } from "lucide-react";
 import Image from "next/image";
+import React from "react";
 
 import {
   Sidebar,
@@ -44,6 +45,13 @@ const items = [
     url: "/account",
     icon: Settings,
   },
+  {
+    title: "Pax",
+    url: "/pax",
+    icon: (props: any) => (
+      <Image src="/pax.png" alt="Pax Logo" width={24} height={24} {...props} />
+    ),
+  },
 ];
 
 export function AppSidebar() {
@@ -59,7 +67,9 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <a href={item.url}>
-                      <item.icon />
+                      {typeof item.icon === "function"
+                        ? item.icon({ className: "w-5 h-5" })
+                        : React.createElement(item.icon, { className: "w-5 h-5" })}
                       <span>{item.title}</span>
                     </a>
                   </SidebarMenuButton>
