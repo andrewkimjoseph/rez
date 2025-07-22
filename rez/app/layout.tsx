@@ -10,6 +10,7 @@ import Script from "next/script";
 import { TallyWidget } from "@/components/tally-widget";
 import { AmplitudeProvider } from "@/providers/AmplitudeProvider";
 import { AuthHydrator } from "@/components/auth-hydrator";
+import { cookies } from "next/headers";
 
 const sen = Sen({
   variable: "--font-sen",
@@ -21,7 +22,7 @@ const sen = Sen({
 //   description: "Rez, by Canvassing",
 // };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -29,6 +30,10 @@ export default function RootLayout({
   const pathname = usePathname();
   const isSignInPageOrOnboarding =
     pathname === "/sign-in" || pathname === "/organization-onboarding";
+
+
+    const cookieStore = await cookies()
+  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true"
 
   return (
     <html lang="en">
@@ -44,7 +49,7 @@ export default function RootLayout({
       <body className={`${sen.variable} antialiased `}>
         <AuthHydrator />
         <AmplitudeProvider>
-          <SidebarProvider>
+          <SidebarProvider defaultOpen={defaultOpen}>
             {!isSignInPageOrOnboarding && <AppSidebar />}
             <main className="flex flex-col w-full font-[family-name:var(--font-sen)]">
               {!isSignInPageOrOnboarding && <AppNavbar />}
