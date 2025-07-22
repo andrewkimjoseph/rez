@@ -68,12 +68,12 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <Link href={item.url} passHref>
-                      <a>
+                   
                         {typeof item.icon === "function"
                           ? item.icon({ className: "w-5 h-5" })
                           : React.createElement(item.icon, { className: "w-5 h-5" })}
                         <span>{item.title}</span>
-                      </a>
+                
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
