@@ -21,7 +21,7 @@ const sen = Sen({
 //   description: "Rez, by Canvassing",
 // };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
