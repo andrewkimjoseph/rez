@@ -74,10 +74,9 @@ export default function Dashboard() {
           </Card>
         </div>
 
-
         <p className="text-2xl">Task Completions Over Time</p>
         <div className="h-[200px]">
-        <TaskCompletionsOverTime />
+          <TaskCompletionsOverTime />
         </div>
 
       </main>
