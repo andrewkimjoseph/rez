@@ -7,9 +7,9 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { AppNavbar } from "@/components/app-navbar";
 import { usePathname } from "next/navigation";
 import Script from "next/script";
-import { MessageCircle } from "lucide-react";
 import { TallyWidget } from "@/components/tally-widget";
 import { AmplitudeProvider } from "@/providers/AmplitudeProvider";
+import { AuthHydrator } from "@/components/auth-hydrator";
 
 const sen = Sen({
   variable: "--font-sen",
@@ -42,6 +42,7 @@ export default function RootLayout({
         <meta property="og:image" content="/rez-favicon.svg" />
       </head>
       <body className={`${sen.variable} antialiased `}>
+        <AuthHydrator />
         <AmplitudeProvider>
           <SidebarProvider>
             {!isSignInPageOrOnboarding && <AppSidebar />}
