@@ -10,7 +10,6 @@ import Script from "next/script";
 import { TallyWidget } from "@/components/tally-widget";
 import { AmplitudeProvider } from "@/providers/AmplitudeProvider";
 import { AuthHydrator } from "@/components/auth-hydrator";
-import { cookies } from "next/headers";
 
 const sen = Sen({
   variable: "--font-sen",
@@ -32,9 +31,6 @@ export default async function RootLayout({
     pathname === "/sign-in" || pathname === "/organization-onboarding";
 
 
-    const cookieStore = await cookies()
-  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true"
-
   return (
     <html lang="en">
       <head>
@@ -49,7 +45,7 @@ export default async function RootLayout({
       <body className={`${sen.variable} antialiased `}>
         <AuthHydrator />
         <AmplitudeProvider>
-          <SidebarProvider defaultOpen={defaultOpen}>
+          <SidebarProvider>
             {!isSignInPageOrOnboarding && <AppSidebar />}
             <main className="flex flex-col w-full font-[family-name:var(--font-sen)]">
               {!isSignInPageOrOnboarding && <AppNavbar />}
