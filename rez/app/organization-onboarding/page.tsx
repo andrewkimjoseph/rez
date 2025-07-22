@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/form";
 import { CountryDropdown } from "@/components/country-dropdown";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getCurrentUser } from "@/firebase/auth";
+import { useEffect, useState } from "react";
 
 const FormSchema = z.object({
   organizationName: z.string().min(2, {
@@ -32,6 +34,12 @@ const FormSchema = z.object({
 
 export default function OrganizationOnboardingPage() {
   const router = useRouter();
+  const [userName, setUserName] = useState<string | null>(null);
+
+  useEffect(() => {
+    const user = getCurrentUser();
+    setUserName(user?.displayName || null);
+  }, []);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -60,7 +68,9 @@ export default function OrganizationOnboardingPage() {
         <div className="p-[2px] rounded-2xl  w-full max-w-md mx-4 md:mx-0">
           <div className="bg-white rounded-2xl p-6 md:p-10 flex flex-col items-center gap-6 w-full">
             <h1 className="text-2xl md:text-4xl font-bold text-center">
-              <span className="text-[#2d254c]">Create Your Organization </span>
+              <span className="text-[#2d254c]">
+                Create Your Organization{userName ? `, ${userName}` : ""}
+              </span>
             </h1>
             <Form {...form}>
               <form
