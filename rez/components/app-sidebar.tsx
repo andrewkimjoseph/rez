@@ -31,11 +31,11 @@ const items = [
     url: "/tasks",
     icon: ListTodo,
   },
-  {
-    title: "Analytics",
-    url: "/analytics",
-    icon: ChartBar,
-  },
+  // {
+  //   title: "Analytics",
+  //   url: "/analytics",
+  //   icon: ChartBar,
+  // },
   {
     title: "Resources",
     url: "/resources",

@@ -10,6 +10,7 @@ import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { createTaskMasterInFirestore } from "@/firebase/firestore/services/createTaskMasterInFirestore";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
+import { getTaskMasterFromFirestore } from "@/firebase/firestore/services/getTaskMasterFromFirestore";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -29,17 +30,30 @@ export default function SignInPage() {
       const user = await signInTaskMasterWithGoogle();
       if (user) {
         const token = await user.getIdToken();
-        document.cookie = `firebaseToken=${token}; path=/;`;
-        const taskMaster = {
-          id: user.uid,
-          name: user.displayName || null,
-          emailAddress: user.email || null,
-          profilePictureURI: user.photoURL || null,
-          organizationId: null,
-          privyDid: null,
-        };
-        await createTaskMasterInFirestore(taskMaster);
-        setTaskMasterUser(taskMaster);
+        // Check if TaskMaster exists
+        const existingTaskMaster = await getTaskMasterFromFirestore(user.uid);
+        if (existingTaskMaster) {
+          document.cookie = `firebaseToken=${token}; path=/;`;
+          if (existingTaskMaster.organizationId) {
+            document.cookie = `organizationId=${existingTaskMaster.organizationId}; path=/;`;
+          }
+          setTaskMasterUser(existingTaskMaster);
+          router.push("/dashboard");
+          return;
+        } else {
+          // Create new TaskMaster as before
+          const taskMaster = {
+            id: user.uid,
+            name: user.displayName || null,
+            emailAddress: user.email || null,
+            profilePictureURI: user.photoURL || null,
+            organizationId: null,
+            privyDid: null,
+          };
+          await createTaskMasterInFirestore(taskMaster);
+          setTaskMasterUser(taskMaster);
+          document.cookie = `firebaseToken=${token}; path=/;`;
+        }
       }
       router.push("/organization-onboarding");
       // setLoading(false); // Let loading be handled by useEffect on route change

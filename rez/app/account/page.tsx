@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { toast, Toaster } from "sonner";
+import { useTaskMasterStore } from "@/stores/taskmaster-store";
 
 type AccountFormValues = {
   fullName: string;
@@ -21,14 +22,15 @@ type AccountFormValues = {
 };
 
 export default function Account() {
+  const user = useTaskMasterStore((state) => state.user);
   const form = useForm<AccountFormValues>({
     defaultValues: {
-      fullName: "Benedictors Ogada",
-      email: "Benedictors666@example.com",
-      phone: "+254 -790839513",
-      location: "Nairobi, Kenya",
-      company: "+254 -790839513",
-      jobTitle: "Nairobi, Kenya",
+      fullName: user?.name || "",
+      email: user?.emailAddress || "",
+      phone: "",
+      location: "",
+      company: "",
+      jobTitle: "",
       bio: "",
     },
   });
@@ -67,7 +69,7 @@ export default function Account() {
             <h2 className="text-lg font-semibold mb-1">Profile Photo</h2>
             <p className="text-sm text-muted-foreground mb-4">Your profile picture is visible to team members</p>
             <Avatar className="w-40 h-40 mb-2">
-              <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Profile" className="object-cover w-full h-full" />
+              <img src={user?.profilePictureURI || "https://randomuser.me/api/portraits/men/32.jpg"} alt="Profile" className="object-cover w-full h-full" />
             </Avatar>
           </div>
           {/* Personal Information */}
@@ -82,7 +84,7 @@ export default function Account() {
                     <FormItem>
                       <FormLabel>Full Name</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} readOnly disabled />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -95,13 +97,13 @@ export default function Account() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} readOnly disabled />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <FormField
+                {/* <FormField
                   control={form.control}
                   name="phone"
                   render={({ field }) => (
@@ -165,10 +167,10 @@ export default function Account() {
                       <FormMessage />
                     </FormItem>
                   )}
-                />
+                /> */}
                 <div className="col-span-1 md:col-span-2 flex justify-end gap-2 mt-4">
-                  <Button variant="outline" type="button">Cancel</Button>
-                  <Button type="submit">Save Changes</Button>
+                  {/* <Button variant="outline" type="button">Cancel</Button> */}
+                  <Button type="submit" disabled>Saved</Button>
                 </div>
               </form>
             </Form>

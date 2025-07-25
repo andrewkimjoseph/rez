@@ -40,6 +40,10 @@ export function middleware(request: NextRequest) {
 
   // Check for organizationId in cookies
   const orgId = request.cookies.get('organizationId');
+  if (orgId && pathname === '/organization-onboarding') {
+    const dashboardUrl = new URL('/dashboard', request.url);
+    return NextResponse.redirect(dashboardUrl);
+  }
   if (!orgId && pathname !== '/organization-onboarding') {
     const onboardingUrl = new URL('/organization-onboarding', request.url);
     return NextResponse.redirect(onboardingUrl);
