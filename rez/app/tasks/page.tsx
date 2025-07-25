@@ -1,22 +1,20 @@
 "use client";
 
 import { useNewTaskStore, TaskStep } from "@/stores/new-task-store";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Step1TaskCategory from '@/components/new-task/Step1TaskCategory';
-import Step2TaskDetails from '@/components/new-task/Step2TaskDetails';
-import Step3Targeting from '@/components/new-task/Step3Targeting';
-import Step4QuestionsTasks from '@/components/new-task/Step4QuestionsTasks';
-import Step5Review from '@/components/new-task/Step5Review';
-import { toast, Toaster } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Step1TaskType from "@/components/new-task/Step1TaskType";
+import Step2TaskDetails from "@/components/new-task/Step2TaskDetails";
+import Step4QuestionsTasks from "@/components/new-task/Step3QuestionsTasks";
+import Step5Review from "@/components/new-task/Step4Review";
+import { toast, Toaster } from "sonner";
+import NewTask from "@/components/new-task/tab-component/NewTask";
 
 const stepTitles = [
-  "Task Category",
+  "Task Type",
   "Task Details",
   // "Targeting", // commented out
   "Questions & Tasks",
-  "Review"
+  "Review",
 ];
 
 function Stepper({ step }: { step: TaskStep }) {
@@ -27,7 +25,10 @@ function Stepper({ step }: { step: TaskStep }) {
         const current = idx + 1 === step;
         const completed = idx + 1 < step;
         return (
-          <div key={stepTitles[idx]} className="flex flex-col items-center flex-1">
+          <div
+            key={stepTitles[idx]}
+            className="flex flex-col items-center flex-1"
+          >
             <div
               className={`rounded-full w-8 h-8 flex items-center justify-center font-bold border-2 ${
                 current
@@ -39,7 +40,9 @@ function Stepper({ step }: { step: TaskStep }) {
             >
               {idx + 1}
             </div>
-            <span className="text-xs mt-2 text-center whitespace-nowrap">{stepTitles[idx]}</span>
+            <span className="text-xs mt-2 text-center whitespace-nowrap">
+              {stepTitles[idx]}
+            </span>
           </div>
         );
       })}
@@ -50,7 +53,7 @@ function Stepper({ step }: { step: TaskStep }) {
 function TaskStepContent({ step }: { step: TaskStep }) {
   switch (step) {
     case 1:
-      return <Step1TaskCategory />;
+      return <Step1TaskType />;
     case 2:
       return <Step2TaskDetails />;
     // case 3:
@@ -68,9 +71,9 @@ export default function Tasks() {
   const { step, nextStep, prevStep, setStep } = useNewTaskStore();
 
   const handleContinue = () => {
-    if (step === 5) {
-      toast('Task created!', {
-        description: 'Your new task has been created successfully.'
+    if (step === 4) {
+      toast("Task created!", {
+        description: "Your new task has been created successfully.",
       });
     } else {
       nextStep();
@@ -82,7 +85,10 @@ export default function Tasks() {
       <Toaster />
       <div className="w-full max-w-2xl">
         <h1 className="text-3xl md:text-4xl font-bold mb-1">Create New Task</h1>
-        <p className="text-muted-foreground mb-6">Create a new task using our step-by-step wizard or let AI help you build it faster.</p>
+        <p className="text-muted-foreground mb-6">
+          Create a new task using our step-by-step wizard or let AI help you
+          build it faster.
+        </p>
         <Tabs defaultValue="create" className="w-full mb-6">
           <TabsList className="bg-white">
             <TabsTrigger
@@ -91,22 +97,20 @@ export default function Tasks() {
             >
               Create New Task
             </TabsTrigger>
+
+            <TabsTrigger
+              value="view-tasks"
+              className="data-[state=active]:bg-[#363062] data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-[#363062] px-6 py-2"
+            >
+              View Tasks
+            </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="create">
+            <NewTask />
+          </TabsContent>
         </Tabs>
-        <Card className="p-6">
-          <Stepper step={step} />
-          <TaskStepContent step={step} />
-          <div className="flex justify-between mt-8">
-            <Button variant="outline" onClick={prevStep} disabled={step === 1}>
-              Back
-            </Button>
-            <Button onClick={handleContinue}>
-              {step === 4 ? "Finish" : "Continue"}
-            </Button>
-          </div>
-        </Card>
       </div>
     </div>
   );
 }
-  
