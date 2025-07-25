@@ -3,12 +3,12 @@ import { create } from 'zustand';
 export type TaskStep = 1 | 2 | 3 | 4 | 5;
 
 export interface NewTaskData {
-  // Step 1: Task Category
-  category?: 'survey' | 'tasks';
+  // Step 1: Task Type
+  type?: 'survey' | 'non-survey';
   // Step 2: Task Details
   title?: string;
-  description?: string;
-  objective?: string;
+  category?: 'finance' | 'climate' | 'education';
+  difficulty?: 'easy' | 'medium' | 'hard';
   payout?: number;
   fee?: number;
   // Step 3: Targeting
