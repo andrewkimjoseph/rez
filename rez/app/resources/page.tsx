@@ -1,7 +1,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users } from "lucide-react";
 import Image from "next/image";
-import { ArticleCard } from "@/components/article-card";
+import { ForumArticleCard } from "@/components/forum-article-card";
+import { forumArticles } from "@/data/forumArticles";
 
 export default function Resources() {
   return (
@@ -14,7 +15,7 @@ export default function Resources() {
 
       <Tabs defaultValue="overview" className="w-full mt-4">
         <TabsList className="bg-white">
-          <TabsTrigger
+          {/* <TabsTrigger
             value="overview"
             className="
               data-[state=active]:bg-[#363062] data-[state=active]:text-white
@@ -22,7 +23,7 @@ export default function Resources() {
             "
           >
             Overview
-          </TabsTrigger>
+          </TabsTrigger> */}
           <TabsTrigger
             value="articles"
             className="
@@ -78,42 +79,19 @@ export default function Resources() {
         </TabsContent>
         <TabsContent value="articles">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <ArticleCard
-              title="Effective Research Methodologies for Modern Studies"
-              description="Explore the latest research methodologies that are transforming how we conduct studies in the digital age. Learn about mixed-methods approaches and their applications."
-              author="Dr. Sarah Johnson"
-              date="Dec 15, 2024"
-              readTime="8 min read"
-              imageUrl="/resources.jpg"
-              category="Methodology"
-            />
-            <ArticleCard
-              title="Data Analysis Techniques for Qualitative Research"
-              description="Master the art of qualitative data analysis with proven techniques and tools. Discover how to extract meaningful insights from interview transcripts and observations."
-              author="Prof. Michael Chen"
-              date="Dec 12, 2024"
-              readTime="12 min read"
-              imageUrl="/friends-posing.png"
-              category="Analysis"
-            />
-            <ArticleCard
-              title="Writing Effective Research Proposals"
-              description="Learn the essential elements of a compelling research proposal. From problem statement to methodology, get expert tips for securing funding and approval."
-              author="Dr. Emily Rodriguez"
-              date="Dec 10, 2024"
-              readTime="10 min read"
-              imageUrl="/friends-posing-2.png"
-              category="Writing"
-            />
-            <ArticleCard
-              title="Ethical Considerations in Research Design"
-              description="Navigate the complex landscape of research ethics. Understand IRB requirements, informed consent, and maintaining participant confidentiality."
-              author="Dr. James Wilson"
-              date="Dec 8, 2024"
-              readTime="6 min read"
-              imageUrl="/resources.jpg"
-              category="Ethics"
-            />
+
+            {/* Forum Articles */}
+            {forumArticles.map((forumArticle) => (
+              <ForumArticleCard
+                key={forumArticle.id}
+                title={forumArticle.title}
+                description={forumArticle.description}
+                date={forumArticle.date}
+                imageUrl={forumArticle.imageUrl}
+                category={forumArticle.category}
+                postUrl={forumArticle.postUrl}
+              />
+            ))}
           </div>
         </TabsContent>
       </Tabs>
