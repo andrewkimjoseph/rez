@@ -1,4 +1,6 @@
-import { PlusIcon, FileIcon } from "lucide-react";
+"use client";
+
+import { PlusIcon, FileIcon, RefreshCw } from "lucide-react";
 
 import {
   Card,
@@ -7,47 +9,91 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { TaskCompletionsOverTime } from "@/components/task-completions-over-time";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useTasksData } from "@/hooks/use-tasks-data";
 
 export default function Dashboard() {
+  const { tasks, taskCompletions, isLoading, error, refetch } = useTasksData({ autoFetch: false });
+
+  // Calculate counts
+  const totalTasks = tasks.length;
+  const activeTasks = tasks.filter(task => task.isAvailable === true).length;
+  const totalTaskCompletions = taskCompletions.length;
+
   return (
     <div className="min-h-screen pb-20 sm:p-4 font-[family-name:var(--font-sen)] p-4">
-      <main className="flex flex-col gap-[32px] sm:items-start ">
-        <h1 className="text-4xl font-bold">Dashboard Overview</h1>
-        <p>Monitor your research projects and analytics at a glance.</p>
+      <div className="w-full">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-4xl font-bold pb-2">Dashboard Overview</h1>
+            <p>Monitor your research projects and analytics at a glance.</p>
+          </div>
+          <Button
+            onClick={refetch}
+            disabled={isLoading}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
+        
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            Error loading data: {error}
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-4 w-4/6">
+
+        <Card className="flex-1 min-w-[250px] basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1.333rem)] max-w-full">
+            <CardHeader>
+              <CardTitle>Total Tasks</CardTitle>
+              <CardDescription>Ever created</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-[32px] w-[60px]" />
+              ) : (
+                <p className="text-2xl font-bold">{totalTasks}</p>
+              )}
+            </CardContent>
+          </Card>
           <Card className="flex-1 min-w-[250px] basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1.333rem)] max-w-full">
             <CardHeader>
               <CardTitle>Active Tasks</CardTitle>
-              <CardDescription>Currently running</CardDescription>
+              <CardDescription>Marked as available</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">0</p>
+              {isLoading ? (
+                <Skeleton className="h-[32px] w-[60px]" />
+              ) : (
+                <p className="text-2xl font-bold">{activeTasks}</p>
+              )}
             </CardContent>
           </Card>
           <Card className="flex-1 min-w-[250px] basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1.333rem)] max-w-full">
             <CardHeader>
-              <CardTitle>Total Participants</CardTitle>
+              <CardTitle>Total Task Completions</CardTitle>
               <CardDescription>Across all tasks</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">0</p>
+              {isLoading ? (
+                <Skeleton className="h-[32px] w-[60px]" />
+              ) : (
+                <p className="text-2xl font-bold">{totalTaskCompletions}</p>
+              )}
             </CardContent>
           </Card>
-          <Card className="flex-1 min-w-[250px] basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1.333rem)] max-w-full">
-            <CardHeader>
-              <CardTitle>Response Rate</CardTitle>
-              <CardDescription>Average completion</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">-%</p>
-            </CardContent>
-          </Card>
+  
         </div>
 
-        <p className="text-2xl">Quick Actions</p>
+        <p className="text-2xl py-4">Quick Actions</p>
         <div className="flex flex-col sm:flex-row gap-3 w-full max-w-lg">
           {/* Create New Survey */}
 
@@ -86,7 +132,7 @@ export default function Dashboard() {
         <div className="h-[200px]">
           <TaskCompletionsOverTime />
         </div> */}
-      </main>
+      </div>
     </div>
   );
 }
