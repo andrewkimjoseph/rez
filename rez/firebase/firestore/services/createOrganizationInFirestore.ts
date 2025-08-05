@@ -1,6 +1,6 @@
 import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { Organization } from '../models/Organization';
-import { firestore } from '../../firebaseConfig';
+import { firestore } from '../../clientConfig';
 import { COLLECTIONS } from '../constants/collections';
 
 export async function createOrganizationInFirestore({

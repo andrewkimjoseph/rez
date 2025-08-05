@@ -1,5 +1,5 @@
 import { doc, updateDoc } from 'firebase/firestore';
-import { firestore } from '../../firebaseConfig';
+import { firestore } from '../../clientConfig';
 import { COLLECTIONS } from '../constants/collections';
 
 export async function updateTaskMasterOrganizationId(taskMasterId: string, organizationId: string) {

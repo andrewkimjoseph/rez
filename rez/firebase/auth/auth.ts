@@ -1,5 +1,5 @@
 import { signInWithPopup, GoogleAuthProvider, signOut, User, deleteUser } from 'firebase/auth';
-import { auth, initFirebase } from '@/firebase/firebaseConfig';
+import { auth, initFirebase } from '@/firebase/clientConfig';
 import { allowedResearcherAddresses } from '@/data/allowedResearcherAddresses';
 
 initFirebase();

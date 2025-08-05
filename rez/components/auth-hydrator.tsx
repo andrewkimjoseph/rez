@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth, firestore } from "@/firebase/firebaseConfig";
+import { auth, firestore } from "@/firebase/clientConfig";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { doc, getDoc } from "firebase/firestore";
 import { COLLECTIONS } from "@/firebase/firestore/constants/collections";

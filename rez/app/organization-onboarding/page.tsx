@@ -21,7 +21,7 @@ import { CountryDropdown } from "@/components/country-dropdown";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "@/firebase/firebaseConfig";
+import { auth } from "@/firebase/clientConfig";
 import { createOrganizationInFirestore } from "@/firebase/firestore/services/createOrganizationInFirestore";
 import { useOrganizationStore } from "@/stores/organization-store";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";

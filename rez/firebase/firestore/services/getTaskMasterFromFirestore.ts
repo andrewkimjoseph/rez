@@ -1,5 +1,5 @@
 import { doc, getDoc } from 'firebase/firestore';
-import { firestore } from '../../firebaseConfig';
+import { firestore } from '../../clientConfig';
 import { COLLECTIONS } from '../constants/collections';
 import { TaskMaster } from '../models/TaskMaster';
 

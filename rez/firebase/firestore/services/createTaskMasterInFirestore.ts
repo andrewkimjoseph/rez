@@ -1,6 +1,6 @@
 import { getFirestore, doc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { TaskMaster } from '../models/TaskMaster';
-import { firestore } from '../../firebaseConfig';
+import { firestore } from '../../clientConfig';
 import { COLLECTIONS } from '../constants/collections';
 
 export async function createTaskMasterInFirestore({
