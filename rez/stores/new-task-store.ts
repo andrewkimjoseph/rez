@@ -4,7 +4,7 @@ export type TaskStep = 1 | 2 | 3 | 4 | 5;
 
 export interface NewTaskData {
   // Step 1: Task Type
-  type?: 'survey' | 'non-survey';
+  type?: 'Survey' | 'Non-survey';
   // Step 2: Task Details
   title?: string;
   category?: 'finance' | 'climate' | 'education';
