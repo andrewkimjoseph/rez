@@ -1,10 +1,16 @@
+"use client";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users } from "lucide-react";
 import Image from "next/image";
 import { ForumArticleCard } from "@/components/forum-article-card";
 import { forumArticles } from "@/data/forumArticles";
+import Link from "next/link";
+import { useState } from "react";
 
 export default function Resources() {
+  const [activeTab, setActiveTab] = useState("overview");
+
   return (
     <div className="min-h-screen pb-20 sm:p-4 font-[family-name:var(--font-sen)] p-4">
       {/* Title */}
@@ -13,9 +19,9 @@ export default function Resources() {
         <p className="text-base md:text-lg text-gray-600">Access articles, guides, community forums, and more to help advance your research.</p>
       </div>
 
-      <Tabs defaultValue="overview" className="w-full mt-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-4">
         <TabsList className="bg-white">
-          {/* <TabsTrigger
+          <TabsTrigger
             value="overview"
             className="
               data-[state=active]:bg-[#363062] data-[state=active]:text-white
@@ -23,7 +29,7 @@ export default function Resources() {
             "
           >
             Overview
-          </TabsTrigger> */}
+          </TabsTrigger>
           <TabsTrigger
             value="articles"
             className="
@@ -65,8 +71,13 @@ export default function Resources() {
           </div>
 
           {/* Resource Cards */}
+
+          <button 
+            onClick={() => setActiveTab("articles")}
+            className="w-full text-left"
+          >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white rounded-xl shadow p-5 flex items-start gap-4">
+            <div className="bg-white rounded-xl shadow p-5 flex items-start gap-4 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer">
               <div className="bg-blue-100 text-blue-600 rounded-full p-2">
                 <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4" fill="#3B82F6" fillOpacity=".15"/><path d="M8 8h8M8 12h8M8 16h4" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round"/></svg>
               </div>
@@ -76,6 +87,7 @@ export default function Resources() {
               </div>
             </div>
           </div>
+          </button>
         </TabsContent>
         <TabsContent value="articles">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
