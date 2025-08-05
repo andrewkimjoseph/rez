@@ -56,8 +56,8 @@ export default function Step3Targeting() {
               <input
                 type="radio"
                 name="gender"
-                checked={data.gender === 'male'}
-                onChange={() => updateData({ gender: 'male' })}
+                checked={data.gender === 'Male'}
+                onChange={() => updateData({ gender: 'Male' })}
                 className="accent-[#363062]"
               />
               Male
@@ -66,8 +66,8 @@ export default function Step3Targeting() {
               <input
                 type="radio"
                 name="gender"
-                checked={data.gender === 'female'}
-                onChange={() => updateData({ gender: 'female' })}
+                checked={data.gender === 'Female'}
+                onChange={() => updateData({ gender: 'Female' })}
                 className="accent-[#363062]"
               />
               Female
@@ -76,8 +76,8 @@ export default function Step3Targeting() {
               <input
                 type="radio"
                 name="gender"
-                checked={data.gender === 'all' || !data.gender}
-                onChange={() => updateData({ gender: 'all' })}
+                  checked={data.gender === 'All' || !data.gender}
+                onChange={() => updateData({ gender: 'All' })}
                 className="accent-[#363062]"
               />
               All
