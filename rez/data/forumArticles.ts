@@ -64,4 +64,15 @@ export const forumArticles: ForumArticle[] = [
       "https://forum.celo.org/t/stablecoin-and-cryptocurrency-adoption-comparing-kenya-and-nigeria/10819",
     category: "Stablecoins",
   },
+
+  {
+    id: "rt1_1_2",
+    title: "Could Digital Rewards Revolutionise Recycling in Africa?",
+    description: "As climate change accelerates and plastic pollution threatens ecosystems across Africa, understanding how to motivate sustainable behaviours becomes increasingly critical.",
+    imageUrl: "/forumArticles/rt1_1_2.png",
+    date: "2025-07-31", 
+    postUrl:
+      "https://forum.celo.org/t /could-digital-rewards-revolutionise-recycling-in-africa-new-survey-results-featuring-wayst-recycling/12038",
+    category: "Recycling",
+  },
 ]; 
