@@ -14,22 +14,22 @@ export default function Step2TaskDetails() {
           id="title"
           value={data.title || ''}
           onChange={e => updateData({ title: e.target.value })}
-          placeholder="Enter a title for your task"
+          placeholder="e.g. Recycling Habits & Digital Rewards"
         />
       </div>
       <div>
         <Label htmlFor="category" className="mb-2">Category</Label>
         <Select
           value={data.category || ''}
-          onValueChange={value => updateData({ category: value as 'finance' | 'climate' | 'education' })}
+          onValueChange={value => updateData({ category: value as 'Finance' | 'Climate' | 'Education' })}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a category" />
+            <SelectValue placeholder="e.g. Finance" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="finance">Finance</SelectItem>
-            <SelectItem value="climate">Climate</SelectItem>
-            <SelectItem value="education">Education</SelectItem>
+            <SelectItem value="Finance">Finance</SelectItem>
+            <SelectItem value="Climate">Climate</SelectItem>
+            <SelectItem value="Education">Education</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -37,10 +37,10 @@ export default function Step2TaskDetails() {
         <Label htmlFor="difficulty" className="mb-2">Level of Difficulty</Label>
         <Select
           value={data.difficulty || ''}
-          onValueChange={value => updateData({ difficulty: value as 'easy' | 'medium' | 'hard' })}
+          onValueChange={value => updateData({ difficulty: value as 'Easy' | 'Medium' | 'Hard' })}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select difficulty" />
+            <SelectValue placeholder="e.g. Easy" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="easy">Easy</SelectItem>

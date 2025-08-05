@@ -7,13 +7,13 @@ export interface NewTaskData {
   type?: 'Survey' | 'Non-survey';
   // Step 2: Task Details
   title?: string;
-  category?: 'finance' | 'climate' | 'education';
-  difficulty?: 'easy' | 'medium' | 'hard';
+  category?: 'Finance' | 'Climate' | 'Education';
+  difficulty?: 'Easy' | 'Medium' | 'Hard';
   payout?: number;
   fee?: number;
   // Step 3: Targeting
   countries?: string[];
-  gender?: 'male' | 'female' | 'all';
+  gender?: 'Male' | 'Female' | 'All';
   minAge?: number;
   maxAge?: number;
   // Step 4: Questions & Tasks
