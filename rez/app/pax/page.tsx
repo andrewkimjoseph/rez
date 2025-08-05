@@ -1,3 +1,5 @@
+"use client";
+
 export default function Pax() {
   return (
     <div className="min-h-screen pb-20 sm:p-4 font-[family-name:var(--font-sen)] p-4 flex flex-col">
