@@ -27,6 +27,10 @@ export async function signInTaskMasterWithGoogle() {
 
 export async function signOutTaskMaster() {
   await signOut(auth);
+  
+  // Clear cookies created during authentication
+  document.cookie = 'firebaseToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+  document.cookie = 'organizationId=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
 }
 
 export function getCurrentTaskMaster(): User | null {
