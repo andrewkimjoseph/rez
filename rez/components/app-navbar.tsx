@@ -13,9 +13,12 @@ import { Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
+import { useTasksStore } from "@/stores/tasks-store";
 
 export function AppNavbar({}: React.HTMLAttributes<HTMLElement>) {
   const user = useTaskMasterStore((state) => state.user);
+
+  const { clearTasksAndCompletions } = useTasksStore();
   const router = useRouter();
   const { signOutClicked, signOutComplete, signOutFailed } = useAmplitudeEvents();
   const handleSignOut = async () => { 
@@ -29,6 +32,7 @@ export function AppNavbar({}: React.HTMLAttributes<HTMLElement>) {
         description: "You have been signed out of your account.",
       });
       router.push("/sign-in");  
+      clearTasksAndCompletions();
       signOutComplete();
     } catch (error) {
       toast.error("Failed to sign out", {

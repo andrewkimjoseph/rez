@@ -14,17 +14,14 @@ export const useTasksData = (options: UseTasksDataOptions = {}) => {
     taskCompletions, 
     isLoading, 
     error, 
-    fetchTasksAndCompletions,
-    clearTasksAndCompletions 
+    fetchTasksAndCompletions
   } = useTasksStore();
 
   useEffect(() => {
     if (autoFetch && taskMaster?.emailAddress) {
       fetchTasksAndCompletions();
-    } else if (!taskMaster?.emailAddress) {
-      clearTasksAndCompletions();
     }
-  }, [taskMaster?.emailAddress, fetchTasksAndCompletions, clearTasksAndCompletions, autoFetch]);
+  }, [taskMaster?.emailAddress, fetchTasksAndCompletions, autoFetch]);
 
   return {
     tasks,
