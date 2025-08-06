@@ -52,7 +52,7 @@ export default function Resources() {
                 priority
               />
               {/* Overlay Banner */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[95%] md:w-[85%] lg:w-[70%] bg-gradient-to-r from-orange-400 to-pink-500 rounded-xl shadow-lg flex flex-col md:flex-row items-center justify-between px-6 py-4 gap-4 mt-4 md:mt-0">
+              {/* <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[95%] md:w-[85%] lg:w-[70%] bg-gradient-to-r from-orange-400 to-pink-500 rounded-xl shadow-lg flex flex-col md:flex-row items-center justify-between px-6 py-4 gap-4 mt-4 md:mt-0">
                 <div className="flex items-center gap-3">
                   <div className="bg-white bg-opacity-30 rounded-full p-2">
                    <Users className="w-4 h-4" />
@@ -66,7 +66,7 @@ export default function Resources() {
                   <a href="#" className="bg-white text-pink-600 font-semibold px-4 py-2 rounded-lg shadow hover:bg-gray-100 transition">Browse Topics</a>
                   <a href="#" className="bg-blue-900 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-800 transition">Join Community</a>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
 

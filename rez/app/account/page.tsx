@@ -73,7 +73,7 @@ export default function Account() {
           </TabsTrigger>
         </TabsList>
       </Tabs>
-      <Card className="p-6">
+      <Card className="p-6 cursor-default">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Profile Photo */}
           <div className="flex-1 flex flex-col items-center md:items-start">
