@@ -7,9 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { toast, Toaster } from "sonner";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
+import Image from "next/image";
 
 type AccountFormValues = {
   fullName: string;
@@ -50,8 +58,12 @@ export default function Account() {
   return (
     <div className="min-h-screen pb-20 sm:p-4 p-4 font-[family-name:var(--font-sen)]">
       <Toaster />
-      <h1 className="text-3xl md:text-4xl font-bold mt-2 mb-1">Account Management</h1>
-      <p className="text-muted-foreground mb-6">Manage your account settings, team access, and subscription detail</p>
+      <h1 className="text-3xl md:text-4xl font-bold mt-2 mb-1">
+        Account Management
+      </h1>
+      <p className="text-muted-foreground mb-6">
+        Manage your account settings, team access, and subscription detail
+      </p>
       <Tabs defaultValue="profile" className="w-full mb-6">
         <TabsList className="bg-white">
           <TabsTrigger
@@ -67,16 +79,28 @@ export default function Account() {
           {/* Profile Photo */}
           <div className="flex-1 flex flex-col items-center md:items-start">
             <h2 className="text-lg font-semibold mb-1">Profile Photo</h2>
-            <p className="text-sm text-muted-foreground mb-4">Your profile picture is visible to team members</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              Your profile picture is visible to team members
+            </p>
             <Avatar className="w-40 h-40 mb-2">
-              <img src={user?.profilePictureURI || "https://randomuser.me/api/portraits/men/32.jpg"} alt="Profile" className="object-cover w-full h-full" />
+              <Image
+                src={
+                  user?.profilePictureURI ||
+                  "https://randomuser.me/api/portraits/men/32.jpg"
+                }
+                alt="Profile"
+                className="object-cover w-full h-full"
+              />
             </Avatar>
           </div>
           {/* Personal Information */}
           <div className="flex-[2]">
             <h2 className="text-lg font-semibold mb-4">Personal Information</h2>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+              >
                 <FormField
                   control={form.control}
                   name="fullName"
@@ -170,7 +194,9 @@ export default function Account() {
                 /> */}
                 <div className="col-span-1 md:col-span-2 flex justify-end gap-2 mt-4">
                   {/* <Button variant="outline" type="button">Cancel</Button> */}
-                  <Button type="submit" disabled>Saved</Button>
+                  <Button type="submit" disabled>
+                    Saved
+                  </Button>
                 </div>
               </form>
             </Form>
