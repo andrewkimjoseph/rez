@@ -1,5 +1,5 @@
 export const allowedResearcherEmailAddresses = [
-  "thecanvassing@gmail.com",
-  "waystrecycling@gmail.com",
-  "kimathidennis38@gmail.com",
+  "thecanvassing@gmail.com", // Researcher Zero
+  "waystrecycling@gmail.com", // Researcher One
+  "kimathidennis38@gmail.com", // Researcher Two
 ];
