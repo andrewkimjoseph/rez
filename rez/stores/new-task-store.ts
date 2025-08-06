@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export type TaskStep = 1 | 2 | 3 | 4 | 5;
 
@@ -7,7 +8,7 @@ export interface NewTaskData {
   type?: 'Survey' | 'Non-survey';
   // Step 2: Task Details
   title?: string;
-  category?: 'Finance' | 'Climate' | 'Education';
+  category?: 'Finance' | 'Climate' | 'Education' | 'Health' | 'Technology' | 'Other';
   difficulty?: 'Easy' | 'Medium' | 'Hard';
   payout?: number;
   fee?: number;
@@ -31,12 +32,20 @@ interface NewTaskStore {
   reset: () => void;
 }
 
-export const useNewTaskStore = create<NewTaskStore>((set, get) => ({
-  step: 1,
-  data: {},
-  setStep: (step) => set({ step }),
-  nextStep: () => set((state) => ({ step: Math.min(state.step + 1, 5) as TaskStep })),
-  prevStep: () => set((state) => ({ step: Math.max(state.step - 1, 1) as TaskStep })),
-  updateData: (data) => set((state) => ({ data: { ...state.data, ...data } })),
-  reset: () => set({ step: 1, data: {} }),
-})); 
+export const useNewTaskStore = create<NewTaskStore>()(
+  persist(
+    (set, get) => ({
+      step: 1,
+      data: {},
+      setStep: (step) => set({ step }),
+      nextStep: () => set((state) => ({ step: Math.min(state.step + 1, 5) as TaskStep })),
+      prevStep: () => set((state) => ({ step: Math.max(state.step - 1, 1) as TaskStep })),
+      updateData: (data) => set((state) => ({ data: { ...state.data, ...data } })),
+      reset: () => set({ step: 1, data: {} }),
+    }),
+    {
+      name: 'new-task-storage',
+      partialize: (state) => ({ step: state.step, data: state.data }),
+    }
+  )
+); 
