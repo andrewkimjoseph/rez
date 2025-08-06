@@ -27,6 +27,7 @@ import { useOrganizationStore } from "@/stores/organization-store";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { Loader2Icon } from "lucide-react";
 import { updateTaskMasterOrganizationId } from "@/firebase/firestore/services/updateTaskMasterOrganizationId";
+import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 const FormSchema = z.object({
   organizationName: z.string().min(2, {
@@ -45,7 +46,7 @@ export default function OrganizationOnboardingPage() {
   const setTaskMasterUser = useTaskMasterStore((state) => state.setUser);
   const taskMasterUser = useTaskMasterStore((state) => state.user);
   const [loading, setLoading] = useState(false);
-
+  const { organizationOnboardingClicked, organizationOnboardingComplete, organizationOnboardingFailed, identifyTaskMaster } = useAmplitudeEvents();
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUserName(user?.displayName || null);
@@ -63,11 +64,13 @@ export default function OrganizationOnboardingPage() {
   });
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setLoading(true);
+    organizationOnboardingClicked();
     // Get current user
     const user = auth.currentUser;
     if (!user) {
       toast("User not found. Please sign in again.");
       setLoading(false);
+      organizationOnboardingFailed();
       return;
     }
     const orgData = {
@@ -87,6 +90,12 @@ export default function OrganizationOnboardingPage() {
       await updateTaskMasterOrganizationId(user.uid, orgId);
       if (taskMasterUser) {
         setTaskMasterUser({ ...taskMasterUser, organizationId: orgId });
+        identifyTaskMaster({
+          rez_task_master_org_id: orgId,
+          rez_task_master_org_name: org.name,
+          rez_task_master_org_country: org.country,
+          rez_task_master_org_team_size: org.teamSize,
+        });
       }
     }
     toast("Organization created!", {
@@ -97,6 +106,7 @@ export default function OrganizationOnboardingPage() {
       ),
     });
     setLoading(false);
+    organizationOnboardingComplete();
     router.push("/dashboard");
   }
   return (

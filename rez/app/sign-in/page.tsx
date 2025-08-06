@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import { createTaskMasterInFirestore } from "@/firebase/firestore/services/createTaskMasterInFirestore";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { getTaskMasterFromFirestore } from "@/firebase/firestore/services/getTaskMasterFromFirestore";
+import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -18,6 +19,13 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false);
   const pathname = usePathname();
   const setTaskMasterUser = useTaskMasterStore((state) => state.setUser);
+  const {
+    signInWithGoogleClicked,
+    signInWithGoogleFailed,
+    signInWithGoogleComplete,
+    setTaskMasterId,
+    identifyTaskMaster,
+  } = useAmplitudeEvents();
 
   useEffect(() => {
     setLoading(false);
@@ -26,6 +34,7 @@ export default function SignInPage() {
   async function handleGoogleSignIn() {
     setError(null);
     setLoading(true);
+    signInWithGoogleClicked();
     try {
       const user = await signInTaskMasterWithGoogle();
       if (user) {
@@ -39,6 +48,14 @@ export default function SignInPage() {
           }
           setTaskMasterUser(existingTaskMaster);
           router.push("/dashboard");
+          setTaskMasterId(user.uid);
+          identifyTaskMaster({
+            rez_task_master_id: existingTaskMaster.id,
+            rez_task_master_email_address: existingTaskMaster.emailAddress,
+            rez_task_master_name: existingTaskMaster.name,
+            rez_task_master_org_id: existingTaskMaster.organizationId,
+          });
+          signInWithGoogleComplete();
           return;
         } else {
           // Create new TaskMaster as before
@@ -53,11 +70,21 @@ export default function SignInPage() {
           await createTaskMasterInFirestore(taskMaster);
           setTaskMasterUser(taskMaster);
           document.cookie = `firebaseToken=${token}; path=/;`;
+          setTaskMasterId(user.uid);
+          identifyTaskMaster({
+            rez_task_master_id: taskMaster.id,
+            rez_task_master_email_address: taskMaster.emailAddress,
+            rez_task_master_name: taskMaster.name,
+          });
+          signInWithGoogleComplete(taskMaster);
         }
       }
       router.push("/organization-onboarding");
       // setLoading(false); // Let loading be handled by useEffect on route change
     } catch (err: any) {
+      signInWithGoogleFailed({
+        error_message: err?.message,
+      });
       if (err?.code === "auth/popup-closed-by-user") {
         setError("Sign-in was cancelled.");
         setLoading(false);
