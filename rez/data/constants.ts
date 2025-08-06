@@ -1,0 +1,2 @@
+export const TASK_MASTER_ID = '2kMODZqwM8OuJnfygUXXwlgXl233';
+export const TASK_MANAGER_CONTRACT_ADDRESS = "0xae1a9018762e984448dd6d15003a9c731f45f3fa"; 

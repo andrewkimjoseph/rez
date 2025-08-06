@@ -1,6 +1,6 @@
 import { signInWithPopup, GoogleAuthProvider, signOut, User, deleteUser } from 'firebase/auth';
 import { auth, initFirebase } from '@/firebase/clientConfig';
-import { allowedResearcherAddresses } from '@/data/allowedResearcherAddresses';
+import { allowedResearcherEmailAddresses } from '@/data/allowedResearcherEmailAddresses';
 
 initFirebase();
 
@@ -10,7 +10,7 @@ export async function signInTaskMasterWithGoogle() {
   try {
     const result = await signInWithPopup(auth, provider);
     const email = result.user.email;
-    if (!email || !allowedResearcherAddresses.includes(email)) {
+    if (!email || !allowedResearcherEmailAddresses.includes(email)) {
       await signOutTaskMaster();
       try {
         await deleteUser(result.user);
