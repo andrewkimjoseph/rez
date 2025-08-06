@@ -10,8 +10,10 @@ import Step5Review from "@/components/new-task/Step4Review";
 import { toast, Toaster } from "sonner";
 import NewTask from "@/components/new-task/tab-component/NewTask";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Clock } from "lucide-react";
 import { useTasksStore } from "@/stores/tasks-store";
+import { useRefreshStore } from "@/stores/refresh-store";
+import { useState, useEffect } from "react";
 import ViewTasks from "@/components/view-components/tab-component/ViewAllTasks";
 
 const stepTitles = [
@@ -75,6 +77,28 @@ function TaskStepContent({ step }: { step: TaskStep }) {
 export default function Tasks() {
   const [selectedTab, setSelectedTab] = React.useState("create");
   const { fetchTasksAndCompletions, isLoading } = useTasksStore();
+  const { checkCanRefresh, updateRefreshTime } = useRefreshStore();
+  const [, forceUpdate] = useState({});
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Check if refresh is available for tasks (updated every second)
+  const tasksRefreshStatus = checkCanRefresh();
+
+  // Handle hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  // Force re-render every second when on cooldown
+  useEffect(() => {
+    if (isHydrated && !tasksRefreshStatus.canRefresh) {
+      const interval = setInterval(() => {
+        forceUpdate({});
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [isHydrated, tasksRefreshStatus.canRefresh]);
 
 
   const getTitle = () => {
@@ -100,11 +124,20 @@ export default function Tasks() {
   };
 
   const handleRefresh = async () => {
+    // Check refresh status at the time of click
+    const currentRefreshStatus = checkCanRefresh();
+    
+    if (!currentRefreshStatus.canRefresh) {
+      toast.error(`Please wait ${currentRefreshStatus.formattedTime} before refreshing again.`);
+      return;
+    }
+
     try {
       await fetchTasksAndCompletions();
-      toast.success("Data refreshed successfully!");
+      updateRefreshTime();
+      toast.success("Tasks data refreshed successfully!");
     } catch (error) {
-      toast.error("Failed to refresh data");
+      toast.error("Failed to refresh tasks data");
     }
   };
 
@@ -122,13 +155,20 @@ export default function Tasks() {
           {selectedTab === "view-tasks" && (
             <Button
               onClick={handleRefresh}
-              disabled={isLoading}
+              disabled={isLoading || (isHydrated && !tasksRefreshStatus.canRefresh)}
               variant="outline"
               size="sm"
               className="flex items-center gap-2"
+              title={isHydrated && !tasksRefreshStatus.canRefresh ? `Wait ${tasksRefreshStatus.formattedTime}` : ''}
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-              Refresh
+              {isHydrated && !tasksRefreshStatus.canRefresh ? (
+                <Clock className="h-4 w-4" />
+              ) : (
+                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              )}
+              {isHydrated && !tasksRefreshStatus.canRefresh 
+                ? `Refresh after ${tasksRefreshStatus.formattedTime}` 
+                : 'Refresh'}
             </Button>
           )}
         </div>

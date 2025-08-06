@@ -1,6 +1,6 @@
 "use client";
 
-import { PlusIcon, FileIcon, RefreshCw } from "lucide-react";
+import { PlusIcon, FileIcon, RefreshCw, Clock } from "lucide-react";
 
 import {
   Card,
@@ -14,15 +14,54 @@ import { TaskCompletionsOverTime } from "@/components/task-completions-over-time
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useTasksData } from "@/hooks/use-tasks-data";
+import { useRefreshStore } from "@/stores/refresh-store";
+import { toast } from "sonner";
+import { useState, useEffect } from "react";
 
 export default function Dashboard() {
   const { tasks, taskCompletions, isLoading, error, refetch } = useTasksData({ autoFetch: false });
+  const { checkCanRefresh, updateRefreshTime } = useRefreshStore();
+  const [, forceUpdate] = useState({});
+  const [isHydrated, setIsHydrated] = useState(false);
 
   // Calculate counts
   const totalTasks = tasks.length;
   const activeTasks = tasks.filter(task => task.isAvailable === true).length;
   const totalTaskCompletions = taskCompletions.length;
 
+  // Check if refresh is available (updated every second)
+  const dashboardRefreshStatus = checkCanRefresh();
+
+  // Handle hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  // Force re-render every second when on cooldown
+  useEffect(() => {
+    if (isHydrated && !dashboardRefreshStatus.canRefresh) {
+      const interval = setInterval(() => {
+        forceUpdate({});
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [isHydrated, dashboardRefreshStatus.canRefresh]);
+
+  const handleRefresh = async () => {
+    if (!dashboardRefreshStatus.canRefresh) {
+      toast.error(`Please wait ${dashboardRefreshStatus.formattedTime} before refreshing again.`);
+      return;
+    }
+
+    try {
+      await refetch();
+      updateRefreshTime();
+      toast.success("Dashboard data refreshed successfully!");
+    } catch (error) {
+      toast.error("Failed to refresh dashboard data");
+    }
+  };
   return (
     <div className="min-h-screen pb-20 sm:p-4 font-[family-name:var(--font-sen)] p-4">
       <div className="w-full">
@@ -32,14 +71,21 @@ export default function Dashboard() {
             <p>Monitor your research projects and analytics at a glance.</p>
           </div>
           <Button
-            onClick={refetch}
-            disabled={isLoading}
+            onClick={handleRefresh}
+            disabled={isLoading || (isHydrated && !dashboardRefreshStatus.canRefresh)}
             variant="outline"
             size="sm"
             className="flex items-center gap-2"
+            title={isHydrated && !dashboardRefreshStatus.canRefresh ? `Wait ${dashboardRefreshStatus.formattedTime}` : ''}
           >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
+            {isHydrated && !dashboardRefreshStatus.canRefresh ? (
+              <Clock className="h-4 w-4" />
+            ) : (
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            )}
+            {isHydrated && !dashboardRefreshStatus.canRefresh 
+              ? `Refresh after ${dashboardRefreshStatus.formattedTime}` 
+              : 'Refresh'}
           </Button>
         </div>
         
