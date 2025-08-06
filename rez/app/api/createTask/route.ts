@@ -19,7 +19,6 @@ export async function POST(request: NextRequest) {
       title: body.title,
       category: body.category || "Other",
       difficulty: body.difficulty || "Medium",
-      countries: body.countries,
       gender: body.gender,
       tallyFormUrl: body.tallyFormUrl,
       rezTaskMasterEmailAddress: body.rezTaskMasterEmailAddress,

@@ -9,7 +9,6 @@ export interface CreateTaskData {
   title: string;
   category: 'Finance' | 'Climate' | 'Education' | 'Health' | 'Technology' | 'Other';
   difficulty: 'Easy' | 'Medium' | 'Hard';
-  countries?: string[];
   gender?: 'Male' | 'Female' | 'All';
   tallyFormUrl?: string | null;
   rezTaskMasterEmailAddress?: string | null;

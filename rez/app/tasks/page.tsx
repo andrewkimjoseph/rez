@@ -1,12 +1,8 @@
 "use client";
 
 import React from "react";
-import { useNewTaskStore, TaskStep } from "@/stores/new-task-store";
+import { TaskStep } from "@/stores/new-task-store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Step1TaskType from "@/components/new-task/Step1TaskType";
-import Step2TaskDetails from "@/components/new-task/Step2TaskDetails";
-import Step4QuestionsTasks from "@/components/new-task/Step3QuestionsTasks";
-import Step5Review from "@/components/new-task/Step4Review";
 import { toast, Toaster } from "sonner";
 import NewTask from "@/components/new-task/tab-component/NewTask";
 import { Button } from "@/components/ui/button";
@@ -14,65 +10,9 @@ import { RefreshCw, Clock } from "lucide-react";
 import { useTasksStore } from "@/stores/tasks-store";
 import { useRefreshStore } from "@/stores/refresh-store";
 import { useState, useEffect } from "react";
-import ViewTasks from "@/components/view-components/tab-component/ViewAllTasks";
+import ViewTasks from "@/components/view-task/tab-component/tab-component/ViewAllTasks";
+import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
-const stepTitles = [
-  "Task Type",
-  "Task Details",
-  // "Targeting", // commented out
-  "Questions & Tasks",
-  "Review",
-];
-
-function Stepper({ step }: { step: TaskStep }) {
-  // Only show 4 steps in the stepper
-  return (
-    <div className="flex items-center justify-between mb-6">
-      {[0, 1, 2, 3].map((idx) => {
-        const current = idx + 1 === step;
-        const completed = idx + 1 < step;
-        return (
-          <div
-            key={stepTitles[idx]}
-            className="flex flex-col items-center flex-1"
-          >
-            <div
-              className={`rounded-full w-8 h-8 flex items-center justify-center font-bold border-2 ${
-                current
-                  ? "bg-[#363062] text-white border-[#363062]"
-                  : completed
-                  ? "bg-[#ececec] text-[#363062] border-[#363062]"
-                  : "bg-white text-[#363062] border-[#ececec]"
-              }`}
-            >
-              {idx + 1}
-            </div>
-            <span className="text-xs mt-2 text-center whitespace-nowrap">
-              {stepTitles[idx]}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function TaskStepContent({ step }: { step: TaskStep }) {
-  switch (step) {
-    case 1:
-      return <Step1TaskType />;
-    case 2:
-      return <Step2TaskDetails />;
-    // case 3:
-    //   return <Step3Targeting />;
-    case 3:
-      return <Step4QuestionsTasks />;
-    case 4:
-      return <Step5Review />;
-    default:
-      return null;
-  }
-}
 
 export default function Tasks() {
   const [selectedTab, setSelectedTab] = React.useState("create");
@@ -80,8 +20,8 @@ export default function Tasks() {
   const { checkCanRefresh, updateRefreshTime } = useRefreshStore();
   const [, forceUpdate] = useState({});
   const [isHydrated, setIsHydrated] = useState(false);
+  const { viewTasksTabClicked, createNewTaskTabClicked, refreshClicked } = useAmplitudeEvents();
 
-  // Check if refresh is available for tasks (updated every second)
   const tasksRefreshStatus = checkCanRefresh();
 
   // Handle hydration
@@ -99,7 +39,6 @@ export default function Tasks() {
       return () => clearInterval(interval);
     }
   }, [isHydrated, tasksRefreshStatus.canRefresh]);
-
 
   const getTitle = () => {
     switch (selectedTab) {
@@ -124,11 +63,16 @@ export default function Tasks() {
   };
 
   const handleRefresh = async () => {
-    // Check refresh status at the time of click
+    refreshClicked({
+      route: "/tasks",
+    });
+
     const currentRefreshStatus = checkCanRefresh();
-    
+
     if (!currentRefreshStatus.canRefresh) {
-      toast.error(`Please wait ${currentRefreshStatus.formattedTime} before refreshing again.`);
+      toast.error(
+        `Please wait ${currentRefreshStatus.formattedTime} before refreshing again.`
+      );
       return;
     }
 
@@ -144,39 +88,58 @@ export default function Tasks() {
   return (
     <div className="min-h-screen pb-20 sm:p-4 font-[family-name:var(--font-sen)] p-4">
       <Toaster />
-      <div className={`w-full ${selectedTab === "view-tasks" ? "max-w-7xl" : "max-w-2xl"}`}>
+      <div
+        className={`w-full ${
+          selectedTab === "view-tasks" ? "max-w-7xl" : "max-w-2xl"
+        }`}
+      >
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-1">{getTitle()}</h1>
-            <p className="text-muted-foreground">
-              {getSubtitle()}
-            </p>
+            <h1 className="text-3xl md:text-4xl font-bold mb-1">
+              {getTitle()}
+            </h1>
+            <p className="text-muted-foreground">{getSubtitle()}</p>
           </div>
           {selectedTab === "view-tasks" && (
             <Button
               onClick={handleRefresh}
-              disabled={isLoading || (isHydrated && !tasksRefreshStatus.canRefresh)}
+              disabled={
+                isLoading || (isHydrated && !tasksRefreshStatus.canRefresh)
+              }
               variant="outline"
               size="sm"
               className="flex items-center gap-2"
-              title={isHydrated && !tasksRefreshStatus.canRefresh ? `Wait ${tasksRefreshStatus.formattedTime}` : ''}
+              title={
+                isHydrated && !tasksRefreshStatus.canRefresh
+                  ? `Wait ${tasksRefreshStatus.formattedTime}`
+                  : ""
+              }
             >
               {isHydrated && !tasksRefreshStatus.canRefresh ? (
                 <Clock className="h-4 w-4" />
               ) : (
-                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+                />
               )}
-              {isHydrated && !tasksRefreshStatus.canRefresh 
-                ? `Refresh after ${tasksRefreshStatus.formattedTime}` 
-                : 'Refresh'}
+              {isHydrated && !tasksRefreshStatus.canRefresh
+                ? `Refresh after ${tasksRefreshStatus.formattedTime}`
+                : "Refresh"}
             </Button>
           )}
         </div>
-        <Tabs 
-          defaultValue="create" 
+        <Tabs
+          defaultValue="create"
           className="w-full mb-6"
           value={selectedTab}
-          onValueChange={setSelectedTab}
+          onValueChange={(value) => {
+            setSelectedTab(value);
+            if (value === "view-tasks") {
+              viewTasksTabClicked();
+            } else {
+              createNewTaskTabClicked();
+            }
+          }}
         >
           <TabsList className="bg-white">
             <TabsTrigger

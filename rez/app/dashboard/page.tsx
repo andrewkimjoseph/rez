@@ -17,13 +17,14 @@ import { useTasksData } from "@/hooks/use-tasks-data";
 import { useRefreshStore } from "@/stores/refresh-store";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
+import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 export default function Dashboard() {
   const { tasks, taskCompletions, isLoading, error, refetch } = useTasksData({ autoFetch: false });
   const { checkCanRefresh, updateRefreshTime } = useRefreshStore();
   const [, forceUpdate] = useState({});
   const [isHydrated, setIsHydrated] = useState(false);
-
+  const { refreshClicked } = useAmplitudeEvents();
   // Calculate counts
   const totalTasks = tasks.length;
   const activeTasks = tasks.filter(task => task.isAvailable === true).length;
@@ -49,11 +50,13 @@ export default function Dashboard() {
   }, [isHydrated, dashboardRefreshStatus.canRefresh]);
 
   const handleRefresh = async () => {
+    refreshClicked({
+      route: "/dashboard",
+    });
     if (!dashboardRefreshStatus.canRefresh) {
       toast.error(`Please wait ${dashboardRefreshStatus.formattedTime} before refreshing again.`);
       return;
     }
-
     try {
       await refetch();
       updateRefreshTime();
