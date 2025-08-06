@@ -3,14 +3,14 @@ import { Button } from "@/components/ui/button";
 import { useNewTaskStore, TaskStep } from "@/stores/new-task-store";
 import Step1TaskType from "@/components/new-task/Step1TaskType";
 import Step2TaskDetails from "@/components/new-task/Step2TaskDetails";
-import Step3Targeting from "@/components/new-task/Step3Targeting";
 import Step4QuestionsTasks from "@/components/new-task/Step3QuestionsTasks";
 import Step5Review from "@/components/new-task/Step4Review";
 import { toast } from "sonner";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { useTasksStore } from "@/stores/tasks-store";
 import { useState } from "react";
-import { Loader2, Loader2Icon, Clock, AlertCircle } from "lucide-react";
+import { Loader2Icon, Clock, AlertCircle } from "lucide-react";
+import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 const stepTitles = [
   "Task Type",
@@ -75,7 +75,8 @@ export default function NewTask() {
   const { user } = useTaskMasterStore();
   const { tasks, fetchTasksAndCompletions } = useTasksStore();
   const [isCreating, setIsCreating] = useState(false);
-
+  const { createNewTaskClicked, createNewTaskComplete, createNewTaskFailed } =
+    useAmplitudeEvents();
   // Check if user can create a new task (once per week limit)
   const getTaskCreationStatus = () => {
     if (!user?.emailAddress || !tasks.length) {
@@ -83,8 +84,8 @@ export default function NewTask() {
     }
 
     // Find the user's most recent task
-    const userTasks = tasks.filter(task => 
-      task.rezTaskMasterEmailAddress === user.emailAddress
+    const userTasks = tasks.filter(
+      (task) => task.rezTaskMasterEmailAddress === user.emailAddress
     );
 
     if (userTasks.length === 0) {
@@ -103,7 +104,7 @@ export default function NewTask() {
     });
 
     const latestTask = sortedTasks[0];
-    
+
     if (!latestTask.timeCreated) {
       return { canCreate: true, lastTaskDate: null, daysLeft: 0 };
     }
@@ -124,13 +125,15 @@ export default function NewTask() {
     const oneWeekMs = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
     const timeSinceLastTask = Date.now() - lastTaskTime;
     const canCreate = timeSinceLastTask >= oneWeekMs;
-    const daysLeft = canCreate ? 0 : Math.ceil((oneWeekMs - timeSinceLastTask) / (24 * 60 * 60 * 1000));
-    
+    const daysLeft = canCreate
+      ? 0
+      : Math.ceil((oneWeekMs - timeSinceLastTask) / (24 * 60 * 60 * 1000));
+
     return {
       canCreate,
       lastTaskDate: new Date(lastTaskTime),
       daysLeft,
-      lastTaskTitle: latestTask.title
+      lastTaskTitle: latestTask.title,
     };
   };
 
@@ -150,7 +153,13 @@ export default function NewTask() {
         return !!data.tallyFormUrl;
       case 4:
         // Step 4: Review - all required fields should be filled
-        return !!(data.type && data.title && data.category && data.difficulty && data.tallyFormUrl);
+        return !!(
+          data.type &&
+          data.title &&
+          data.category &&
+          data.difficulty &&
+          data.tallyFormUrl
+        );
       default:
         return false;
     }
@@ -159,44 +168,54 @@ export default function NewTask() {
   const handleContinue = async () => {
     if (step === 4) {
       setIsCreating(true);
+      createNewTaskClicked();
       try {
         // Create the task via API route
-        const response = await fetch('/api/createTask', {
-          method: 'POST',
+        const response = await fetch("/api/createTask", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             type: data.type!,
             title: data.title!,
             category: data.category || "Other",
             difficulty: data.difficulty || "Medium",
-            countries: data.countries,
             gender: data.gender,
-            tallyFormUrl: data.tallyFormUrl,  
+            tallyFormUrl: data.tallyFormUrl,
             rezTaskMasterEmailAddress: user?.emailAddress,
           }),
         });
 
         if (!response.ok) {
-          throw new Error('Failed to create task');
+          throw new Error("Failed to create task");
         }
 
         const result = await response.json();
-        
+
         toast("Task created!", {
           description: `Your new task has been created successfully with ID: ${result.taskId}`,
         });
-        
+        createNewTaskComplete({
+          task_id: result.taskId,
+          task_title: data.title,
+          task_type: data.type,
+          task_category: data.category,
+          task_difficulty: data.difficulty,
+          task_tally_form_url: data.tallyFormUrl,
+        });
         // Refresh the tasks list to include the newly created task
         await fetchTasksAndCompletions();
-        
+
         // Reset the form after successful creation
         reset();
       } catch (error) {
-        console.error('Error creating task:', error);
         toast("Error creating task", {
-          description: "There was an error creating your task. Please try again.",
+          description:
+            "There was an error creating your task. Please try again.",
+        });
+        createNewTaskFailed({
+          error_message: error?.toString(),
         });
       } finally {
         setIsCreating(false);
@@ -220,22 +239,28 @@ export default function NewTask() {
             Task Creation Limit Reached
           </h3>
           <p className="text-gray-600 mb-4">
-            You can only create one task per week. You created your last task{' '}
-            <span className="font-medium">"{taskCreationStatus.lastTaskTitle}"</span>{' '}
-            on{' '}
+            You can only create one task per week. You created your last task{" "}
             <span className="font-medium">
-              {taskCreationStatus.lastTaskDate?.toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric'
+              "{taskCreationStatus.lastTaskTitle}"
+            </span>{" "}
+            on{" "}
+            <span className="font-medium">
+              {taskCreationStatus.lastTaskDate?.toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
               })}
-            </span>.
+            </span>
+            .
           </p>
           <div className="flex items-center space-x-2 p-3 bg-orange-50 rounded-lg">
             <AlertCircle className="w-5 h-5 text-orange-600" />
             <span className="text-orange-800 font-medium">
-              You can create your next task in{' '}
-              <span className="font-bold">{taskCreationStatus.daysLeft} day{taskCreationStatus.daysLeft !== 1 ? 's' : ''}</span>
+              You can create your next task in{" "}
+              <span className="font-bold">
+                {taskCreationStatus.daysLeft} day
+                {taskCreationStatus.daysLeft !== 1 ? "s" : ""}
+              </span>
             </span>
           </div>
         </div>
@@ -253,13 +278,14 @@ export default function NewTask() {
       <Stepper step={step} />
       <TaskStepContent step={step} />
       <div className="flex justify-between mt-8">
-        <Button variant="outline" onClick={prevStep} disabled={step === 1 || isCreating}>
+        <Button
+          variant="outline"
+          onClick={prevStep}
+          disabled={step === 1 || isCreating}
+        >
           Back
         </Button>
-        <Button 
-          onClick={handleContinue} 
-          disabled={isCreating || !canProceed()}
-        >
+        <Button onClick={handleContinue} disabled={isCreating || !canProceed()}>
           {step === 4 ? (
             isCreating ? (
               <>
@@ -276,4 +302,4 @@ export default function NewTask() {
       </div>
     </Card>
   );
-} 
+}
