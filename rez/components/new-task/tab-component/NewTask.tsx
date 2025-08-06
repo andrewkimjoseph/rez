@@ -241,7 +241,7 @@ export default function NewTask() {
           <p className="text-gray-600 mb-4">
             You can only create one task per week. You created your last task{" "}
             <span className="font-medium">
-              "{taskCreationStatus.lastTaskTitle}"
+              &ldquo;{taskCreationStatus.lastTaskTitle}&rdquo;
             </span>{" "}
             on{" "}
             <span className="font-medium">
