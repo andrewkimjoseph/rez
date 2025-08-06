@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { useTasksData } from "@/hooks/use-tasks-data";
 import { Badge } from "@/components/ui/badge";
+import { Task } from "@/firebase/firestore/models/Task";
 // import { format } from "date-fns";
 
 export default function ViewTasks() {
@@ -18,6 +19,13 @@ export default function ViewTasks() {
   const getTaskCompletionsCount = (taskId: string | null) => {
     if (!taskId) return 0;
     return taskCompletions.filter(completion => completion.taskId === taskId).length;
+  };
+
+  // Check if task is complete based on target participants
+  const isTaskComplete = (task: Task) => {
+    const completionsCount = getTaskCompletionsCount(task.id);
+    const target = task.targetNumberOfParticipants || 0;
+    return target > 0 && completionsCount >= target;
   };
 
   // Sort tasks by deadline (latest first)
@@ -108,21 +116,25 @@ export default function ViewTasks() {
         <TableCaption>A list of all your tasks.</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[300px]">Title</TableHead>
+            <TableHead className="w-[60px]">#</TableHead>
+            <TableHead className="w-[350px]">Title</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Category</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Difficulty</TableHead>
-            <TableHead>Time Created</TableHead>
-            <TableHead className="text-right w-[120px]">Total Completions</TableHead>
-            <TableHead className="text-right">Time (min)</TableHead>
+            <TableHead className="w-[200px]">Time Created</TableHead>
+            <TableHead className="text-right">Target Participants</TableHead>
+            <TableHead className="text-right">Total Completions</TableHead>
+            <TableHead>Complete</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedTasks.map((task) => (
+          {sortedTasks.map((task, index) => (
             <TableRow key={task.id}>
+              <TableCell className="font-medium text-center">
+                {index + 1}
+              </TableCell>
               <TableCell className="font-medium">
-                <div className="max-w-[300px] truncate" title={task.title || ''}>
+                <div className="max-w-[350px] truncate" title={task.title || ''}>
                   {task.title || 'Untitled Task'}
                 </div>
               </TableCell>
@@ -145,25 +157,21 @@ export default function ViewTasks() {
                 </Badge>
               </TableCell>
               <TableCell>
-                <Badge 
-                  variant="outline" 
-                  className={`text-xs ${
-                    task.levelOfDifficulty === 'Easy' ? 'text-green-600' :
-                    task.levelOfDifficulty === 'Medium' ? 'text-yellow-600' :
-                    task.levelOfDifficulty === 'Hard' ? 'text-red-600' : 'text-gray-600'
-                  }`}
-                >
-                  {task.levelOfDifficulty || 'N/A'}
-                </Badge>
-              </TableCell>
-              <TableCell>
                 {formatTaskTimestamp(task.timeCreated)}
+              </TableCell>
+              <TableCell className="text-right">
+                {task.targetNumberOfParticipants || 0}
               </TableCell>
               <TableCell className="text-right">
                 {getTaskCompletionsCount(task.id)}
               </TableCell>
-              <TableCell className="text-right">
-                {task.estimatedTimeOfCompletionInMinutes || 0}
+              <TableCell>
+                <Badge 
+                  variant={isTaskComplete(task) ? "default" : "secondary"}
+                  className="text-xs"
+                >
+                  {isTaskComplete(task) ? 'Yes' : 'No'}
+                </Badge>
               </TableCell>
             </TableRow>
           ))}
