@@ -43,9 +43,9 @@ export default function Step2TaskDetails() {
             <SelectValue placeholder="e.g. Easy" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="easy">Easy</SelectItem>
-            <SelectItem value="medium">Medium</SelectItem>
-            <SelectItem value="hard">Hard</SelectItem>
+            <SelectItem value="Easy">Easy</SelectItem>
+            <SelectItem value="Medium">Medium</SelectItem>
+            <SelectItem value="Hard">Hard</SelectItem>
           </SelectContent>
         </Select>
       </div>
