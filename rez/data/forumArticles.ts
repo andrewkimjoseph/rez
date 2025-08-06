@@ -72,7 +72,7 @@ export const forumArticles: ForumArticle[] = [
     imageUrl: "/forumArticles/rt1_1_2.png",
     date: "2025-07-31", 
     postUrl:
-      "https://forum.celo.org/t /could-digital-rewards-revolutionise-recycling-in-africa-new-survey-results-featuring-wayst-recycling/12038",
+      "https://forum.celo.org/t/could-digital-rewards-revolutionise-recycling-in-africa-new-survey-results-featuring-wayst-recycling/12038",
     category: "Recycling",
   },
 ]; 

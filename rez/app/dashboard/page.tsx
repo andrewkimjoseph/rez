@@ -71,7 +71,7 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-4xl font-bold pb-2">Dashboard Overview</h1>
-            <p>Monitor your research projects and analytics at a glance.</p>
+            <p>Monitor your tasks and task completions at a glance.</p>
           </div>
           <Button
             onClick={handleRefresh}
