@@ -57,7 +57,7 @@ const items = [
 
 export function AppSidebar() {
   return (
-    <Sidebar variant="sidebar" collapsible="offcanvas" className="font-[family-name:var(--font-sen)]">
+    <Sidebar variant="sidebar" collapsible="icon" className="font-[family-name:var(--font-sen)]">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent className="">

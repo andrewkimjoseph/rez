@@ -2,7 +2,7 @@
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
@@ -82,14 +82,10 @@ export default function Account() {
               Your profile picture is visible to team members
             </p>
             <Avatar className="w-40 h-40 mb-2">
-              <Image
-                src={
-                  user?.profilePictureURI ||
-                  "https://randomuser.me/api/portraits/men/32.jpg"
-                }
-                alt="Profile"
-                className="object-cover w-full h-full"
-              />
+
+            <AvatarImage src={user?.profilePictureURI && user.profilePictureURI.trim() !== "" ? user.profilePictureURI : "https://github.com/shadcn.png"} />
+            <AvatarFallback>{user?.name?.charAt(0) || "U"}</AvatarFallback>
+  
             </Avatar>
           </div>
           {/* Personal Information */}
