@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore";
+
 export interface Task {
   id: string | null;
   taskMasterId: string | null;
@@ -8,13 +10,13 @@ export interface Task {
   targetNumberOfParticipants: number | null;
   link: string | null;
   levelOfDifficulty: string | null;
-  deadline: number | null;
+  deadline: Timestamp | null;
   managerContractAddress: string | null;
   rewardAmountPerParticipant: number | null;
-  rewardCurrencyId: string | null;
+  rewardCurrencyId: number | null;
   isAvailable: boolean | null;
-  timeCreated: any | null; // Firestore Timestamp
-  timeUpdated: any | null; // Firestore Timestamp
+  timeCreated: Timestamp | null;  
+  timeUpdated: Timestamp | null;
   isTest: boolean | null;
   rezTaskMasterEmailAddress: string | null;
 } 
