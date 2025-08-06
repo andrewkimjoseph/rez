@@ -20,10 +20,18 @@ export const useAmplitudeEvents = () => {
       return;
     }
 
-    const eventProperties = {
-      ...getBaseProperties(),
-      ...properties,
-    };
+    let eventProperties = {};
+
+    if (eventName === "sign_in_with_google_complete") {
+      eventProperties = {
+        ...getBaseProperties(),
+        ...properties,
+      };
+    } else {
+      eventProperties = {
+        ...properties,
+      };
+    }
 
     amplitude.track(eventName, eventProperties);
   };
