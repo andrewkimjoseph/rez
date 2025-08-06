@@ -13,7 +13,7 @@ import { Task } from "@/firebase/firestore/models/Task";
 // import { format } from "date-fns";
 
 export default function ViewTasks() {
-  const { tasks, taskCompletions, isLoading, error } = useTasksData();
+  const { tasks, taskCompletions, isLoading, error } = useTasksData({ autoFetch: false });
 
   // Calculate task completions for each task
   const getTaskCompletionsCount = (taskId: string | null) => {

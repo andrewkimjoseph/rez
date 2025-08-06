@@ -20,7 +20,7 @@ import { useState, useEffect } from "react";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 export default function Dashboard() {
-  const { tasks, taskCompletions, isLoading, error, refetch } = useTasksData();
+  const { tasks, taskCompletions, isLoading, error, refetch } = useTasksData({ autoFetch: false });
   const { checkCanRefresh, updateRefreshTime } = useRefreshStore();
   const [, forceUpdate] = useState({});
   const [isHydrated, setIsHydrated] = useState(false);
