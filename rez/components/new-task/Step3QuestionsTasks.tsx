@@ -7,12 +7,12 @@ export default function Step4QuestionsTasks() {
 
   return (
     <div className="space-y-4">
-      <Label htmlFor="tallyFormUrl">Tally Form Webhook URL</Label>
+      <Label htmlFor="tallyFormUrl">Tally Form URL</Label>
       <Input
         id="tallyFormUrl"
         value={data.tallyFormUrl || ''}
         onChange={e => updateData({ tallyFormUrl: e.target.value })}
-        placeholder="Paste your Tally form webhook URL here"
+        placeholder="Paste your Tally form URL here"
       />
       <div className="text-xs text-muted-foreground mt-1">
         Only links generated from Tally forms will be accepted.
