@@ -31,8 +31,7 @@ export function AppNavbar({}: React.HTMLAttributes<HTMLElement>) {
       toast.success("Signed out successfully!", {
         description: "You have been signed out of your account.",
       });
-      router.push("/sign-in");  
-      clearTasksAndCompletions();
+      router.push("/sign-in");
       signOutComplete();
     } catch (error) {
       toast.error("Failed to sign out", {
