@@ -15,6 +15,20 @@ import { Task } from "@/firebase/firestore/models/Task";
 export default function ViewTasks() {
   const { tasks, taskCompletions, isLoading, error } = useTasksData({ autoFetch: false });
 
+  // Format task type for display
+  const getTaskTypeLabel = (type: string | null | undefined) => {
+    switch (type) {
+      case 'fillAForm':
+        return 'Fill a Form';
+      case 'checkOutApp':
+        return 'Check Out App';
+      case 'doVideoInterview':
+        return 'Do Video Interview';
+      default:
+        return type || 'N/A';
+    }
+  };
+
   // Calculate task completions for each task
   const getTaskCompletionsCount = (taskId: string | null) => {
     if (!taskId) return 0;
@@ -140,7 +154,7 @@ export default function ViewTasks() {
               </TableCell>
               <TableCell>
                 <Badge variant="outline" className="text-xs">
-                  {task.type || 'N/A'}
+                  {getTaskTypeLabel(task.type)}
                 </Badge>
               </TableCell>
               <TableCell>
