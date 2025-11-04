@@ -28,16 +28,23 @@ export async function GET(request: NextRequest) {
     }
 
     // Then, get all task completions where taskId matches any of the task IDs
+    // Firestore 'in' operator supports up to 30 values, so we need to batch the queries
     const taskCompletionsRef = paxDB.collection('task_completions');
-    const taskCompletionsSnapshot = await taskCompletionsRef.where('taskId', 'in', taskIds).get();
-
     const taskCompletions: any[] = [];
-    taskCompletionsSnapshot.forEach((doc) => {
-      taskCompletions.push({
-        id: doc.id,
-        ...doc.data(),
+    
+    // Split taskIds into chunks of 30
+    const chunkSize = 30;
+    for (let i = 0; i < taskIds.length; i += chunkSize) {
+      const chunk = taskIds.slice(i, i + chunkSize);
+      const taskCompletionsSnapshot = await taskCompletionsRef.where('taskId', 'in', chunk).get();
+      
+      taskCompletionsSnapshot.forEach((doc) => {
+        taskCompletions.push({
+          id: doc.id,
+          ...doc.data(),
+        });
       });
-    });
+    }
 
     return NextResponse.json({ taskCompletions });
   } catch (error) {
