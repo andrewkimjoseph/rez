@@ -20,7 +20,7 @@ export default function Tasks() {
   const { checkCanRefresh, updateRefreshTime } = useRefreshStore();
   const [, forceUpdate] = useState({});
   const [isHydrated, setIsHydrated] = useState(false);
-  const { viewTasksTabClicked, createNewTaskTabClicked, refreshClicked } = useAmplitudeEvents();
+  const { viewTasksTabClicked,createNewTaskTabClicked, refreshClicked } = useAmplitudeEvents();
 
   const tasksRefreshStatus = checkCanRefresh();
 
