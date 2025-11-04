@@ -149,17 +149,24 @@ export default function NewTask() {
         // Step 2: Task Details - requires title, category, and difficulty
         return !!(data.title && data.category && data.difficulty);
       case 3:
-        // Step 3: Questions & Tasks - requires tally form URL
-        return !!data.tallyFormUrl;
+        // Step 3: Questions & Tasks - requires link, and for checkOutApp also requires instructions and feedback
+        if (data.type === 'checkOutApp') {
+          return !!(data.link && data.instructions && data.feedback);
+        }
+        return !!data.link;
       case 4:
         // Step 4: Review - all required fields should be filled
-        return !!(
+        const baseFieldsValid = !!(
           data.type &&
           data.title &&
           data.category &&
           data.difficulty &&
-          data.tallyFormUrl
+          data.link
         );
+        if (data.type === 'checkOutApp') {
+          return baseFieldsValid && !!(data.instructions && data.feedback);
+        }
+        return baseFieldsValid;
       default:
         return false;
     }
@@ -182,7 +189,9 @@ export default function NewTask() {
             category: data.category || "Other",
             difficulty: data.difficulty || "Medium",
             gender: data.gender,
-            tallyFormUrl: data.tallyFormUrl,
+            link: data.link,
+            instructions: data.instructions,
+            feedback: data.feedback,
             rezTaskMasterEmailAddress: user?.emailAddress,
           }),
         });
@@ -202,7 +211,7 @@ export default function NewTask() {
           task_type: data.type,
           task_category: data.category,
           task_difficulty: data.difficulty,
-          task_tally_form_url: data.tallyFormUrl,
+          task_link: data.link,
         });
         // Refresh the tasks list to include the newly created task
         await fetchTasksAndCompletions();

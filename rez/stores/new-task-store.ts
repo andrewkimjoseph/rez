@@ -5,7 +5,7 @@ export type TaskStep = 1 | 2 | 3 | 4 | 5;
 
 export interface NewTaskData {
   // Step 1: Task Type
-  type?: 'Survey' | 'Non-survey';
+  type?: 'fillAForm' | 'checkOutApp' | 'doVideoInterview';
   // Step 2: Task Details
   title?: string;
   category?: 'Finance' | 'Climate' | 'Education' | 'Health' | 'Technology' | 'Other';
@@ -18,7 +18,9 @@ export interface NewTaskData {
   minAge?: number;
   maxAge?: number;
   // Step 4: Questions & Tasks
-  tallyFormUrl?: string;
+  link?: string; // Link to form or product
+  instructions?: string; // Instructions for completing the task
+  feedback?: string; // Link to feedback form (for checkOutApp)
   // Step 5: Review (no extra fields, just review all above)
 }
 

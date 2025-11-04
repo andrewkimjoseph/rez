@@ -20,7 +20,9 @@ export async function POST(request: NextRequest) {
       category: body.category || "Other",
       difficulty: body.difficulty || "Medium",
       gender: body.gender,
-      tallyFormUrl: body.tallyFormUrl,
+      link: body.link,
+      instructions: body.instructions,
+      feedback: body.feedback,
       rezTaskMasterEmailAddress: body.rezTaskMasterEmailAddress,
     });
 
@@ -33,7 +35,7 @@ export async function POST(request: NextRequest) {
         category: body.category || "Other",
         difficulty: body.difficulty || "Medium",
         rezTaskMasterEmailAddress: body.rezTaskMasterEmailAddress,
-        tallyFormUrl: body.tallyFormUrl,
+        link: body.link,
         estimatedTimeOfCompletionInMinutes: 5, // Default from service
         targetNumberOfParticipants: 100, // Default from service
         rewardAmountPerParticipant: 0.15, // Default from service
