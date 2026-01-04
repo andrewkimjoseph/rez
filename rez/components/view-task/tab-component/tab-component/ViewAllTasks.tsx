@@ -22,7 +22,8 @@ import {
 } from "@/components/ui/dialog";
 import { Task } from "@/firebase/firestore/models/Task";
 import { useTasksStore } from "@/stores/tasks-store";
-import { Trash2, FileX, Loader2, Power, PowerOff } from "lucide-react";
+import { Trash2, FileX, Loader2, Power, PowerOff, Pencil } from "lucide-react";
+import EditTaskDialog from "../../EditTaskDialog";
 import { toast } from "sonner";
 
 export default function ViewTasks() {
@@ -32,10 +33,21 @@ export default function ViewTasks() {
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [taskToToggle, setTaskToToggle] = useState<Task | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
 
   const handleDeleteClick = (task: Task) => {
     setTaskToDelete(task);
     setDeleteDialogOpen(true);
+  };
+
+  const handleEditClick = (task: Task) => {
+    setTaskToEdit(task);
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSuccess = async () => {
+    await refetch();
   };
 
   const handleStatusToggleClick = (task: Task) => {
@@ -199,7 +211,7 @@ export default function ViewTasks() {
               <TableHead className="text-right font-semibold">Target</TableHead>
               <TableHead className="text-right font-semibold">Completions</TableHead>
               <TableHead className="font-semibold">Complete</TableHead>
-              <TableHead className="w-[100px] text-center font-semibold">Actions</TableHead>
+              <TableHead className="w-[120px] text-center font-semibold">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -245,6 +257,15 @@ export default function ViewTasks() {
                 </TableCell>
                 <TableCell className="text-center">
                   <div className="flex items-center justify-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                      onClick={() => handleEditClick(task)}
+                      title="Edit task"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -354,6 +375,14 @@ export default function ViewTasks() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Task Dialog */}
+      <EditTaskDialog
+        task={taskToEdit}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSuccess={handleEditSuccess}
+      />
     </div>
   );
 }
