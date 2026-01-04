@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -9,11 +12,46 @@ import {
 } from "@/components/ui/table";
 import { useTasksData } from "@/hooks/use-tasks-data";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Task } from "@/firebase/firestore/models/Task";
-// import { format } from "date-fns";
+import { useTasksStore } from "@/stores/tasks-store";
+import { Trash2 } from "lucide-react";
 
 export default function ViewTasks() {
-  const { tasks, taskCompletions, isLoading, error } = useTasksData({ autoFetch: false });
+  const { tasks, taskCompletions, isLoading, error, refetch } = useTasksData({ autoFetch: false });
+  const { deleteTask, isDeleting } = useTasksStore();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+
+  const handleDeleteClick = (task: Task) => {
+    setTaskToDelete(task);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!taskToDelete?.id) return;
+    
+    const success = await deleteTask(taskToDelete.id);
+    if (success) {
+      setDeleteDialogOpen(false);
+      setTaskToDelete(null);
+      // Refresh tasks data from server
+      await refetch();
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setTaskToDelete(null);
+  };
 
   // Format task type for display
   const getTaskTypeLabel = (type: string | null | undefined) => {
@@ -133,12 +171,12 @@ export default function ViewTasks() {
             <TableHead className="w-[60px]">#</TableHead>
             <TableHead className="w-[350px]">Title</TableHead>
             <TableHead>Type</TableHead>
-            <TableHead>Category</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="w-[200px]">Time Created</TableHead>
             <TableHead className="text-right">Target Participants</TableHead>
             <TableHead className="text-right">Total Completions</TableHead>
             <TableHead>Complete</TableHead>
+            <TableHead className="w-[80px] text-center">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -155,11 +193,6 @@ export default function ViewTasks() {
               <TableCell>
                 <Badge variant="outline" className="text-xs">
                   {getTaskTypeLabel(task.type)}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <Badge variant="secondary" className="text-xs">
-                  {task.category || 'N/A'}
                 </Badge>
               </TableCell>
               <TableCell>
@@ -187,10 +220,50 @@ export default function ViewTasks() {
                   {isTaskComplete(task) ? 'Yes' : 'No'}
                 </Badge>
               </TableCell>
+              <TableCell className="text-center">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => handleDeleteClick(task)}
+                  title="Delete task"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Task</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete &quot;{taskToDelete?.title || 'this task'}&quot;? 
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={handleCancelDelete}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 
