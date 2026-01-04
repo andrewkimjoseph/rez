@@ -4,16 +4,29 @@ import { Task } from '@/firebase/firestore/models/Task';
 import { TaskCompletion } from '@/firebase/firestore/models/TaskCompletion';
 import { useTaskMasterStore } from './taskmaster-store';
 
+export interface EditTaskData {
+  title?: string;
+  type?: 'fillAForm' | 'checkOutApp' | 'doVideoInterview';
+  category?: string;
+  levelOfDifficulty?: string;
+  link?: string;
+  instructions?: string;
+  feedback?: string;
+  targetCountry?: string;
+}
+
 interface TasksStore {
   tasks: Task[];
   taskCompletions: TaskCompletion[];
   isLoading: boolean;
   isDeleting: boolean;
   isUpdatingStatus: boolean;
+  isEditing: boolean;
   error: string | null;
   fetchTasksAndCompletions: () => Promise<void>;
   deleteTask: (taskId: string) => Promise<boolean>;
   updateTaskStatus: (taskId: string, isAvailable: boolean) => Promise<boolean>;
+  editTask: (taskId: string, data: EditTaskData) => Promise<boolean>;
   setTasks: (tasks: Task[]) => void;
   setTaskCompletions: (taskCompletions: TaskCompletion[]) => void;
   clearTasksAndCompletions: () => void;
@@ -27,6 +40,7 @@ export const useTasksStore = create<TasksStore>()(
       isLoading: false,
       isDeleting: false,
       isUpdatingStatus: false,
+      isEditing: false,
       error: null,
 
       fetchTasksAndCompletions: async () => {
@@ -178,6 +192,57 @@ export const useTasksStore = create<TasksStore>()(
           set({ 
             isUpdatingStatus: false, 
             error: error instanceof Error ? error.message : 'Failed to update task status' 
+          });
+          return false;
+        }
+      },
+
+      editTask: async (taskId: string, data: EditTaskData): Promise<boolean> => {
+        const taskMaster = useTaskMasterStore.getState().user;
+        
+        if (!taskMaster?.emailAddress) {
+          set({ error: 'No valid taskMaster email address found' });
+          return false;
+        }
+
+        set({ isEditing: true, error: null });
+
+        try {
+          const response = await fetch('/api/updateTask', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              taskId,
+              data,
+              rezTaskMasterEmailAddress: taskMaster.emailAddress,
+            }),
+          });
+
+          if (!response.ok) {
+            const responseData = await response.json();
+            throw new Error(responseData.error || 'Failed to update task');
+          }
+
+          // Update the task in local state
+          const currentTasks = get().tasks;
+          const updatedTasks = currentTasks.map(task => 
+            task.id === taskId ? { ...task, ...data } : task
+          );
+
+          set({ 
+            tasks: updatedTasks,
+            isEditing: false, 
+            error: null 
+          });
+
+          return true;
+        } catch (error) {
+          console.error('Error editing task:', error);
+          set({ 
+            isEditing: false, 
+            error: error instanceof Error ? error.message : 'Failed to edit task' 
           });
           return false;
         }
