@@ -59,9 +59,7 @@ const externalItems = [
   {
     title: "Pax App",
     url: "/pax",
-    icon: (props: React.ComponentProps<"svg">) => (
-      <Image src="/pax.png" alt="Pax Logo" width={18} height={18} className="rounded-sm" />
-    ),
+    iconElement: <Image src="/pax.png" alt="Pax Logo" width={18} height={18} className="rounded-sm" />,
     external: false,
   },
 ];
@@ -162,11 +160,7 @@ export function AppSidebar() {
                 className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent"
               >
                 <Link href={item.url}>
-                  {typeof item.icon === "function" ? (
-                    item.icon({})
-                  ) : (
-                    <item.icon className="w-[18px] h-[18px] shrink-0" />
-                  )}
+                  {item.iconElement}
                   <span className="font-medium">{item.title}</span>
                   {item.external && (
                     <ExternalLink className="w-3 h-3 ml-auto opacity-50" />
