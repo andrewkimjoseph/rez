@@ -92,7 +92,7 @@ export function AppNavbar() {
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
-                className="relative h-10 gap-2 rounded-full pl-2 pr-3 hover:bg-accent"
+                className="relative h-10 gap-2 rounded-lg pl-2 pr-3 hover:bg-accent"
               >
                 <Avatar className="h-8 w-8 border border-border">
                   <AvatarImage 
