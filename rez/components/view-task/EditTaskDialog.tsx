@@ -39,7 +39,7 @@ const taskTypes = [
   { value: "checkOutApp", label: "Check Out App", description: "Users test and explore applications" },
 ];
 
-const categories = ["Finance", "Climate", "Education", "Health", "Technology", "Other"];
+const categories = ["Finance", "Climate", "Education", "Health", "Technology", "Social", "Other"];
 const difficulties = ["Easy", "Medium", "Hard"];
 
 export default function EditTaskDialog({ 

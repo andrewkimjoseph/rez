@@ -7,7 +7,7 @@ export interface NewTaskData {
   type?: 'fillAForm' | 'checkOutApp' | 'doVideoInterview';
   // Step 2: Task Details
   title?: string;
-  category?: 'Finance' | 'Climate' | 'Education' | 'Health' | 'Technology' | 'Other';
+  category?: 'Finance' | 'Climate' | 'Education' | 'Health' | 'Technology' | 'Social' | 'Other';
   difficulty?: 'Easy' | 'Medium' | 'Hard';
   payout?: number;
   fee?: number;

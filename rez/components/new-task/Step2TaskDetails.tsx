@@ -21,7 +21,7 @@ export default function Step2TaskDetails() {
         <Label htmlFor="category" className="mb-2">Category</Label>
         <Select
           value={data.category || ''}
-          onValueChange={value => updateData({ category: value as 'Finance' | 'Climate' | 'Education'  | 'Health' | 'Technology' | 'Other'})}
+          onValueChange={value => updateData({ category: value as 'Finance' | 'Climate' | 'Education' | 'Health' | 'Technology' | 'Social' | 'Other'})}
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="e.g. Finance" />
@@ -32,6 +32,7 @@ export default function Step2TaskDetails() {
             <SelectItem value="Education">Education</SelectItem>
             <SelectItem value="Health">Health</SelectItem>
             <SelectItem value="Technology">Technology</SelectItem>
+            <SelectItem value="Social">Social</SelectItem>
             <SelectItem value="Other">Other</SelectItem>
           </SelectContent>
         </Select>
