@@ -108,12 +108,6 @@ export default function ViewTasks() {
     return taskCompletions.filter(completion => completion.taskId === taskId).length;
   };
 
-  const isTaskComplete = (task: Task) => {
-    const completionsCount = getTaskCompletionsCount(task.id);
-    const target = task.targetNumberOfParticipants || 0;
-    return target > 0 && completionsCount >= target;
-  };
-
   const sortedTasks = [...tasks].sort((a, b) => {
     const getDeadlineTime = (deadline: unknown) => {
       if (!deadline) return 0;
@@ -204,13 +198,13 @@ export default function ViewTasks() {
           <TableHeader>
             <TableRow className="bg-muted/30 hover:bg-muted/30">
               <TableHead className="w-[50px] font-semibold">#</TableHead>
-              <TableHead className="font-semibold min-w-[200px]">Title</TableHead>
+              <TableHead className="font-semibold min-w-[150px]">Title</TableHead>
+              <TableHead className="font-semibold">Category</TableHead>
               <TableHead className="font-semibold">Type</TableHead>
               <TableHead className="font-semibold">Status</TableHead>
-              <TableHead className="font-semibold">Created</TableHead>
               <TableHead className="text-right font-semibold">Target</TableHead>
               <TableHead className="text-right font-semibold">Completions</TableHead>
-              <TableHead className="font-semibold">Complete</TableHead>
+              <TableHead className="font-semibold">Created</TableHead>
               <TableHead className="w-[120px] text-center font-semibold">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -221,9 +215,14 @@ export default function ViewTasks() {
                   {index + 1}
                 </TableCell>
                 <TableCell>
-                  <div className="max-w-[280px] truncate font-medium" title={task.title || ''}>
+                  <div className="max-w-[180px] truncate font-medium" title={task.title || ''}>
                     {task.title || 'Untitled Task'}
                   </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className="font-normal">
+                    {task.category || 'N/A'}
+                  </Badge>
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className="font-normal">
@@ -238,22 +237,14 @@ export default function ViewTasks() {
                     {task.isAvailable ? 'Active' : 'Inactive'}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {formatTaskTimestamp(task.timeCreated)}
-                </TableCell>
                 <TableCell className="text-right tabular-nums">
                   {task.targetNumberOfParticipants || 0}
                 </TableCell>
                 <TableCell className="text-right tabular-nums font-medium">
                   {getTaskCompletionsCount(task.id)}
                 </TableCell>
-                <TableCell>
-                  <Badge 
-                    variant={isTaskComplete(task) ? "default" : "secondary"}
-                    className={isTaskComplete(task) ? "bg-primary/15 text-primary hover:bg-primary/20 border-0" : ""}
-                  >
-                    {isTaskComplete(task) ? 'Yes' : 'No'}
-                  </Badge>
+                <TableCell className="text-muted-foreground">
+                  {formatTaskTimestamp(task.timeCreated)}
                 </TableCell>
                 <TableCell className="text-center">
                   <div className="flex items-center justify-center gap-1">
