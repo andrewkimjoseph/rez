@@ -79,7 +79,7 @@ export function AppSidebar() {
     >
       {/* Header with Logo */}
       <SidebarHeader className="px-4 py-5">
-        <div className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <Image 
             src="/rez-logo.svg" 
             alt="Rez" 
@@ -91,7 +91,7 @@ export function AppSidebar() {
             <span className="text-lg font-semibold text-sidebar-foreground">Rez</span>
             <span className="text-xs text-sidebar-foreground/60">by Canvassing</span>
           </div>
-        </div>
+        </Link>
       </SidebarHeader>
 
       <SidebarContent className="px-2">

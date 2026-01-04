@@ -46,11 +46,11 @@ export function TallyWidget() {
   };
 
   return (
-    <div className="fixed bottom-4 left-4 z-50">
+    <div className="fixed bottom-4 right-4 z-50">
       {/* Tally Popup Button */}
       <button
         onClick={handleOpenPopup}
-        className="bg-[#363062] text-white p-3 rounded-full shadow-lg hover:bg-[#2d254c] transition-colors"
+        className="bg-primary text-primary-foreground p-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors"
         title="Get Support"
       >
         <MessageCircle size={24} />
