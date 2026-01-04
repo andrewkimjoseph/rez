@@ -9,9 +9,11 @@ interface TasksStore {
   taskCompletions: TaskCompletion[];
   isLoading: boolean;
   isDeleting: boolean;
+  isUpdatingStatus: boolean;
   error: string | null;
   fetchTasksAndCompletions: () => Promise<void>;
   deleteTask: (taskId: string) => Promise<boolean>;
+  updateTaskStatus: (taskId: string, isAvailable: boolean) => Promise<boolean>;
   setTasks: (tasks: Task[]) => void;
   setTaskCompletions: (taskCompletions: TaskCompletion[]) => void;
   clearTasksAndCompletions: () => void;
@@ -24,6 +26,7 @@ export const useTasksStore = create<TasksStore>()(
       taskCompletions: [],
       isLoading: false,
       isDeleting: false,
+      isUpdatingStatus: false,
       error: null,
 
       fetchTasksAndCompletions: async () => {
@@ -124,6 +127,57 @@ export const useTasksStore = create<TasksStore>()(
           set({ 
             isDeleting: false, 
             error: error instanceof Error ? error.message : 'Failed to delete task' 
+          });
+          return false;
+        }
+      },
+
+      updateTaskStatus: async (taskId: string, isAvailable: boolean): Promise<boolean> => {
+        const taskMaster = useTaskMasterStore.getState().user;
+        
+        if (!taskMaster?.emailAddress) {
+          set({ error: 'No valid taskMaster email address found' });
+          return false;
+        }
+
+        set({ isUpdatingStatus: true, error: null });
+
+        try {
+          const response = await fetch('/api/updateTaskStatus', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              taskId,
+              isAvailable,
+              rezTaskMasterEmailAddress: taskMaster.emailAddress,
+            }),
+          });
+
+          if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to update task status');
+          }
+
+          // Update the task in local state
+          const currentTasks = get().tasks;
+          const updatedTasks = currentTasks.map(task => 
+            task.id === taskId ? { ...task, isAvailable } : task
+          );
+
+          set({ 
+            tasks: updatedTasks,
+            isUpdatingStatus: false, 
+            error: null 
+          });
+
+          return true;
+        } catch (error) {
+          console.error('Error updating task status:', error);
+          set({ 
+            isUpdatingStatus: false, 
+            error: error instanceof Error ? error.message : 'Failed to update task status' 
           });
           return false;
         }
