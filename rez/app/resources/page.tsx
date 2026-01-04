@@ -1,49 +1,49 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users } from "lucide-react";
+import { FileText, LayoutGrid } from "lucide-react";
 import Image from "next/image";
 import { ForumArticleCard } from "@/components/forum-article-card";
 import { forumArticles } from "@/data/forumArticles";
-import Link from "next/link";
 import { useState } from "react";
 
 export default function Resources() {
   const [activeTab, setActiveTab] = useState("overview");
 
   return (
-    <div className="min-h-screen pb-20 sm:p-4 font-[family-name:var(--font-sen)] p-4">
-      {/* Title */}
-      <div className="mb-2">
-        <h1 className="text-3xl md:text-4xl font-bold mb-1">Research Resources</h1>
-        <p className="text-base md:text-lg text-gray-600">Access articles, guides, community forums, and more to help advance your research.</p>
+    <div className="min-h-screen p-6 md:p-8">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight">
+          Research Resources
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Access articles, guides, and community resources to help advance your research.
+        </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-4">
-        <TabsList className="bg-white">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="bg-card border border-border/50 p-1 rounded-lg h-auto mb-6">
           <TabsTrigger
             value="overview"
-            className="
-              data-[state=active]:bg-[#363062] data-[state=active]:text-white
-              data-[state=inactive]:bg-white data-[state=inactive]:text-[#363062]
-            "
+            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm px-4 py-2.5 rounded-md transition-all duration-200 text-sm font-medium"
           >
+            <LayoutGrid className="h-4 w-4 mr-2" />
             Overview
           </TabsTrigger>
           <TabsTrigger
             value="articles"
-            className="
-              data-[state=active]:bg-[#363062] data-[state=active]:text-white
-              data-[state=inactive]:bg-white data-[state=inactive]:text-[#363062]
-            "
+            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm px-4 py-2.5 rounded-md transition-all duration-200 text-sm font-medium"
           >
+            <FileText className="h-4 w-4 mr-2" />
             Articles
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="overview">
-          {/* Hero Banner with Community CTA */}
-          <div className="w-full rounded-xl overflow-hidden bg-white shadow mb-8">
-            <div className="relative w-full h-80 md:h-[28rem]">
+
+        <TabsContent value="overview" className="mt-0 space-y-6">
+          {/* Hero Banner */}
+          <div className="enterprise-card rounded-xl overflow-hidden border-0">
+            <div className="relative w-full h-64 md:h-80">
               <Image
                 src="/resources.jpg"
                 alt="Community"
@@ -51,48 +51,43 @@ export default function Resources() {
                 className="object-cover"
                 priority
               />
-              {/* Overlay Banner */}
-              {/* <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[95%] md:w-[85%] lg:w-[70%] bg-gradient-to-r from-orange-400 to-pink-500 rounded-xl shadow-lg flex flex-col md:flex-row items-center justify-between px-6 py-4 gap-4 mt-4 md:mt-0">
-                <div className="flex items-center gap-3">
-                  <div className="bg-white bg-opacity-30 rounded-full p-2">
-                   <Users className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-white font-semibold text-lg md:text-xl">Join our active community of 5,000+ researchers</div>
-                    <div className="text-white text-sm md:text-base opacity-90">Share insights, ask questions, and collaborate on research challenges</div>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <a href="#" className="bg-white text-pink-600 font-semibold px-4 py-2 rounded-lg shadow hover:bg-gray-100 transition">Browse Topics</a>
-                  <a href="#" className="bg-blue-900 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-800 transition">Join Community</a>
-                </div>
-              </div> */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              <div className="absolute bottom-6 left-6 right-6">
+                <h2 className="text-xl md:text-2xl font-semibold text-white mb-2">
+                  Research Community
+                </h2>
+                <p className="text-white/80 text-sm md:text-base max-w-lg">
+                  Join thousands of researchers sharing insights and collaborating on research challenges.
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Resource Cards */}
-
-          <button 
-            onClick={() => setActiveTab("articles")}
-            className="w-full text-left"
-          >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white rounded-xl shadow p-5 flex items-start gap-4 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer">
-              <div className="bg-blue-100 text-blue-600 rounded-full p-2">
-                <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4" fill="#3B82F6" fillOpacity=".15"/><path d="M8 8h8M8 12h8M8 16h4" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round"/></svg>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <button 
+              onClick={() => setActiveTab("articles")}
+              className="text-left group"
+            >
+              <div className="enterprise-card p-5 h-full flex items-start gap-4 border-0 transition-all duration-200 hover:shadow-md hover:border-primary/20">
+                <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/15 transition-colors shrink-0">
+                  <FileText className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors mb-1">
+                    Articles & Blogs
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Discover the latest research trends, methodologies, and insights from experts.
+                  </p>
+                </div>
               </div>
-              <div>
-                <div className="font-semibold text-base md:text-lg mb-1">Articles & Blogs</div>
-                <div className="text-gray-600 text-sm md:text-base">Discover the latest research trends, methodologies, and insights from experts.</div>
-              </div>
-            </div>
+            </button>
           </div>
-          </button>
         </TabsContent>
-        <TabsContent value="articles">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 
-            {/* Forum Articles */}
+        <TabsContent value="articles" className="mt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {forumArticles.map((forumArticle) => (
               <ForumArticleCard
                 key={forumArticle.id}

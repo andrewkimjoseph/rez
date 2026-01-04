@@ -4,14 +4,14 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { signInTaskMasterWithGoogle } from "@/firebase/auth/auth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2Icon } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
 import { createTaskMasterInFirestore } from "@/firebase/firestore/services/createTaskMasterInFirestore";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { getTaskMasterFromFirestore } from "@/firebase/firestore/services/getTaskMasterFromFirestore";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
+import { useTasksStore } from "@/stores/tasks-store";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -26,6 +26,7 @@ export default function SignInPage() {
     setTaskMasterId,
     identifyTaskMaster,
   } = useAmplitudeEvents();
+  const { fetchTasksAndCompletions } = useTasksStore();
 
   useEffect(() => {
     setLoading(false);
@@ -39,7 +40,6 @@ export default function SignInPage() {
       const user = await signInTaskMasterWithGoogle();
       if (user) {
         const token = await user.getIdToken();
-        // Check if TaskMaster exists
         const existingTaskMaster = await getTaskMasterFromFirestore(user.uid);
         if (existingTaskMaster) {
           document.cookie = `firebaseToken=${token}; path=/;`;
@@ -47,6 +47,8 @@ export default function SignInPage() {
             document.cookie = `organizationId=${existingTaskMaster.organizationId}; path=/;`;
           }
           setTaskMasterUser(existingTaskMaster);
+          // Refresh tasks after login
+          fetchTasksAndCompletions();
           router.push("/dashboard");
           setTaskMasterId(user.uid);
           identifyTaskMaster({
@@ -58,7 +60,6 @@ export default function SignInPage() {
           signInWithGoogleComplete();
           return;
         } else {
-          // Create new TaskMaster as before
           const taskMaster = {
             id: user.uid,
             name: user.displayName || null,
@@ -80,17 +81,17 @@ export default function SignInPage() {
         }
       }
       router.push("/organization-onboarding");
-      // setLoading(false); // Let loading be handled by useEffect on route change
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { code?: string; message?: string };
       signInWithGoogleFailed({
-        error_message: err?.message,
+        error_message: error?.message,
       });
-      if (err?.code === "auth/popup-closed-by-user") {
+      if (error?.code === "auth/popup-closed-by-user") {
         setError("Sign-in was cancelled.");
         setLoading(false);
         return;
       }
-      if (err?.code === "auth/email-not-allowed") {
+      if (error?.code === "auth/email-not-allowed") {
         setError("This email is not allowed to sign in.");
         setLoading(false);
         return;
@@ -99,71 +100,143 @@ export default function SignInPage() {
       setLoading(false);
     }
   }
-  return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-      {/* Left Side */}
-      <div className="flex-1 flex items-center justify-center bg-white py-8 md:py-0">
-        <div className="p-[4px] rounded-[2.5rem] overflow-hidden bg-gradient-to-br from-[#ff9966] via-[#f857a6] to-[#ff5858] w-full max-w-md mx-4 md:mx-0">
-          <div className="bg-white rounded-[2.5rem] p-6 md:p-10 flex flex-col items-center gap-6 w-full">
-            <Image
-              src="/rez-logo.svg"
-              alt="Rez Logo"
-              width={100}
-              height={100}
-              className="w-20 h-20 md:w-32 md:h-32"
-            />
-            <h1 className="text-2xl md:text-4xl font-bold text-center">
-              <span className="text-[#2d254c]">Welcome </span>
-              <span className="bg-gradient-to-r from-[#ff9966] via-[#f857a6] to-[#ff5858] text-transparent bg-clip-text">
-                to Rez
-                <br />
-                by Canvassing
-              </span>
-            </h1>
-            <Button
-              size="sm"
-              className="w-full mt-8"
-              variant={"outline"}
-              onClick={handleGoogleSignIn}
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2Icon className="animate-spin mr-2" />
-                  Please wait
-                </>
-              ) : (
-                <>
-                  <Image
-                    src="/google.svg"
-                    alt="Google"
-                    width={20}
-                    height={20}
-                    className="mr-2"
-                  />
-                  Continue with Google
-                </>
-              )}
-            </Button>
 
-            <div className="text-red-500 text-sm mt-2 text-center">{error}</div>
+  return (
+    <div className="min-h-screen flex flex-col lg:flex-row">
+      {/* Left Side - Sign In Form */}
+      <div className="flex-1 flex items-center justify-center bg-background p-6 lg:p-12">
+        <div className="w-full max-w-md space-y-8">
+          {/* Logo & Header */}
+          <div className="text-center space-y-2">
+            <div className="flex justify-center mb-6">
+              <div className="p-4 rounded-2xl bg-primary/5">
+                <Image
+                  src="/rez-logo.svg"
+                  alt="Rez Logo"
+                  width={64}
+                  height={64}
+                  className="w-16 h-16"
+                />
+              </div>
+            </div>
+            <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+              Welcome to Rez
+            </h1>
+            <p className="text-muted-foreground">
+              Sign in to manage your research tasks
+            </p>
           </div>
+
+          {/* Sign In Card */}
+          <div className="enterprise-card bg-card rounded-xl border border-border/50 p-8 shadow-sm">
+            <div className="space-y-6">
+              <div className="space-y-2 text-center">
+                <h2 className="text-lg font-medium text-foreground">Sign in to continue</h2>
+                <p className="text-sm text-muted-foreground">
+                  Use your Google account to get started
+                </p>
+              </div>
+
+              <Button
+                size="lg"
+                className="w-full h-12 text-base"
+                variant="outline"
+                onClick={handleGoogleSignIn}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2Icon className="animate-spin mr-2 h-5 w-5" />
+                    Signing in...
+                  </>
+                ) : (
+                  <>
+                    <Image
+                      src="/google.svg"
+                      alt="Google"
+                      width={20}
+                      height={20}
+                      className="mr-3"
+                    />
+                    Continue with Google
+                  </>
+                )}
+              </Button>
+
+              {error && (
+                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                  <p className="text-sm text-destructive text-center">{error}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <p className="text-xs text-center text-muted-foreground">
+            By signing in, you agree to our terms of service and privacy policy.
+          </p>
         </div>
       </div>
-      {/* Right Side */}
-      <div className="flex-1 flex flex-col justify-center items-center bg-[#ef5366] relative min-h-[300px] md:min-h-0">
-        <div className="flex-1 flex items-end justify-center w-full relative">
-          <Image
-            src="/friends-posing.png"
-            alt="friends posing"
-            fill
-            className="object-contain w-full h-full max-w-none max-h-none"
-          />
-          <div className="absolute inset-0 flex items-start justify-center pt-4 md:pt-8 pointer-events-none">
-            <span className="text-lg md:text-2xl font-semibold text-[#2d254c] max-w-xs text-center bg-white/80 rounded-lg px-2 md:px-4 py-1 md:py-2 shadow">
-              Reach real users who actively use stablecoins in their daily
-              lives.
-            </span>
+
+      {/* Right Side - Hero Image */}
+      <div className="hidden lg:flex flex-1 relative bg-gradient-to-br from-primary via-primary/90 to-primary/80 overflow-hidden">
+        {/* Decorative Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)" />
+          </svg>
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 flex flex-col items-center justify-center w-full p-12">
+          <div className="max-w-lg text-center space-y-6">
+            {/* Hero Image */}
+            <div className="relative w-80 h-80 mx-auto mb-8">
+              <Image
+                src="/friends-posing.png"
+                alt="Research participants"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+
+            {/* Tagline */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-semibold text-white">
+                Reach Real Users
+              </h2>
+              <p className="text-lg text-white/80 leading-relaxed">
+                Connect with users who actively use stablecoins in their daily lives. 
+                Get authentic insights for your research.
+              </p>
+            </div>
+
+            {/* Stats or Features */}
+            <div className="flex justify-center gap-8 pt-6">
+              <div className="text-center">
+                <p className="text-3xl font-semibold text-white">1000+</p>
+                <p className="text-sm text-white/70">Active Users</p>
+              </div>
+              <div className="text-center">
+                <p className="text-3xl font-semibold text-white">50+</p>
+                <p className="text-sm text-white/70">Countries</p>
+              </div>
+              <div className="text-center">
+                <p className="text-3xl font-semibold text-white">24h</p>
+                <p className="text-sm text-white/70">Avg Response</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Powered by badge */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
+            <p className="text-sm text-white/60">Powered by Canvassing</p>
           </div>
         </div>
       </div>

@@ -1,18 +1,16 @@
 "use client";
 
 import React from "react";
-import { TaskStep } from "@/stores/new-task-store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast, Toaster } from "sonner";
 import NewTask from "@/components/new-task/tab-component/NewTask";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Clock } from "lucide-react";
+import { RefreshCw, Clock, Plus, List } from "lucide-react";
 import { useTasksStore } from "@/stores/tasks-store";
 import { useRefreshStore } from "@/stores/refresh-store";
 import { useState, useEffect } from "react";
 import ViewTasks from "@/components/view-task/tab-component/tab-component/ViewAllTasks";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
-
 
 export default function Tasks() {
   const [selectedTab, setSelectedTab] = React.useState("create");
@@ -20,7 +18,7 @@ export default function Tasks() {
   const { checkCanRefresh, updateRefreshTime } = useRefreshStore();
   const [, forceUpdate] = useState({});
   const [isHydrated, setIsHydrated] = useState(false);
-  const { viewTasksTabClicked,createNewTaskTabClicked, refreshClicked } = useAmplitudeEvents();
+  const { viewTasksTabClicked, createNewTaskTabClicked, refreshClicked } = useAmplitudeEvents();
 
   const tasksRefreshStatus = checkCanRefresh();
 
@@ -35,7 +33,6 @@ export default function Tasks() {
       const interval = setInterval(() => {
         forceUpdate({});
       }, 1000);
-
       return () => clearInterval(interval);
     }
   }, [isHydrated, tasksRefreshStatus.canRefresh]);
@@ -54,19 +51,16 @@ export default function Tasks() {
   const getSubtitle = () => {
     switch (selectedTab) {
       case "create":
-        return "Create a new task.";
+        return "Set up a new task with custom questions and targeting options.";
       case "view-tasks":
-        return "View and manage all your created tasks.";
+        return "View, manage, and track all your created tasks.";
       default:
         return "";
     }
   };
 
   const handleRefresh = async () => {
-    refreshClicked({
-      route: "/tasks",
-    });
-
+    refreshClicked({ route: "/tasks" });
     const currentRefreshStatus = checkCanRefresh();
 
     if (!currentRefreshStatus.canRefresh) {
@@ -86,51 +80,41 @@ export default function Tasks() {
   };
 
   return (
-    <div className="min-h-screen pb-20 sm:p-4 font-[family-name:var(--font-sen)] p-4">
+    <div className="min-h-screen p-6 md:p-8">
       <Toaster />
-      <div
-        className={`w-full ${
-          selectedTab === "view-tasks" ? "max-w-7xl" : "max-w-2xl"
-        }`}
-      >
-        <div className="flex items-center justify-between mb-6">
+      <div className={selectedTab === "view-tasks" ? "" : "max-w-3xl"}>
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-1">
+            <h1 className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight">
               {getTitle()}
             </h1>
-            <p className="text-muted-foreground">{getSubtitle()}</p>
+            <p className="text-muted-foreground mt-1">{getSubtitle()}</p>
           </div>
           {selectedTab === "view-tasks" && (
             <Button
               onClick={handleRefresh}
-              disabled={
-                isLoading || (isHydrated && !tasksRefreshStatus.canRefresh)
-              }
+              disabled={isLoading || (isHydrated && !tasksRefreshStatus.canRefresh)}
               variant="outline"
               size="sm"
-              className="flex items-center gap-2"
-              title={
-                isHydrated && !tasksRefreshStatus.canRefresh
-                  ? `Wait ${tasksRefreshStatus.formattedTime}`
-                  : ""
-              }
+              className="self-start sm:self-auto"
             >
               {isHydrated && !tasksRefreshStatus.canRefresh ? (
-                <Clock className="h-4 w-4" />
+                <Clock className="h-4 w-4 mr-2" />
               ) : (
-                <RefreshCw
-                  className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
-                />
+                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
               )}
               {isHydrated && !tasksRefreshStatus.canRefresh
-                ? `Refresh after ${tasksRefreshStatus.formattedTime}`
+                ? `${tasksRefreshStatus.formattedTime}`
                 : "Refresh"}
             </Button>
           )}
         </div>
+
+        {/* Tabs */}
         <Tabs
           defaultValue="create"
-          className="w-full mb-6"
+          className="w-full"
           value={selectedTab}
           onValueChange={(value) => {
             setSelectedTab(value);
@@ -141,28 +125,33 @@ export default function Tasks() {
             }
           }}
         >
-          <TabsList className="bg-white">
+          <TabsList className="bg-card border border-border/50 p-1 rounded-lg h-auto mb-6">
             <TabsTrigger
               value="create"
-              className="data-[state=active]:bg-[#363062] data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-[#363062] px-6 py-2"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm px-4 py-2.5 rounded-md transition-all duration-200 text-sm font-medium"
             >
+              <Plus className="h-4 w-4 mr-2" />
               Create New Task
             </TabsTrigger>
-
             <TabsTrigger
               value="view-tasks"
-              className="data-[state=active]:bg-[#363062] data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-[#363062] px-6 py-2"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm px-4 py-2.5 rounded-md transition-all duration-200 text-sm font-medium"
             >
+              <List className="h-4 w-4 mr-2" />
               View Tasks
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="create">
-            <NewTask />
+          <TabsContent value="create" className="mt-0">
+            <div className="enterprise-card bg-card rounded-lg border border-border/50 p-6">
+              <NewTask />
+            </div>
           </TabsContent>
 
-          <TabsContent value="view-tasks">
-            <ViewTasks />
+          <TabsContent value="view-tasks" className="mt-0">
+            <div className="enterprise-card bg-card rounded-lg border border-border/50 p-6">
+              <ViewTasks />
+            </div>
           </TabsContent>
         </Tabs>
       </div>

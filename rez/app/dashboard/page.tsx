@@ -1,6 +1,6 @@
 "use client";
 
-import { PlusIcon, FileIcon, RefreshCw, Clock } from "lucide-react";
+import { PlusIcon, RefreshCw, Clock, TrendingUp, CheckCircle2, ListTodo } from "lucide-react";
 
 import {
   Card,
@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TaskCompletionsOverTime } from "@/components/task-completions-over-time";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useTasksData } from "@/hooks/use-tasks-data";
@@ -25,6 +24,7 @@ export default function Dashboard() {
   const [, forceUpdate] = useState({});
   const [isHydrated, setIsHydrated] = useState(false);
   const { refreshClicked } = useAmplitudeEvents();
+
   // Calculate counts
   const totalTasks = tasks.length;
   const activeTasks = tasks.filter(task => task.isAvailable === true).length;
@@ -44,15 +44,12 @@ export default function Dashboard() {
       const interval = setInterval(() => {
         forceUpdate({});
       }, 1000);
-
       return () => clearInterval(interval);
     }
   }, [isHydrated, dashboardRefreshStatus.canRefresh]);
 
   const handleRefresh = async () => {
-    refreshClicked({
-      route: "/dashboard",
-    });
+    refreshClicked({ route: "/dashboard" });
     if (!dashboardRefreshStatus.canRefresh) {
       toast.error(`Please wait ${dashboardRefreshStatus.formattedTime} before refreshing again.`);
       return;
@@ -65,122 +62,125 @@ export default function Dashboard() {
       toast.error("Failed to refresh dashboard data");
     }
   };
+
+  const stats = [
+    {
+      title: "Total Tasks",
+      description: "All time created",
+      value: totalTasks,
+      icon: ListTodo,
+      iconBg: "bg-primary/10",
+      iconColor: "text-primary",
+    },
+    {
+      title: "Active Tasks",
+      description: "Currently available",
+      value: activeTasks,
+      icon: TrendingUp,
+      iconBg: "bg-emerald-500/10",
+      iconColor: "text-emerald-600",
+    },
+    {
+      title: "Total Completions",
+      description: "Across all tasks",
+      value: totalTaskCompletions,
+      icon: CheckCircle2,
+      iconBg: "bg-blue-500/10",
+      iconColor: "text-blue-600",
+    },
+  ];
+
   return (
-    <div className="min-h-screen pb-20 sm:p-4 font-[family-name:var(--font-sen)] p-4">
-      <div className="w-full">
-        <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen p-6 md:p-8">
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold pb-2">Dashboard Overview</h1>
-            <p>Monitor your tasks and task completions at a glance.</p>
+            <h1 className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight">
+              Dashboard Overview
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Monitor your tasks and completions at a glance.
+            </p>
           </div>
           <Button
             onClick={handleRefresh}
             disabled={isLoading || (isHydrated && !dashboardRefreshStatus.canRefresh)}
             variant="outline"
             size="sm"
-            className="flex items-center gap-2"
-            title={isHydrated && !dashboardRefreshStatus.canRefresh ? `Wait ${dashboardRefreshStatus.formattedTime}` : ''}
+            className="self-start sm:self-auto"
           >
             {isHydrated && !dashboardRefreshStatus.canRefresh ? (
-              <Clock className="h-4 w-4" />
+              <Clock className="h-4 w-4 mr-2" />
             ) : (
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             )}
             {isHydrated && !dashboardRefreshStatus.canRefresh 
-              ? `Refresh after ${dashboardRefreshStatus.formattedTime}` 
+              ? `${dashboardRefreshStatus.formattedTime}` 
               : 'Refresh'}
           </Button>
         </div>
-        
+
+        {/* Error State */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            Error loading data: {error}
+          <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg">
+            <p className="text-sm font-medium">Error loading data: {error}</p>
           </div>
         )}
 
-        <div className="flex flex-wrap gap-4 w-4/6">
-
-        <Card className="flex-1 min-w-[250px] basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1.333rem)] max-w-full">
-            <CardHeader>
-              <CardTitle>Total Tasks</CardTitle>
-              <CardDescription>Ever created</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-[32px] w-[60px]" />
-              ) : (
-                <p className="text-2xl font-bold">{totalTasks}</p>
-              )}
-            </CardContent>
-          </Card>
-          <Card className="flex-1 min-w-[250px] basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1.333rem)] max-w-full">
-            <CardHeader>
-              <CardTitle>Active Tasks</CardTitle>
-              <CardDescription>Marked as available</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-[32px] w-[60px]" />
-              ) : (
-                <p className="text-2xl font-bold">{activeTasks}</p>
-              )}
-            </CardContent>
-          </Card>
-          <Card className="flex-1 min-w-[250px] basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1.333rem)] max-w-full">
-            <CardHeader>
-              <CardTitle>Total Task Completions</CardTitle>
-              <CardDescription>Across all tasks</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-[32px] w-[60px]" />
-              ) : (
-                <p className="text-2xl font-bold">{totalTaskCompletions}</p>
-              )}
-            </CardContent>
-          </Card>
-  
-        </div>
-
-        <p className="text-2xl py-4">Quick Actions</p>
-        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-lg">
-          {/* Create New Survey */}
-
-          <Link href="/tasks">
-            <Card className="flex-1 min-w-[180px] max-w-full sm:max-w-[220px] cursor-pointer transition-shadow hover:shadow-lg hover:ring-2 hover:ring-blue-200 hover:bg-blue-50">
-              <CardContent className="flex flex-col items-start gap-2 py-4">
-                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 mb-1">
-                  <PlusIcon className="text-blue-600" size={20} />
-                </span>
-                <div>
-                  <div className="font-semibold text-sm mb-1">
-                    Create New Task
-                  </div>
-                  <div className="text-xs text-muted-foreground leading-tight">
-                    Launch a new task with custom questions
-                  </div>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          {stats.map((stat) => (
+            <Card key={stat.title} className="enterprise-card border-0">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    {stat.title}
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    {stat.description}
+                  </CardDescription>
                 </div>
+                <div className={`p-2.5 rounded-lg ${stat.iconBg}`}>
+                  <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
+                </div>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <Skeleton className="h-9 w-20" />
+                ) : (
+                  <p className="text-3xl font-semibold text-foreground">
+                    {stat.value.toLocaleString()}
+                  </p>
+                )}
               </CardContent>
             </Card>
-          </Link>
-          {/* Manage Surveys */}
-          {/* <Card className="flex-1 min-w-[180px] max-w-full sm:max-w-[220px] cursor-pointer transition-shadow hover:shadow-lg hover:ring-2 hover:ring-purple-200 hover:bg-purple-50">
-            <CardContent className="flex flex-col items-start gap-2 py-4">
-              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-100 mb-1">
-                <FileIcon className="text-purple-600" size={20} />
-              </span>
-              <div>
-                  <div className="font-semibold text-sm mb-1">Manage Tasks</div>
-                <div className="text-xs text-muted-foreground leading-tight">Edit, duplicate or archive existing tasks</div>
-              </div>
-            </CardContent>
-          </Card> */}
+          ))}
         </div>
 
-        {/* <p className="text-2xl">Task Completions Over Time</p>
-        <div className="h-[200px]">
-          <TaskCompletionsOverTime />
-        </div> */}
+        {/* Quick Actions */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-foreground">Quick Actions</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Link href="/tasks" className="group">
+              <Card className="enterprise-card border-0 h-full transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer">
+                <CardContent className="flex items-start gap-4 p-5">
+                  <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/15 transition-colors">
+                    <PlusIcon className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                      Create New Task
+                    </h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Launch a new task with custom questions and targeting
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );
