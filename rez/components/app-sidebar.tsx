@@ -57,7 +57,7 @@ const settingsItems = [
 // External links
 const externalItems = [
   {
-    title: "Pax App",
+    title: "Pax: Analytics",
     url: "/pax",
     iconElement: <Image src="/pax.png" alt="Pax Logo" width={18} height={18} className="rounded-sm" />,
     external: false,
