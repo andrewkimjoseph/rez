@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { deleteTaskFromPaxApp } from '@/firebase/firestore/services/deleteTaskFromPaxApp';
+import { paxDB } from '@/firebase/serverConfig';
+import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 
 export async function DELETE(request: NextRequest) {
   try {
@@ -21,10 +23,62 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Fetch task data before deletion for notification
+    const taskRef = paxDB.collection(COLLECTIONS.TASKS).doc(taskId);
+    const taskDoc = await taskRef.get();
+    
+    if (!taskDoc.exists) {
+      return NextResponse.json(
+        { error: 'Task not found' },
+        { status: 404 }
+      );
+    }
+
+    const taskData = taskDoc.data();
+    
+    if (taskData?.rezTaskMasterEmailAddress !== rezTaskMasterEmailAddress) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Task does not belong to this task master' },
+        { status: 403 }
+      );
+    }
+
     await deleteTaskFromPaxApp({
       taskId,
       rezTaskMasterEmailAddress,
     });
+
+    // Trigger notification about the deleted task (fire and forget)
+    try {
+      const notificationData = {
+        taskId,
+        title: taskData.title || '',
+        type: taskData.type || '',
+        category: taskData.category || '',
+        difficulty: taskData.levelOfDifficulty || '',
+        rezTaskMasterEmailAddress,
+        action: 'deleted' as const,
+        tallyFormUrl: taskData.link || undefined,
+        estimatedTimeOfCompletionInMinutes: taskData.estimatedTimeOfCompletionInMinutes || undefined,
+        targetNumberOfParticipants: taskData.targetNumberOfParticipants || undefined,
+        rewardAmountPerParticipant: taskData.rewardAmountPerParticipant || undefined,
+      };
+
+      // Send notification without awaiting (fire and forget)
+      fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/notifyRezTotifierOfUpdatedOrDeletedTask`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(notificationData),
+      }).catch(error => {
+        // Silently handle notification errors
+        console.error('Failed to send delete notification:', error);
+      });
+    } catch (error) {
+      // Don't fail the task deletion if notification fails
+      console.error('Error sending delete notification:', error);
+    }
 
     return NextResponse.json({
       success: true,
