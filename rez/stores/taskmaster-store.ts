@@ -8,6 +8,7 @@ export interface TaskMasterStoreUser {
   profilePictureURI: string | null;
   organizationId: string | null;
   privyDid: string | null;
+  isSuperAdmin?: boolean;
 }
 
 interface TaskMasterStore {

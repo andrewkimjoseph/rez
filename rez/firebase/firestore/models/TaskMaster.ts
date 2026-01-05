@@ -9,4 +9,5 @@ export interface TaskMaster {
   privyDid: string | null;
   timeCreated: Timestamp | null;
   timeUpdated: Timestamp | null;
+  isSuperAdmin?: boolean;
 } 

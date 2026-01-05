@@ -16,7 +16,17 @@ export function AuthHydrator() {
         const ref = doc(firestore, COLLECTIONS.TASK_MASTERS, user.uid);
         const snap = await getDoc(ref);
         if (snap.exists()) {
-          setUser(snap.data() as TaskMasterStoreUser);
+          const data = snap.data();
+          // Explicitly map all fields including isSuperAdmin
+          setUser({
+            id: data.id || user.uid,
+            name: data.name || null,
+            emailAddress: data.emailAddress || null,
+            profilePictureURI: data.profilePictureURI || null,
+            organizationId: data.organizationId || null,
+            privyDid: data.privyDid || null,
+            isSuperAdmin: data.isSuperAdmin === true,
+          });
         } else {
           setUser({
             id: user.uid,
@@ -25,6 +35,7 @@ export function AuthHydrator() {
             profilePictureURI: user.photoURL || null,
             organizationId: null,
             privyDid: null,
+            isSuperAdmin: false,
           });
         }
       } else {
