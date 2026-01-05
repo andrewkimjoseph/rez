@@ -26,6 +26,8 @@ import { Task } from "@/firebase/firestore/models/Task";
 import { useTasksStore, EditTaskData } from "@/stores/tasks-store";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supportedTokens } from "@/utils/currencies";
+import Image from "next/image";
 
 interface EditTaskDialogProps {
   task: Task | null;
@@ -58,6 +60,8 @@ export default function EditTaskDialog({
   const [link, setLink] = useState("");
   const [instructions, setInstructions] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [rewardCurrencyId, setRewardCurrencyId] = useState<number>(0);
+  const [rewardAmountPerParticipant, setRewardAmountPerParticipant] = useState<number>(0);
 
   // Initialize form with task data when task changes
   useEffect(() => {
@@ -69,6 +73,8 @@ export default function EditTaskDialog({
       setLink(task.link || "");
       setInstructions(task.instructions || "");
       setFeedback(task.feedback || "");
+      setRewardCurrencyId(task.rewardCurrencyId || 0);
+      setRewardAmountPerParticipant(task.rewardAmountPerParticipant || 0);
     }
   }, [task]);
 
@@ -85,6 +91,9 @@ export default function EditTaskDialog({
     if (link !== (task.link || "")) updateData.link = link;
     if (instructions !== (task.instructions || "")) updateData.instructions = instructions;
     if (feedback !== (task.feedback || "")) updateData.feedback = feedback;
+    if (rewardCurrencyId !== (task.rewardCurrencyId || 0)) updateData.rewardCurrencyId = rewardCurrencyId;
+    if (rewardAmountPerParticipant !== (task.rewardAmountPerParticipant || 0)) 
+      updateData.rewardAmountPerParticipant = rewardAmountPerParticipant;
 
     if (Object.keys(updateData).length === 0) {
       toast.info("No changes detected");
@@ -201,6 +210,63 @@ export default function EditTaskDialog({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          {/* Reward Settings */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-currency">Reward Currency</Label>
+              <Select 
+                value={rewardCurrencyId.toString()} 
+                onValueChange={(value) => setRewardCurrencyId(Number(value))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select currency">
+                    {rewardCurrencyId > 0 && supportedTokens[rewardCurrencyId] && (
+                      <div className="flex items-center gap-2">
+                        <Image
+                          src={supportedTokens[rewardCurrencyId].imagePath}
+                          alt={supportedTokens[rewardCurrencyId].name}
+                          width={16}
+                          height={16}
+                          className="rounded-full"
+                        />
+                        <span>{supportedTokens[rewardCurrencyId].symbol} - {supportedTokens[rewardCurrencyId].name}</span>
+                      </div>
+                    )}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(supportedTokens).map((token) => (
+                    <SelectItem key={token.id} value={token.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <Image
+                          src={token.imagePath}
+                          alt={token.name}
+                          width={16}
+                          height={16}
+                          className="rounded-full"
+                        />
+                        <span>{token.symbol} - {token.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-reward-amount">Reward Amount per Participant</Label>
+              <Input
+                id="edit-reward-amount"
+                type="number"
+                min={0}
+                step={0.01}
+                value={rewardAmountPerParticipant}
+                onChange={(e) => setRewardAmountPerParticipant(Number(e.target.value))}
+                placeholder="0.00"
+              />
             </div>
           </div>
 

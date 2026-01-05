@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Task } from "@/firebase/firestore/models/Task";
 import { useTasksStore } from "@/stores/tasks-store";
+import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { Trash2, FileX, Loader2, Power, PowerOff, Pencil } from "lucide-react";
 import EditTaskDialog from "../../EditTaskDialog";
 import { toast } from "sonner";
@@ -29,6 +30,8 @@ import { toast } from "sonner";
 export default function ViewTasks() {
   const { tasks, taskCompletions, isLoading, error, refetch } = useTasksData({ autoFetch: false });
   const { deleteTask, isDeleting, updateTaskStatus, isUpdatingStatus } = useTasksStore();
+  const user = useTaskMasterStore((state) => state.user);
+  const isSuperAdmin = user?.isSuperAdmin === true;
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
@@ -248,15 +251,17 @@ export default function ViewTasks() {
                 </TableCell>
                 <TableCell className="text-center">
                   <div className="flex items-center justify-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
-                      onClick={() => handleEditClick(task)}
-                      title="Edit task"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+                    {isSuperAdmin && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                        onClick={() => handleEditClick(task)}
+                        title="Edit task"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"

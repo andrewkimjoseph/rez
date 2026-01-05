@@ -13,6 +13,8 @@ export interface EditTaskData {
   instructions?: string;
   feedback?: string;
   targetCountry?: string;
+  rewardCurrencyId?: number;
+  rewardAmountPerParticipant?: number;
 }
 
 interface TasksStore {

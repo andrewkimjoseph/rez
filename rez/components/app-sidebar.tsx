@@ -6,6 +6,7 @@ import {
   ListTodo,
   Settings,
   ExternalLink,
+  Crown,
 } from "lucide-react";
 import Image from "next/image";
 import React from "react";
@@ -25,6 +26,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { useTaskMasterStore } from "@/stores/taskmaster-store";
 
 // Main navigation items
 const mainNavItems = [
@@ -64,8 +66,19 @@ const externalItems = [
   },
 ];
 
+// Admin items (only shown for superadmins)
+const adminItems = [
+  {
+    title: "Admin Dashboard",
+    url: "/admin",
+    icon: Crown,
+  },
+];
+
 export function AppSidebar() {
   const pathname = usePathname();
+  const { user } = useTaskMasterStore();
+  const isSuperAdmin = user?.isSuperAdmin === true;
 
   const isActive = (url: string) => {
     return pathname === url || pathname.startsWith(url + "/");
@@ -146,6 +159,36 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Admin Section - Only visible for superadmins */}
+        {isSuperAdmin && (
+          <>
+            <Separator className="my-3 bg-sidebar-border/50" />
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-amber-600/80 text-xs font-medium uppercase tracking-wider px-3 mb-1">
+                Admin
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {adminItems.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton 
+                        asChild
+                        isActive={isActive(item.url)}
+                        className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-amber-500/10 data-[active=true]:bg-amber-500/20 data-[active=true]:text-amber-700"
+                      >
+                        <Link href={item.url}>
+                          <item.icon className="w-[18px] h-[18px] shrink-0 text-amber-600" />
+                          <span className="font-medium">{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        )}
       </SidebarContent>
 
       {/* Footer with External Links */}
