@@ -51,7 +51,7 @@ export async function PATCH(request: NextRequest) {
           category: taskData?.category || '',
           difficulty: taskData?.levelOfDifficulty || '',
           rezTaskMasterEmailAddress,
-          action: 'updated' as const,
+          action: (isAvailable ? 'activated' : 'deactivated') as const,
           tallyFormUrl: taskData?.link || undefined,
           estimatedTimeOfCompletionInMinutes: taskData?.estimatedTimeOfCompletionInMinutes || undefined,
           targetNumberOfParticipants: taskData?.targetNumberOfParticipants || undefined,

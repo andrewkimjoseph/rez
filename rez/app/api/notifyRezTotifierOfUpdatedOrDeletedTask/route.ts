@@ -15,7 +15,7 @@ interface TaskNotificationData {
   category: string;
   difficulty: string;
   rezTaskMasterEmailAddress: string;
-  action: 'updated' | 'deleted';
+  action: 'updated' | 'deleted' | 'activated' | 'deactivated';
   tallyFormUrl?: string;
   estimatedTimeOfCompletionInMinutes?: number;
   targetNumberOfParticipants?: number;
@@ -45,9 +45,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!action || (action !== 'updated' && action !== 'deleted')) {
+    const validActions = ['updated', 'deleted', 'activated', 'deactivated'];
+    if (!action || !validActions.includes(action)) {
       return NextResponse.json(
-        { error: 'Action must be either "updated" or "deleted"' },
+        { error: 'Action must be one of: "updated", "deleted", "activated", or "deactivated"' },
         { status: 400 }
       );
     }
@@ -84,8 +85,28 @@ export async function POST(request: NextRequest) {
     }
 
     // Create notification message based on action type
-    const actionEmoji = action === 'updated' ? '✏️' : '🗑️';
-    const actionText = action === 'updated' ? 'Updated' : 'Deleted';
+    const getActionEmoji = () => {
+      switch (action) {
+        case 'updated': return '✏️';
+        case 'deleted': return '🗑️';
+        case 'activated': return '✅';
+        case 'deactivated': return '⏸️';
+        default: return '📋';
+      }
+    };
+    
+    const getActionText = () => {
+      switch (action) {
+        case 'updated': return 'Updated';
+        case 'deleted': return 'Deleted';
+        case 'activated': return 'Activated';
+        case 'deactivated': return 'Deactivated';
+        default: return 'Modified';
+      }
+    };
+
+    const actionEmoji = getActionEmoji();
+    const actionText = getActionText();
     
     let messageText = `${actionEmoji} *Rez Task ${actionText}!*\n\n` +
       `*Task ID:* ${escapeMarkdown(taskId)}\n` +
@@ -95,7 +116,7 @@ export async function POST(request: NextRequest) {
       `*Difficulty:* ${escapeMarkdown(difficulty || "Not specified")}\n` +
       `*Creator Email:* ${escapeMarkdown(rezTaskMasterEmailAddress || "Not provided")}\n`;
 
-    // Only include task details for updates (deleted tasks might not have all fields)
+    // Only include task details for updates (deleted/activated/deactivated tasks might not need all fields)
     if (action === 'updated') {
       messageText += 
         `*Estimated Time:* ${taskData.estimatedTimeOfCompletionInMinutes || 'N/A'} minutes\n` +
