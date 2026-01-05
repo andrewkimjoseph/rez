@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Task } from "@/firebase/firestore/models/Task";
 import { useAdminStore, AdminUpdateTaskData } from "@/stores/admin-store";
@@ -40,7 +41,6 @@ interface AdminEditTaskDialogProps {
 const taskTypes = [
   { value: "fillAForm", label: "Fill a Form", description: "Users fill out forms or surveys" },
   { value: "checkOutApp", label: "Check Out App", description: "Users test and explore applications" },
-  { value: "doVideoInterview", label: "Video Interview", description: "Users participate in video interviews" },
 ];
 
 const categories = ["Finance", "Climate", "Education", "Health", "Technology", "Social", "Other"];
@@ -198,7 +198,22 @@ export default function AdminEditTaskDialog({
                     </div>
                   </Card>
                 ))}
+                {/* Video Interview - Coming Soon */}
+                <Card className="p-3 border-2 border-border bg-muted/50 opacity-60 cursor-not-allowed relative">
+                  <Badge className="absolute top-2 right-2 bg-orange-500 hover:bg-orange-500">
+                    Coming Soon
+                  </Badge>
+                  <div className="font-medium text-sm mb-1 text-muted-foreground">Video Interview</div>
+                  <div className="text-xs text-muted-foreground">
+                    Users participate in video interviews for qualitative research
+                  </div>
+                </Card>
               </div>
+              {task?.type === "doVideoInterview" && (
+                <Badge variant="secondary" className="mt-2">
+                  Video Interview (view only)
+                </Badge>
+              )}
             </div>
 
             {/* Title */}
