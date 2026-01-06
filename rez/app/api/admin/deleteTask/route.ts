@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { paxDB, rezDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
+import { requireSuperAdmin } from '@/lib/api-auth';
 
 export async function DELETE(request: NextRequest) {
   try {
+    // Verify authentication and super admin status
+    const authResult = await requireSuperAdmin(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
     const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');
-    const adminId = searchParams.get('adminId');
 
     if (!taskId) {
       return NextResponse.json(
@@ -15,31 +21,10 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    if (!adminId) {
-      return NextResponse.json(
-        { error: 'Admin ID is required' },
-        { status: 400 }
-      );
-    }
-
-    // Verify the user is a super admin by document ID (task masters are in Rez Firestore)
-    const adminDocRef = rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(adminId);
+    // Get admin data for notification
+    const adminDocRef = rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(authResult.uid);
     const adminDoc = await adminDocRef.get();
-
-    if (!adminDoc.exists) {
-      return NextResponse.json(
-        { error: 'Unauthorized: User not found' },
-        { status: 403 }
-      );
-    }
-
     const adminData = adminDoc.data();
-    if (adminData?.isSuperAdmin !== true) {
-      return NextResponse.json(
-        { error: 'Unauthorized: Not a super admin' },
-        { status: 403 }
-      );
-    }
 
     // Fetch task data before deletion for notification
     const taskRef = paxDB.collection(COLLECTIONS.TASKS).doc(taskId);

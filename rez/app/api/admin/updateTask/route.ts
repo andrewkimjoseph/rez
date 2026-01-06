@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { paxDB, rezDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { FieldValue } from 'firebase-admin/firestore';
+import { requireSuperAdmin } from '@/lib/api-auth';
 
 export interface AdminUpdateTaskData {
   title?: string;
@@ -25,23 +26,21 @@ export interface AdminUpdateTaskData {
 
 export async function PATCH(request: NextRequest) {
   try {
+    // Verify authentication and super admin status
+    const authResult = await requireSuperAdmin(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
     const body = await request.json();
-    const { taskId, data, adminId } = body as {
+    const { taskId, data } = body as {
       taskId: string;
       data: AdminUpdateTaskData;
-      adminId: string;
     };
 
     if (!taskId) {
       return NextResponse.json(
         { error: 'Task ID is required' },
-        { status: 400 }
-      );
-    }
-
-    if (!adminId) {
-      return NextResponse.json(
-        { error: 'Admin ID is required' },
         { status: 400 }
       );
     }
@@ -53,24 +52,10 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Verify the user is a super admin by document ID (task masters are in Rez Firestore)
-    const adminDocRef = rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(adminId);
+    // Get admin data for notification
+    const adminDocRef = rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(authResult.uid);
     const adminDoc = await adminDocRef.get();
-
-    if (!adminDoc.exists) {
-      return NextResponse.json(
-        { error: 'Unauthorized: User not found' },
-        { status: 403 }
-      );
-    }
-
     const adminData = adminDoc.data();
-    if (adminData?.isSuperAdmin !== true) {
-      return NextResponse.json(
-        { error: 'Unauthorized: Not a super admin' },
-        { status: 403 }
-      );
-    }
 
     // Verify task exists
     const taskRef = paxDB.collection(COLLECTIONS.TASKS).doc(taskId);

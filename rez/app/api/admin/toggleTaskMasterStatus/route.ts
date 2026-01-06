@@ -3,14 +3,20 @@ import { rezDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { getAuth } from 'firebase-admin/auth';
 import { getApp } from 'firebase-admin/app';
+import { requireSuperAdmin } from '@/lib/api-auth';
 
 export async function PATCH(request: NextRequest) {
   try {
+    // Verify authentication and super admin status
+    const authResult = await requireSuperAdmin(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
     const body = await request.json();
-    const { taskMasterId, disabled, adminId } = body as {
+    const { taskMasterId, disabled } = body as {
       taskMasterId: string;
       disabled: boolean;
-      adminId: string;
     };
 
     if (!taskMasterId) {
@@ -20,36 +26,10 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    if (!adminId) {
-      return NextResponse.json(
-        { error: 'Admin ID is required' },
-        { status: 400 }
-      );
-    }
-
     if (typeof disabled !== 'boolean') {
       return NextResponse.json(
         { error: 'Disabled status must be a boolean' },
         { status: 400 }
-      );
-    }
-
-    // Verify the user is a super admin
-    const adminDocRef = rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(adminId);
-    const adminDoc = await adminDocRef.get();
-
-    if (!adminDoc.exists) {
-      return NextResponse.json(
-        { error: 'Unauthorized: User not found' },
-        { status: 403 }
-      );
-    }
-
-    const adminData = adminDoc.data();
-    if (adminData?.isSuperAdmin !== true) {
-      return NextResponse.json(
-        { error: 'Unauthorized: Not a super admin' },
-        { status: 403 }
       );
     }
 

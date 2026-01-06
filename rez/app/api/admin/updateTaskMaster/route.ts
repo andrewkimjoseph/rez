@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { rezDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { FieldValue } from 'firebase-admin/firestore';
+import { requireSuperAdmin } from '@/lib/api-auth';
 
 export interface AdminUpdateTaskMasterData {
   name?: string;
@@ -12,11 +13,16 @@ export interface AdminUpdateTaskMasterData {
 
 export async function PATCH(request: NextRequest) {
   try {
+    // Verify authentication and super admin status
+    const authResult = await requireSuperAdmin(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
     const body = await request.json();
-    const { taskMasterId, data, adminId } = body as {
+    const { taskMasterId, data } = body as {
       taskMasterId: string;
       data: AdminUpdateTaskMasterData;
-      adminId: string;
     };
 
     if (!taskMasterId) {
@@ -26,36 +32,10 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    if (!adminId) {
-      return NextResponse.json(
-        { error: 'Admin ID is required' },
-        { status: 400 }
-      );
-    }
-
     if (!data || Object.keys(data).length === 0) {
       return NextResponse.json(
         { error: 'No data provided for update' },
         { status: 400 }
-      );
-    }
-
-    // Verify the user is a super admin by document ID (task masters are in Rez Firestore)
-    const adminDocRef = rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(adminId);
-    const adminDoc = await adminDocRef.get();
-
-    if (!adminDoc.exists) {
-      return NextResponse.json(
-        { error: 'Unauthorized: User not found' },
-        { status: 403 }
-      );
-    }
-
-    const adminData = adminDoc.data();
-    if (adminData?.isSuperAdmin !== true) {
-      return NextResponse.json(
-        { error: 'Unauthorized: Not a super admin' },
-        { status: 403 }
       );
     }
 
