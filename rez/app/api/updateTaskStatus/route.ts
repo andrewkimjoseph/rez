@@ -63,26 +63,25 @@ export async function PATCH(request: NextRequest) {
     });
 
     // Fetch updated task data for notification
-    const taskRef = paxDB.collection(COLLECTIONS.TASKS).doc(taskId);
-    const taskDoc = await taskRef.get();
+    const updatedTaskDoc = await taskRef.get();
     
-    if (taskDoc.exists) {
-      const taskData = taskDoc.data();
+    if (updatedTaskDoc.exists) {
+      const updatedTaskData = updatedTaskDoc.data();
       
       // Trigger notification about the updated task (fire and forget)
       try {
         const notificationData = {
           taskId,
-          title: taskData?.title || '',
-          type: taskData?.type || '',
-          category: taskData?.category || '',
-          difficulty: taskData?.levelOfDifficulty || '',
+          title: updatedTaskData?.title || '',
+          type: updatedTaskData?.type || '',
+          category: updatedTaskData?.category || '',
+          difficulty: updatedTaskData?.levelOfDifficulty || '',
           rezTaskMasterEmailAddress: authResult.email,
           action: isAvailable ? 'activated' : 'deactivated',
-          tallyFormUrl: taskData?.link || undefined,
-          estimatedTimeOfCompletionInMinutes: taskData?.estimatedTimeOfCompletionInMinutes || undefined,
-          targetNumberOfParticipants: taskData?.targetNumberOfParticipants || undefined,
-          rewardAmountPerParticipant: taskData?.rewardAmountPerParticipant || undefined,
+          tallyFormUrl: updatedTaskData?.link || undefined,
+          estimatedTimeOfCompletionInMinutes: updatedTaskData?.estimatedTimeOfCompletionInMinutes || undefined,
+          targetNumberOfParticipants: updatedTaskData?.targetNumberOfParticipants || undefined,
+          rewardAmountPerParticipant: updatedTaskData?.rewardAmountPerParticipant || undefined,
         };
 
         // Send notification without awaiting (fire and forget)
