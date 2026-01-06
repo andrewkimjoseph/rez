@@ -15,18 +15,17 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  Crown, 
-  Pencil, 
-  Loader2, 
-  FileX,
-  RefreshCw,
-  ArrowLeft,
-  Search,
-  User,
-  UserX,
-  UserCheck
-} from "lucide-react";
+import {
+  ShieldCheckIcon,
+  PencilIcon,
+  ArrowPathIcon,
+  XCircleIcon,
+  ArrowLeftIcon,
+  MagnifyingGlassIcon,
+  UserIcon,
+  UserMinusIcon,
+  UserPlusIcon,
+} from "@heroicons/react/24/outline";
 import {
   Dialog,
   DialogContent,
@@ -180,7 +179,7 @@ export default function AdminTaskMastersPage() {
   if (!isHydrated || isAuthorized === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <ArrowPathIcon className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -195,14 +194,14 @@ export default function AdminTaskMastersPage() {
         {/* Header */}
         <div className="flex flex-col gap-4">
           <Link href="/admin" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors w-fit">
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeftIcon className="h-4 w-4" />
             <span className="text-sm">Back to Admin Dashboard</span>
           </Link>
           
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <Crown className="h-6 w-6 text-primary" />
+                <ShieldCheckIcon className="h-6 w-6 text-primary" />
                 <h1 className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight">
                   All Task Masters
                 </h1>
@@ -217,7 +216,7 @@ export default function AdminTaskMastersPage() {
               variant="outline"
               size="sm"
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingTaskMasters ? 'animate-spin' : ''}`} />
+              <ArrowPathIcon className={`h-4 w-4 mr-2 ${isLoadingTaskMasters ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
           </div>
@@ -225,7 +224,7 @@ export default function AdminTaskMastersPage() {
 
         {/* Search */}
         <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search by name, email, ID, or organization..."
             value={searchQuery}
@@ -244,7 +243,7 @@ export default function AdminTaskMastersPage() {
         {/* Loading State */}
         {isLoadingTaskMasters && (
           <div className="flex flex-col items-center justify-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
+            <ArrowPathIcon className="h-8 w-8 animate-spin text-primary mb-3" />
             <p className="text-muted-foreground">Loading task masters...</p>
           </div>
         )}
@@ -253,7 +252,7 @@ export default function AdminTaskMastersPage() {
         {!isLoadingTaskMasters && sortedTaskMasters.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="p-3 rounded-full bg-muted mb-3">
-              <FileX className="h-6 w-6 text-muted-foreground" />
+              <XCircleIcon className="h-6 w-6 text-muted-foreground" />
             </div>
             <p className="font-medium text-foreground">
               {searchQuery ? "No task masters match your search" : "No task masters found"}
@@ -263,7 +262,7 @@ export default function AdminTaskMastersPage() {
 
         {/* Task Masters Table */}
         {!isLoadingTaskMasters && sortedTaskMasters.length > 0 && (
-          <div className="rounded-lg border border-border/50 overflow-hidden">
+          <div className="bg-white rounded-lg border border-border/50 overflow-hidden shadow-sm">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
@@ -314,18 +313,18 @@ export default function AdminTaskMastersPage() {
                       <div className="flex flex-col gap-1">
                         {(taskMaster as TaskMaster & { isSuperAdmin?: boolean }).isSuperAdmin ? (
                           <Badge className="bg-amber-500/15 text-amber-700 hover:bg-amber-500/20 border-0 w-fit">
-                            <Crown className="h-3 w-3 mr-1" />
+                            <ShieldCheckIcon className="h-3 w-3 mr-1" />
                             Super Admin
                           </Badge>
                         ) : (
                           <Badge variant="secondary" className="w-fit">
-                            <User className="h-3 w-3 mr-1" />
+                            <UserIcon className="h-3 w-3 mr-1" />
                             Task Master
                           </Badge>
                         )}
                         {(taskMaster as TaskMaster & { disabled?: boolean }).disabled && (
                           <Badge variant="destructive" className="w-fit text-xs">
-                            <UserX className="h-3 w-3 mr-1" />
+                            <UserMinusIcon className="h-3 w-3 mr-1" />
                             Disabled
                           </Badge>
                         )}
@@ -343,7 +342,7 @@ export default function AdminTaskMastersPage() {
                           onClick={() => handleEditClick(taskMaster)}
                           title="Edit task master"
                         >
-                          <Pencil className="h-4 w-4" />
+                          <PencilIcon className="h-4 w-4" />
                         </Button>
                         {!(taskMaster as TaskMaster & { isSuperAdmin?: boolean }).isSuperAdmin && (
                           <Button
@@ -358,9 +357,9 @@ export default function AdminTaskMastersPage() {
                             title={(taskMaster as TaskMaster & { disabled?: boolean }).disabled ? "Enable task master" : "Disable task master"}
                           >
                             {(taskMaster as TaskMaster & { disabled?: boolean }).disabled ? (
-                              <UserCheck className="h-4 w-4" />
+                              <UserPlusIcon className="h-4 w-4" />
                             ) : (
-                              <UserX className="h-4 w-4" />
+                              <UserMinusIcon className="h-4 w-4" />
                             )}
                           </Button>
                         )}
@@ -421,7 +420,7 @@ export default function AdminTaskMastersPage() {
               >
                 {isTogglingStatus ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
                     {taskMasterToToggle?.disabled ? 'Enabling...' : 'Disabling...'}
                   </>
                 ) : taskMasterToToggle?.disabled ? 'Enable' : 'Disable'}

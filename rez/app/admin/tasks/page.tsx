@@ -23,16 +23,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { 
-  Crown, 
-  Trash2, 
-  Pencil, 
-  Loader2, 
-  FileX,
-  RefreshCw,
-  ArrowLeft,
-  Search
-} from "lucide-react";
+import {
+  ShieldCheckIcon,
+  TrashIcon,
+  PencilIcon,
+  ArrowPathIcon,
+  XCircleIcon,
+  ArrowLeftIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import Image from "next/image";
@@ -164,7 +163,7 @@ export default function AdminTasksPage() {
   if (!isHydrated || isAuthorized === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <ArrowPathIcon className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -179,14 +178,14 @@ export default function AdminTasksPage() {
         {/* Header */}
         <div className="flex flex-col gap-4">
           <Link href="/admin" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors w-fit">
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeftIcon className="h-4 w-4" />
             <span className="text-sm">Back to Admin Dashboard</span>
           </Link>
           
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <Crown className="h-6 w-6 text-primary" />
+                <ShieldCheckIcon className="h-6 w-6 text-primary" />
                 <h1 className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight">
                   All Tasks
                 </h1>
@@ -201,7 +200,7 @@ export default function AdminTasksPage() {
               variant="outline"
               size="sm"
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingTasks ? 'animate-spin' : ''}`} />
+              <ArrowPathIcon className={`h-4 w-4 mr-2 ${isLoadingTasks ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
           </div>
@@ -209,7 +208,7 @@ export default function AdminTasksPage() {
 
         {/* Search */}
         <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search by title, ID, category, or creator email..."
             value={searchQuery}
@@ -228,7 +227,7 @@ export default function AdminTasksPage() {
         {/* Loading State */}
         {isLoadingTasks && (
           <div className="flex flex-col items-center justify-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
+            <ArrowPathIcon className="h-8 w-8 animate-spin text-primary mb-3" />
             <p className="text-muted-foreground">Loading tasks...</p>
           </div>
         )}
@@ -237,7 +236,7 @@ export default function AdminTasksPage() {
         {!isLoadingTasks && sortedTasks.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="p-3 rounded-full bg-muted mb-3">
-              <FileX className="h-6 w-6 text-muted-foreground" />
+              <XCircleIcon className="h-6 w-6 text-muted-foreground" />
             </div>
             <p className="font-medium text-foreground">
               {searchQuery ? "No tasks match your search" : "No tasks found"}
@@ -247,7 +246,7 @@ export default function AdminTasksPage() {
 
         {/* Tasks Table */}
         {!isLoadingTasks && sortedTasks.length > 0 && (
-          <div className="rounded-lg border border-border/50 overflow-hidden">
+          <div className="bg-white rounded-lg border border-border/50 overflow-hidden shadow-sm">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
@@ -337,7 +336,7 @@ export default function AdminTasksPage() {
                           onClick={() => handleEditClick(task)}
                           title="Edit task"
                         >
-                          <Pencil className="h-4 w-4" />
+                          <PencilIcon className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -346,7 +345,7 @@ export default function AdminTasksPage() {
                           onClick={() => handleDeleteClick(task)}
                           title="Delete task"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <TrashIcon className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -386,7 +385,7 @@ export default function AdminTasksPage() {
               >
                 {isDeleting ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
                     Deleting...
                   </>
                 ) : 'Delete'}

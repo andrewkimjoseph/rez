@@ -13,7 +13,11 @@ import {
 import { SidebarTrigger } from "./ui/sidebar";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { signOutTaskMaster } from "@/firebase/auth/auth";
-import { LogOut, ChevronDown, User } from "lucide-react";
+import {
+  ArrowRightOnRectangleIcon,
+  ChevronDownIcon,
+  UserIcon,
+} from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
@@ -109,7 +113,7 @@ export function AppNavbar() {
                 <span className="hidden md:inline-block text-sm font-medium max-w-[120px] truncate">
                   {user?.name || "User"}
                 </span>
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                <ChevronDownIcon className="h-4 w-4 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
@@ -124,7 +128,7 @@ export function AppNavbar() {
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/account" className="cursor-pointer">
-                  <User className="mr-2 h-4 w-4" />
+                  <UserIcon className="mr-2 h-4 w-4" />
                   Account Settings
                 </Link>
               </DropdownMenuItem>
@@ -133,7 +137,7 @@ export function AppNavbar() {
                 onClick={handleSignOut}
                 className="text-destructive focus:text-destructive cursor-pointer"
               >
-                <LogOut className="mr-2 h-4 w-4" />
+                <ArrowRightOnRectangleIcon className="mr-2 h-4 w-4" />
                 Sign Out
               </DropdownMenuItem>
             </DropdownMenuContent>

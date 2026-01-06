@@ -25,7 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Task } from "@/firebase/firestore/models/Task";
 import { useAdminStore, AdminUpdateTaskData } from "@/stores/admin-store";
-import { Loader2 } from "lucide-react";
+import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supportedTokens } from "@/utils/currencies";
@@ -480,7 +480,7 @@ export default function AdminEditTaskDialog({
           <Button onClick={handleSubmit} disabled={isUpdating}>
             {isUpdating ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
                 Saving...
               </>
             ) : (

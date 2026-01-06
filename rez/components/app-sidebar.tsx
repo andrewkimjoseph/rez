@@ -1,13 +1,13 @@
 "use client";
 
 import {
-  BookOpen,
-  LayoutDashboard,
-  ListTodo,
-  Settings,
-  ExternalLink,
-  Crown,
-} from "lucide-react";
+  BookOpenIcon,
+  Squares2X2Icon,
+  ClipboardDocumentListIcon,
+  Cog6ToothIcon,
+  ArrowTopRightOnSquareIcon,
+  ShieldCheckIcon,
+} from "@heroicons/react/24/outline";
 import Image from "next/image";
 import React from "react";
 import Link from "next/link";
@@ -33,17 +33,17 @@ const mainNavItems = [
   {
     title: "Dashboard",
     url: "/dashboard",
-    icon: LayoutDashboard,
+    icon: Squares2X2Icon,
   },
   {
     title: "Tasks",
     url: "/tasks",
-    icon: ListTodo,
+    icon: ClipboardDocumentListIcon,
   },
   {
     title: "Resources",
     url: "/resources",
-    icon: BookOpen,
+    icon: BookOpenIcon,
   },
 ];
 
@@ -52,7 +52,7 @@ const settingsItems = [
   {
     title: "Account",
     url: "/account",
-    icon: Settings,
+    icon: Cog6ToothIcon,
   },
 ];
 
@@ -71,7 +71,7 @@ const adminItems = [
   {
     title: "Dashboard",
     url: "/admin",
-    icon: Crown,
+    icon: ShieldCheckIcon,
   },
 ];
 
@@ -206,7 +206,7 @@ export function AppSidebar() {
                   {item.iconElement}
                   <span className="font-medium">{item.title}</span>
                   {item.external && (
-                    <ExternalLink className="w-3 h-3 ml-auto opacity-50" />
+                    <ArrowTopRightOnSquareIcon className="w-3 h-3 ml-auto opacity-50" />
                   )}
                 </Link>
               </SidebarMenuButton>

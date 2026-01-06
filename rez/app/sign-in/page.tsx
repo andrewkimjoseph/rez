@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { signInTaskMasterWithGoogle } from "@/firebase/auth/auth";
 import { useState, useEffect } from "react";
-import { Loader2Icon } from "lucide-react";
+import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { usePathname } from "next/navigation";
 import { createTaskMasterInFirestore } from "@/firebase/firestore/services/createTaskMasterInFirestore";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
@@ -146,7 +146,7 @@ export default function SignInPage() {
               >
                 {loading ? (
                   <>
-                    <Loader2Icon className="animate-spin mr-2 h-5 w-5" />
+                    <ArrowPathIcon className="animate-spin mr-2 h-5 w-5" />
                     Signing in...
                   </>
                 ) : (

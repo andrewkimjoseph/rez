@@ -16,7 +16,10 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TaskMaster } from "@/firebase/firestore/models/TaskMaster";
 import { useAdminStore, AdminUpdateTaskMasterData } from "@/stores/admin-store";
-import { Loader2, Crown } from "lucide-react";
+import {
+  ArrowPathIcon,
+  ShieldCheckIcon,
+} from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 
 interface AdminEditTaskMasterDialogProps {
@@ -154,7 +157,7 @@ export default function AdminEditTaskMasterDialog({
           {/* Super Admin Toggle */}
           <div className="flex items-center justify-between p-4 rounded-lg border border-amber-500/30 bg-amber-500/5">
             <div className="flex items-start gap-3">
-              <Crown className="h-5 w-5 text-amber-600 mt-0.5" />
+              <ShieldCheckIcon className="h-5 w-5 text-amber-600 mt-0.5" />
               <div>
                 <Label htmlFor="edit-admin" className="font-medium text-amber-700">
                   Super Admin Access
@@ -179,7 +182,7 @@ export default function AdminEditTaskMasterDialog({
           <Button onClick={handleSubmit} disabled={isUpdating}>
             {isUpdating ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
                 Saving...
               </>
             ) : (

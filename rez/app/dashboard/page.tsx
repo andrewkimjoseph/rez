@@ -1,6 +1,13 @@
 "use client";
 
-import { PlusIcon, RefreshCw, Clock, TrendingUp, CheckCircle2, ListTodo } from "lucide-react";
+import {
+  PlusIcon,
+  ArrowPathIcon,
+  ClockIcon,
+  ChartBarIcon,
+  CheckCircleIcon,
+  ClipboardDocumentListIcon,
+} from "@heroicons/react/24/outline";
 
 import {
   Card,
@@ -68,7 +75,7 @@ export default function Dashboard() {
       title: "Total Tasks",
       description: "All time created",
       value: totalTasks,
-      icon: ListTodo,
+      icon: ClipboardDocumentListIcon,
       iconBg: "bg-primary/10",
       iconColor: "text-primary",
     },
@@ -76,7 +83,7 @@ export default function Dashboard() {
       title: "Active Tasks",
       description: "Currently available",
       value: activeTasks,
-      icon: TrendingUp,
+      icon: ChartBarIcon,
       iconBg: "bg-emerald-500/10",
       iconColor: "text-emerald-600",
     },
@@ -84,7 +91,7 @@ export default function Dashboard() {
       title: "Total Completions",
       description: "Across all tasks",
       value: totalTaskCompletions,
-      icon: CheckCircle2,
+      icon: CheckCircleIcon,
       iconBg: "bg-blue-500/10",
       iconColor: "text-blue-600",
     },
@@ -111,9 +118,9 @@ export default function Dashboard() {
             className="self-start sm:self-auto"
           >
             {isHydrated && !dashboardRefreshStatus.canRefresh ? (
-              <Clock className="h-4 w-4 mr-2" />
+              <ClockIcon className="h-4 w-4 mr-2" />
             ) : (
-              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              <ArrowPathIcon className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             )}
             {isHydrated && !dashboardRefreshStatus.canRefresh 
               ? `${dashboardRefreshStatus.formattedTime}` 

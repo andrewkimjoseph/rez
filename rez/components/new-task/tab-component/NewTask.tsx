@@ -9,7 +9,11 @@ import { toast } from "sonner";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { useTasksStore } from "@/stores/tasks-store";
 import { useState } from "react";
-import { Loader2Icon, Clock, AlertCircle } from "lucide-react";
+import {
+  ArrowPathIcon,
+  ClockIcon,
+  ExclamationCircleIcon,
+} from "@heroicons/react/24/outline";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 const stepTitles = [
@@ -239,7 +243,7 @@ export default function NewTask() {
       <div className="flex items-start space-x-4">
         <div className="flex-shrink-0">
           <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-            <Clock className="w-6 h-6 text-orange-600" />
+            <ClockIcon className="w-6 h-6 text-orange-600" />
           </div>
         </div>
         <div className="flex-1">
@@ -262,7 +266,7 @@ export default function NewTask() {
             .
           </p>
           <div className="flex items-center space-x-2 p-3 bg-orange-50 rounded-lg">
-            <AlertCircle className="w-5 h-5 text-orange-600" />
+            <ExclamationCircleIcon className="w-5 h-5 text-orange-600" />
             <span className="text-orange-800 font-medium">
               You can create your next task in{" "}
               <span className="font-bold">
@@ -297,7 +301,7 @@ export default function NewTask() {
           {step === 4 ? (
             isCreating ? (
               <>
-                <Loader2Icon className="animate-spin" />
+                <ArrowPathIcon className="animate-spin" />
                 Creating Task...
               </>
             ) : (

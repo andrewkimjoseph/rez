@@ -13,15 +13,14 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  Crown, 
-  ListTodo, 
-  Users, 
-  TrendingUp, 
-  RefreshCw,
-  AlertTriangle,
-  Loader2
-} from "lucide-react";
+import {
+  ShieldCheckIcon,
+  ClipboardDocumentListIcon,
+  UsersIcon,
+  ChartBarIcon,
+  ArrowPathIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -71,7 +70,7 @@ export default function AdminDashboard() {
   if (!isHydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <ArrowPathIcon className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -82,7 +81,7 @@ export default function AdminDashboard() {
         <Card className="max-w-md w-full">
           <CardHeader className="text-center">
             <div className="mx-auto p-3 rounded-full bg-destructive/10 w-fit mb-4">
-              <AlertTriangle className="h-8 w-8 text-destructive" />
+              <ExclamationTriangleIcon className="h-8 w-8 text-destructive" />
             </div>
             <CardTitle>Access Denied</CardTitle>
             <CardDescription>
@@ -103,7 +102,7 @@ export default function AdminDashboard() {
   if (isAuthorized === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <ArrowPathIcon className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -125,7 +124,7 @@ export default function AdminDashboard() {
       title: "Total Tasks",
       description: "All tasks in the system",
       value: totalTasks,
-      icon: ListTodo,
+      icon: ClipboardDocumentListIcon,
       iconBg: "bg-primary/10",
       iconColor: "text-primary",
     },
@@ -133,7 +132,7 @@ export default function AdminDashboard() {
       title: "Active Tasks",
       description: "Currently available",
       value: activeTasks,
-      icon: TrendingUp,
+      icon: ChartBarIcon,
       iconBg: "bg-emerald-500/10",
       iconColor: "text-emerald-600",
     },
@@ -141,7 +140,7 @@ export default function AdminDashboard() {
       title: "Task Masters",
       description: "Registered researchers",
       value: totalTaskMasters,
-      icon: Users,
+      icon: UsersIcon,
       iconBg: "bg-blue-500/10",
       iconColor: "text-blue-600",
     },
@@ -149,7 +148,7 @@ export default function AdminDashboard() {
       title: "Super Admins",
       description: "System administrators",
       value: superAdmins,
-      icon: Crown,
+      icon: ShieldCheckIcon,
       iconBg: "bg-amber-500/10",
       iconColor: "text-amber-600",
     },
@@ -162,7 +161,7 @@ export default function AdminDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Crown className="h-6 w-6 text-primary" />
+              <ShieldCheckIcon className="h-6 w-6 text-primary" />
               <h1 className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight">
                 Admin Dashboard
               </h1>
@@ -177,7 +176,7 @@ export default function AdminDashboard() {
             variant="outline"
             size="sm"
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            <ArrowPathIcon className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
         </div>
@@ -227,7 +226,7 @@ export default function AdminDashboard() {
               <Card className="enterprise-card border-0 h-full transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer">
                 <CardContent className="flex items-start gap-4 p-5">
                   <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/15 transition-colors">
-                    <ListTodo className="h-5 w-5 text-primary" />
+                    <ClipboardDocumentListIcon className="h-5 w-5 text-primary" />
                   </div>
                   <div className="space-y-1">
                     <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
@@ -245,7 +244,7 @@ export default function AdminDashboard() {
               <Card className="enterprise-card border-0 h-full transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer">
                 <CardContent className="flex items-start gap-4 p-5">
                   <div className="p-3 rounded-xl bg-blue-500/10 group-hover:bg-blue-500/15 transition-colors">
-                    <Users className="h-5 w-5 text-blue-600" />
+                    <UsersIcon className="h-5 w-5 text-blue-600" />
                   </div>
                   <div className="space-y-1">
                     <h3 className="font-semibold text-foreground group-hover:text-blue-600 transition-colors">

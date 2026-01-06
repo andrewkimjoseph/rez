@@ -23,7 +23,13 @@ import {
 import { Task } from "@/firebase/firestore/models/Task";
 import { useTasksStore } from "@/stores/tasks-store";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
-import { Trash2, FileX, Loader2, Power, PowerOff, Pencil } from "lucide-react";
+import {
+  TrashIcon,
+  XCircleIcon,
+  ArrowPathIcon,
+  PowerIcon,
+  PencilIcon,
+} from "@heroicons/react/24/outline";
 import EditTaskDialog from "../../EditTaskDialog";
 import { toast } from "sonner";
 
@@ -164,7 +170,7 @@ export default function ViewTasks() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
+        <ArrowPathIcon className="h-8 w-8 animate-spin text-primary mb-3" />
         <p className="text-muted-foreground">Loading tasks...</p>
       </div>
     );
@@ -174,7 +180,7 @@ export default function ViewTasks() {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <div className="p-3 rounded-full bg-destructive/10 mb-3">
-          <FileX className="h-6 w-6 text-destructive" />
+          <XCircleIcon className="h-6 w-6 text-destructive" />
         </div>
         <p className="text-destructive font-medium">Error loading tasks</p>
         <p className="text-sm text-muted-foreground mt-1">{error}</p>
@@ -186,7 +192,7 @@ export default function ViewTasks() {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <div className="p-3 rounded-full bg-muted mb-3">
-          <FileX className="h-6 w-6 text-muted-foreground" />
+          <XCircleIcon className="h-6 w-6 text-muted-foreground" />
         </div>
         <p className="font-medium text-foreground">No tasks found</p>
         <p className="text-sm text-muted-foreground mt-1">Create your first task to get started</p>
@@ -264,7 +270,7 @@ export default function ViewTasks() {
                         onClick={() => handleEditClick(task)}
                         title="Edit task"
                       >
-                        <Pencil className="h-4 w-4" />
+                        <PencilIcon className="h-4 w-4" />
                       </Button>
                     )}
                     <Button
@@ -277,11 +283,7 @@ export default function ViewTasks() {
                       onClick={() => handleStatusToggleClick(task)}
                       title={task.isAvailable ? 'Deactivate task' : 'Activate task'}
                     >
-                      {task.isAvailable ? (
-                        <PowerOff className="h-4 w-4" />
-                      ) : (
-                        <Power className="h-4 w-4" />
-                      )}
+                      <PowerIcon className={`h-4 w-4 ${task.isAvailable ? '' : 'opacity-50'}`} />
                     </Button>
                     <Button
                       variant="ghost"
@@ -290,7 +292,7 @@ export default function ViewTasks() {
                       onClick={() => handleDeleteClick(task)}
                       title="Delete task"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <TrashIcon className="h-4 w-4" />
                     </Button>
                   </div>
                 </TableCell>
@@ -299,10 +301,6 @@ export default function ViewTasks() {
           </TableBody>
         </Table>
       </div>
-
-      <p className="text-sm text-muted-foreground text-center">
-        Showing {sortedTasks.length} task{sortedTasks.length !== 1 ? 's' : ''}
-      </p>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -329,7 +327,7 @@ export default function ViewTasks() {
             >
               {isDeleting ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
                   Deleting...
                 </>
               ) : 'Delete'}
@@ -368,7 +366,7 @@ export default function ViewTasks() {
             >
               {isUpdatingStatus ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
                   Updating...
                 </>
               ) : taskToToggle?.isAvailable ? 'Deactivate' : 'Activate'}

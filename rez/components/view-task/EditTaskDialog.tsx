@@ -24,7 +24,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Task } from "@/firebase/firestore/models/Task";
 import { useTasksStore, EditTaskData } from "@/stores/tasks-store";
-import { Loader2 } from "lucide-react";
+import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import { supportedTokens } from "@/utils/currencies";
 import Image from "next/image";
@@ -321,7 +321,7 @@ export default function EditTaskDialog({
           <Button onClick={handleSubmit} disabled={isEditing}>
             {isEditing ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
                 Saving...
               </>
             ) : (
