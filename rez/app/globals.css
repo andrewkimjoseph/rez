@@ -169,6 +169,22 @@
     background: linear-gradient(135deg, oklch(0.985 0.002 260) 0%, oklch(0.955 0.008 250) 100%);
   }
   
+  /* Rez Logo Gradient - Pink to Orange */
+  .rez-gradient {
+    background: linear-gradient(135deg, #ff5c86 0%, #ff9c4c 100%);
+  }
+  
+  .rez-gradient-subtle {
+    background: linear-gradient(135deg, rgba(255, 92, 134, 0.08) 0%, rgba(255, 156, 76, 0.08) 100%);
+  }
+  
+  .rez-gradient-text {
+    background: linear-gradient(135deg, #ff5c86 0%, #ff9c4c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
   .enterprise-card {
     @apply bg-card rounded-lg border border-border/50 shadow-sm;
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);

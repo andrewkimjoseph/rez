@@ -218,8 +218,13 @@ export default function ViewTasks() {
                   {index + 1}
                 </TableCell>
                 <TableCell>
-                  <div className="max-w-[180px] truncate font-medium" title={task.title || ''}>
-                    {task.title || 'Untitled Task'}
+                  <div className="max-w-[180px]">
+                    <div className="font-medium truncate" title={task.title || ''}>
+                      {task.title || 'Untitled Task'}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate mt-0.5" title={task.id || ''}>
+                      {task.id || 'N/A'}
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell>

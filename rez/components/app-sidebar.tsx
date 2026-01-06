@@ -69,7 +69,7 @@ const externalItems = [
 // Admin items (only shown for superadmins)
 const adminItems = [
   {
-    title: "Admin Dashboard",
+    title: "Dashboard",
     url: "/admin",
     icon: Crown,
   },
@@ -96,12 +96,12 @@ export function AppSidebar() {
           <Image 
             src="/rez-logo.svg" 
             alt="Rez" 
-            width={36} 
-            height={36} 
+            width={48} 
+            height={48} 
             className="shrink-0"
           />
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-            <span className="text-lg font-semibold text-sidebar-foreground">Rez</span>
+            <span className="text-lg font-semibold rez-gradient-text">Rez</span>
             <span className="text-xs text-sidebar-foreground/60">by Canvassing</span>
           </div>
         </Link>
@@ -120,7 +120,7 @@ export function AppSidebar() {
                   <SidebarMenuButton 
                     asChild
                     isActive={isActive(item.url)}
-                    className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground"
+                    className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent data-[active=true]:rez-gradient data-[active=true]:text-white data-[active=true]:shadow-sm"
                   >
                     <Link href={item.url}>
                       <item.icon className="w-[18px] h-[18px] shrink-0" />
@@ -147,7 +147,7 @@ export function AppSidebar() {
                   <SidebarMenuButton 
                     asChild
                     isActive={isActive(item.url)}
-                    className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground"
+                    className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent data-[active=true]:rez-gradient data-[active=true]:text-white data-[active=true]:shadow-sm"
                   >
                     <Link href={item.url}>
                       <item.icon className="w-[18px] h-[18px] shrink-0" />

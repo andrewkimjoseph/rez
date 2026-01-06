@@ -43,7 +43,10 @@ export default function RootLayout({
             {!isSignInPageOrOnboarding && <AppSidebar />}
             <main className="flex flex-col w-full min-h-screen">
               {!isSignInPageOrOnboarding && <AppNavbar />}
-              <div className="flex-1 enterprise-gradient">{children}</div>
+              <div className="flex-1 enterprise-gradient relative">
+                <div className="absolute inset-0 rez-gradient-subtle pointer-events-none" />
+                <div className="relative">{children}</div>
+              </div>
             </main>
           </SidebarProvider>
           <Script

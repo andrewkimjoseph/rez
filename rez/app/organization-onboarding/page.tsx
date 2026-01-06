@@ -189,11 +189,11 @@ export default function OrganizationOnboardingPage() {
                 />
               </div>
               <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-2">
-                Create Your Organization
+                Create Your <span className="rez-gradient-text">Organization</span>
               </h1>
               {userName && (
                 <p className="text-slate-600">
-                  Welcome, <span className="font-medium text-slate-900">{userName}</span>
+                  Welcome, <span className="font-medium rez-gradient-text">{userName}</span>
                 </p>
               )}
             </div>

@@ -119,8 +119,8 @@ export default function SignInPage() {
                 />
               </div>
             </div>
-            <h1 className="text-3xl font-semibold text-foreground tracking-tight">
-              Welcome to Rez
+            <h1 className="text-3xl font-semibold tracking-tight">
+              Welcome to <span className="rez-gradient-text">Rez</span>
             </h1>
             <p className="text-muted-foreground">
               Sign in to manage your research tasks
@@ -179,7 +179,7 @@ export default function SignInPage() {
       </div>
 
       {/* Right Side - Hero Image */}
-      <div className="hidden lg:flex flex-1 relative bg-gradient-to-br from-primary via-primary/90 to-primary/80 overflow-hidden">
+      <div className="hidden lg:flex flex-1 relative rez-gradient overflow-hidden">
         {/* Decorative Pattern */}
         <div className="absolute inset-0 opacity-10">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">

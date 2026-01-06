@@ -78,7 +78,7 @@ export function AppNavbar() {
           
           <div className="hidden sm:flex flex-col">
             <p className="text-sm font-medium text-foreground">
-              {getGreeting()}, <span className="text-primary">{user?.name || "there"}</span>
+              {getGreeting()}, <span className="rez-gradient-text font-semibold">{user?.name || "there"}</span>
             </p>
             <p className="text-xs text-muted-foreground">
               Welcome back to your workspace
