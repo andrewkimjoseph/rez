@@ -61,9 +61,7 @@ export const useTasksStore = create<TasksStore>()(
 
         try {
           // Fetch tasks
-          const tasksResponse = await fetch(
-            `/api/fetchAllTasksForRezTaskMaster?rezTaskMasterEmailAddress=${encodeURIComponent(taskMaster.emailAddress)}`
-          );
+          const tasksResponse = await fetch('/api/fetchAllTasksForRezTaskMaster');
           
           if (!tasksResponse.ok) {
             throw new Error('Failed to fetch tasks');
@@ -73,9 +71,7 @@ export const useTasksStore = create<TasksStore>()(
           const tasks: Task[] = tasksData.tasks || [];
 
           // Fetch task completions
-          const completionsResponse = await fetch(
-            `/api/fetchAllTaskCompletionsForRezTaskMaster?rezTaskMasterEmailAddress=${encodeURIComponent(taskMaster.emailAddress)}`
-          );
+          const completionsResponse = await fetch('/api/fetchAllTaskCompletionsForRezTaskMaster');
           
           if (!completionsResponse.ok) {
             throw new Error('Failed to fetch task completions');
@@ -111,7 +107,7 @@ export const useTasksStore = create<TasksStore>()(
 
         try {
           const response = await fetch(
-            `/api/deleteTask?taskId=${encodeURIComponent(taskId)}&rezTaskMasterEmailAddress=${encodeURIComponent(taskMaster.emailAddress)}`,
+            `/api/deleteTask?taskId=${encodeURIComponent(taskId)}`,
             { method: 'DELETE' }
           );
 
@@ -167,7 +163,6 @@ export const useTasksStore = create<TasksStore>()(
             body: JSON.stringify({
               taskId,
               isAvailable,
-              rezTaskMasterEmailAddress: taskMaster.emailAddress,
             }),
           });
 
@@ -218,7 +213,6 @@ export const useTasksStore = create<TasksStore>()(
             body: JSON.stringify({
               taskId,
               data,
-              rezTaskMasterEmailAddress: taskMaster.emailAddress,
             }),
           });
 

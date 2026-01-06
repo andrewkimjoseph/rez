@@ -79,19 +79,10 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
       return;
     }
 
-    const adminId = useTaskMasterStore.getState().user?.id;
-    
-    if (!adminId) {
-      set({ error: 'No admin ID found' });
-      return;
-    }
-
     set({ isLoadingTasks: true, error: null });
 
     try {
-      const response = await fetch(
-        `/api/admin/fetchAllTasks?adminId=${encodeURIComponent(adminId)}`
-      );
+      const response = await fetch('/api/admin/fetchAllTasks');
 
       if (!response.ok) {
         const data = await response.json();
@@ -121,19 +112,10 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
       return;
     }
 
-    const adminId = useTaskMasterStore.getState().user?.id;
-    
-    if (!adminId) {
-      set({ error: 'No admin ID found' });
-      return;
-    }
-
     set({ isLoadingTaskMasters: true, error: null });
 
     try {
-      const response = await fetch(
-        `/api/admin/fetchAllTaskMasters?adminId=${encodeURIComponent(adminId)}`
-      );
+      const response = await fetch('/api/admin/fetchAllTaskMasters');
 
       if (!response.ok) {
         const data = await response.json();
@@ -152,20 +134,13 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
   },
 
   updateTask: async (taskId: string, data: AdminUpdateTaskData): Promise<boolean> => {
-    const adminId = useTaskMasterStore.getState().user?.id;
-    
-    if (!adminId) {
-      set({ error: 'No admin ID found' });
-      return false;
-    }
-
     set({ isUpdating: true, error: null });
 
     try {
       const response = await fetch('/api/admin/updateTask', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskId, data, adminId })
+        body: JSON.stringify({ taskId, data })
       });
 
       if (!response.ok) {
@@ -189,18 +164,11 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
   },
 
   deleteTask: async (taskId: string): Promise<boolean> => {
-    const adminId = useTaskMasterStore.getState().user?.id;
-    
-    if (!adminId) {
-      set({ error: 'No admin ID found' });
-      return false;
-    }
-
     set({ isDeleting: true, error: null });
 
     try {
       const response = await fetch(
-        `/api/admin/deleteTask?taskId=${encodeURIComponent(taskId)}&adminId=${encodeURIComponent(adminId)}`,
+        `/api/admin/deleteTask?taskId=${encodeURIComponent(taskId)}`,
         { method: 'DELETE' }
       );
 
@@ -229,20 +197,13 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
   },
 
   updateTaskMaster: async (taskMasterId: string, data: AdminUpdateTaskMasterData): Promise<boolean> => {
-    const adminId = useTaskMasterStore.getState().user?.id;
-    
-    if (!adminId) {
-      set({ error: 'No admin ID found' });
-      return false;
-    }
-
     set({ isUpdating: true, error: null });
 
     try {
       const response = await fetch('/api/admin/updateTaskMaster', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskMasterId, data, adminId })
+        body: JSON.stringify({ taskMasterId, data })
       });
 
       if (!response.ok) {
@@ -266,20 +227,13 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
   },
 
   toggleTaskMasterStatus: async (taskMasterId: string, disabled: boolean): Promise<boolean> => {
-    const adminId = useTaskMasterStore.getState().user?.id;
-    
-    if (!adminId) {
-      set({ error: 'No admin ID found' });
-      return false;
-    }
-
     set({ isTogglingStatus: true, error: null });
 
     try {
       const response = await fetch('/api/admin/toggleTaskMasterStatus', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskMasterId, disabled, adminId })
+        body: JSON.stringify({ taskMasterId, disabled })
       });
 
       if (!response.ok) {

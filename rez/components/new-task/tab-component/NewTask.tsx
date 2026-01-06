@@ -192,7 +192,6 @@ export default function NewTask() {
             link: data.link,
             instructions: data.instructions,
             feedback: data.feedback,
-            rezTaskMasterEmailAddress: user?.emailAddress,
           }),
         });
 
