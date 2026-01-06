@@ -1,14 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createTaskInPaxApp } from '@/firebase/firestore/services/createTaskInPaxApp';
+import { requireAuth } from '@/lib/api-auth';
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify authentication
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
     const body = await request.json();
     
     // Validate required fields
     if (!body.type || !body.title) {
       return NextResponse.json(
         { error: 'Missing required fields: type and title' },
+        { status: 400 }
+      );
+    }
+
+    // Use authenticated user's email instead of trusting client-provided email
+    if (!authResult.email) {
+      return NextResponse.json(
+        { error: 'User email not found in authentication token' },
         { status: 400 }
       );
     }
@@ -23,7 +38,7 @@ export async function POST(request: NextRequest) {
       link: body.link,
       instructions: body.instructions,
       feedback: body.feedback,
-      rezTaskMasterEmailAddress: body.rezTaskMasterEmailAddress,
+      rezTaskMasterEmailAddress: authResult.email,
     });
 
     // Trigger notification about the new task (fire and forget)
@@ -34,7 +49,7 @@ export async function POST(request: NextRequest) {
         type: body.type,
         category: body.category || "Other",
         difficulty: body.difficulty || "Medium",
-        rezTaskMasterEmailAddress: body.rezTaskMasterEmailAddress,
+        rezTaskMasterEmailAddress: authResult.email,
         link: body.link,
         estimatedTimeOfCompletionInMinutes: 5, // Default from service
         targetNumberOfParticipants: 100, // Default from service

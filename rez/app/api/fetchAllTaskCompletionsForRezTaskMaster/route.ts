@@ -1,22 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { paxDB } from '@/firebase/serverConfig';
+import { requireAuth } from '@/lib/api-auth';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get the rezTaskMasterEmailAddress from query parameters
-    const { searchParams } = new URL(request.url);
-    const rezTaskMasterEmailAddress = searchParams.get('rezTaskMasterEmailAddress');
+    // Verify authentication
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
 
-    if (!rezTaskMasterEmailAddress) {
+    if (!authResult.email) {
       return NextResponse.json(
-        { error: 'rezTaskMasterEmailAddress is required' },
+        { error: 'User email not found in authentication token' },
         { status: 400 }
       );
     }
 
-    // First, get all tasks for the given rezTaskMasterEmailAddress
+    // First, get all tasks for the authenticated user's email
     const tasksRef = paxDB.collection('tasks');
-    const tasksSnapshot = await tasksRef.where('rezTaskMasterEmailAddress', '==', rezTaskMasterEmailAddress).get();
+    const tasksSnapshot = await tasksRef.where('rezTaskMasterEmailAddress', '==', authResult.email).get();
     
     const taskIds: string[] = [];
     tasksSnapshot.forEach((doc) => {

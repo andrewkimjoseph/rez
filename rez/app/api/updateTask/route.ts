@@ -2,26 +2,32 @@ import { NextRequest, NextResponse } from 'next/server';
 import { updateTaskInPaxApp, UpdateTaskData } from '@/firebase/firestore/services/updateTaskInPaxApp';
 import { paxDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
+import { requireAuth } from '@/lib/api-auth';
 
 export async function PATCH(request: NextRequest) {
   try {
+    // Verify authentication
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
+    if (!authResult.email) {
+      return NextResponse.json(
+        { error: 'User email not found in authentication token' },
+        { status: 400 }
+      );
+    }
+
     const body = await request.json();
-    const { taskId, data, rezTaskMasterEmailAddress } = body as {
+    const { taskId, data } = body as {
       taskId: string;
       data: UpdateTaskData;
-      rezTaskMasterEmailAddress: string;
     };
 
     if (!taskId) {
       return NextResponse.json(
         { error: 'Task ID is required' },
-        { status: 400 }
-      );
-    }
-
-    if (!rezTaskMasterEmailAddress) {
-      return NextResponse.json(
-        { error: 'Task Master Email Address is required' },
         { status: 400 }
       );
     }
@@ -33,7 +39,27 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    await updateTaskInPaxApp({ taskId, data, rezTaskMasterEmailAddress });
+    // Verify task ownership before updating
+    const taskRef = paxDB.collection(COLLECTIONS.TASKS).doc(taskId);
+    const taskDoc = await taskRef.get();
+    
+    if (!taskDoc.exists) {
+      return NextResponse.json(
+        { error: 'Task not found' },
+        { status: 404 }
+      );
+    }
+
+    const taskData = taskDoc.data();
+    
+    if (taskData?.rezTaskMasterEmailAddress !== authResult.email) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Task does not belong to this task master' },
+        { status: 403 }
+      );
+    }
+
+    await updateTaskInPaxApp({ taskId, data, rezTaskMasterEmailAddress: authResult.email });
 
     // Fetch updated task data for notification
     const taskRef = paxDB.collection(COLLECTIONS.TASKS).doc(taskId);
@@ -50,7 +76,7 @@ export async function PATCH(request: NextRequest) {
           type: taskData?.type || '',
           category: taskData?.category || '',
           difficulty: taskData?.levelOfDifficulty || '',
-          rezTaskMasterEmailAddress,
+          rezTaskMasterEmailAddress: authResult.email,
           action: 'updated' as const,
           tallyFormUrl: taskData?.link || undefined,
           estimatedTimeOfCompletionInMinutes: taskData?.estimatedTimeOfCompletionInMinutes || undefined,

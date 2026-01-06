@@ -2,11 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { updateTaskStatusInPaxApp } from '@/firebase/firestore/services/updateTaskStatusInPaxApp';
 import { paxDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
+import { requireAuth } from '@/lib/api-auth';
 
 export async function PATCH(request: NextRequest) {
   try {
+    // Verify authentication
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
+    if (!authResult.email) {
+      return NextResponse.json(
+        { error: 'User email not found in authentication token' },
+        { status: 400 }
+      );
+    }
+
     const body = await request.json();
-    const { taskId, isAvailable, rezTaskMasterEmailAddress } = body;
+    const { taskId, isAvailable } = body;
 
     if (!taskId) {
       return NextResponse.json(
@@ -22,17 +36,30 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    if (!rezTaskMasterEmailAddress) {
+    // Verify task ownership before updating
+    const taskRef = paxDB.collection(COLLECTIONS.TASKS).doc(taskId);
+    const taskDoc = await taskRef.get();
+    
+    if (!taskDoc.exists) {
       return NextResponse.json(
-        { error: 'Missing required parameter: rezTaskMasterEmailAddress' },
-        { status: 400 }
+        { error: 'Task not found' },
+        { status: 404 }
+      );
+    }
+
+    const taskData = taskDoc.data();
+    
+    if (taskData?.rezTaskMasterEmailAddress !== authResult.email) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Task does not belong to this task master' },
+        { status: 403 }
       );
     }
 
     await updateTaskStatusInPaxApp({
       taskId,
       isAvailable,
-      rezTaskMasterEmailAddress,
+      rezTaskMasterEmailAddress: authResult.email,
     });
 
     // Fetch updated task data for notification
@@ -50,7 +77,7 @@ export async function PATCH(request: NextRequest) {
           type: taskData?.type || '',
           category: taskData?.category || '',
           difficulty: taskData?.levelOfDifficulty || '',
-          rezTaskMasterEmailAddress,
+          rezTaskMasterEmailAddress: authResult.email,
           action: isAvailable ? 'activated' : 'deactivated',
           tallyFormUrl: taskData?.link || undefined,
           estimatedTimeOfCompletionInMinutes: taskData?.estimatedTimeOfCompletionInMinutes || undefined,

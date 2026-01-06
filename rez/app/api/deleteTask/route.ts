@@ -2,23 +2,29 @@ import { NextRequest, NextResponse } from 'next/server';
 import { deleteTaskFromPaxApp } from '@/firebase/firestore/services/deleteTaskFromPaxApp';
 import { paxDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
+import { requireAuth, verifyResourceOwnership } from '@/lib/api-auth';
 
 export async function DELETE(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const taskId = searchParams.get('taskId');
-    const rezTaskMasterEmailAddress = searchParams.get('rezTaskMasterEmailAddress');
+    // Verify authentication
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
 
-    if (!taskId) {
+    if (!authResult.email) {
       return NextResponse.json(
-        { error: 'Missing required parameter: taskId' },
+        { error: 'User email not found in authentication token' },
         { status: 400 }
       );
     }
 
-    if (!rezTaskMasterEmailAddress) {
+    const { searchParams } = new URL(request.url);
+    const taskId = searchParams.get('taskId');
+
+    if (!taskId) {
       return NextResponse.json(
-        { error: 'Missing required parameter: rezTaskMasterEmailAddress' },
+        { error: 'Missing required parameter: taskId' },
         { status: 400 }
       );
     }
@@ -36,7 +42,8 @@ export async function DELETE(request: NextRequest) {
 
     const taskData = taskDoc.data();
     
-    if (taskData?.rezTaskMasterEmailAddress !== rezTaskMasterEmailAddress) {
+    // Verify the authenticated user owns this task
+    if (taskData?.rezTaskMasterEmailAddress !== authResult.email) {
       return NextResponse.json(
         { error: 'Unauthorized: Task does not belong to this task master' },
         { status: 403 }
@@ -45,7 +52,7 @@ export async function DELETE(request: NextRequest) {
 
     await deleteTaskFromPaxApp({
       taskId,
-      rezTaskMasterEmailAddress,
+      rezTaskMasterEmailAddress: authResult.email,
     });
 
     // Trigger notification about the deleted task (fire and forget)
@@ -56,7 +63,7 @@ export async function DELETE(request: NextRequest) {
         type: taskData.type || '',
         category: taskData.category || '',
         difficulty: taskData.levelOfDifficulty || '',
-        rezTaskMasterEmailAddress,
+        rezTaskMasterEmailAddress: authResult.email,
         action: 'deleted' as const,
         tallyFormUrl: taskData.link || undefined,
         estimatedTimeOfCompletionInMinutes: taskData.estimatedTimeOfCompletionInMinutes || undefined,
