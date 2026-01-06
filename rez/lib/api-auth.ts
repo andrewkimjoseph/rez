@@ -17,14 +17,21 @@ export async function verifyAuthToken(request: NextRequest): Promise<{ uid: stri
     }
 
     const auth = getAuth(getApp('rezApp'));
-    const decodedToken = await auth.verifyIdToken(token);
+    const decodedToken = await auth.verifyIdToken(token, true); // Check if token is revoked
     
     return {
       uid: decodedToken.uid,
       email: decodedToken.email,
     };
-  } catch (error) {
-    console.error('Error verifying auth token:', error);
+  } catch (error: any) {
+    // Log specific error types for debugging
+    if (error?.code === 'auth/id-token-expired') {
+      console.error('Auth token expired - client should refresh token');
+    } else if (error?.code === 'auth/argument-error') {
+      console.error('Invalid auth token format');
+    } else {
+      console.error('Error verifying auth token:', error);
+    }
     return null;
   }
 }
