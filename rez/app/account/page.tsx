@@ -14,7 +14,7 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import Image from "next/image";
 
@@ -56,7 +56,6 @@ export default function Account() {
 
   return (
     <div className="min-h-screen pb-20 sm:p-4 p-4 font-[family-name:var(--font-sen)]">
-      <Toaster />
       <h1 className="text-3xl md:text-4xl font-bold mt-2 mb-1">
         Account Management
       </h1>

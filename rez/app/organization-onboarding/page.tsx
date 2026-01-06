@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { z } from "zod";
 import {
   Form,
@@ -25,7 +25,10 @@ import { auth } from "@/firebase/clientConfig";
 import { createOrganizationInFirestore } from "@/firebase/firestore/services/createOrganizationInFirestore";
 import { useOrganizationStore } from "@/stores/organization-store";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
-import { Loader2Icon, ArrowLeft } from "lucide-react";
+import {
+  ArrowPathIcon,
+  ArrowLeftIcon,
+} from "@heroicons/react/24/outline";
 import { updateTaskMasterOrganizationId } from "@/firebase/firestore/services/updateTaskMasterOrganizationId";
 import { deleteTaskMasterFromFirestore } from "@/firebase/firestore/services/deleteTaskMasterFromFirestore";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
@@ -150,7 +153,6 @@ export default function OrganizationOnboardingPage() {
   }
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      <Toaster />
       {/* Left Side - Form */}
       <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 py-8 md:py-0 px-4">
         <div className="w-full max-w-md">
@@ -165,12 +167,12 @@ export default function OrganizationOnboardingPage() {
             >
               {goingBack ? (
                 <>
-                  <Loader2Icon className="h-4 w-4 mr-2 animate-spin" />
+                  <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
                   Cancelling...
                 </>
               ) : (
                 <>
-                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  <ArrowLeftIcon className="h-4 w-4 mr-2" />
                   Go Back
                 </>
               )}
@@ -270,7 +272,7 @@ export default function OrganizationOnboardingPage() {
                 >
                   {loading ? (
                     <>
-                      <Loader2Icon className="animate-spin mr-2 h-4 w-4" />
+                      <ArrowPathIcon className="animate-spin mr-2 h-4 w-4" />
                       Creating organization...
                     </>
                   ) : (

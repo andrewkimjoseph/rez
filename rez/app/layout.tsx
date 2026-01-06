@@ -10,6 +10,7 @@ import Script from "next/script";
 import { TallyWidget } from "@/components/tally-widget";
 import { AmplitudeProvider } from "@/providers/AmplitudeProvider";
 import { AuthHydrator } from "@/components/auth-hydrator";
+import { Toaster } from "@/components/toaster";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -54,6 +55,7 @@ export default function RootLayout({
             strategy="afterInteractive"
           />
           <TallyWidget />
+          <Toaster />
         </AmplitudeProvider>
       </body>
     </html>

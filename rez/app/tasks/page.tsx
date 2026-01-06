@@ -2,10 +2,15 @@
 
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import NewTask from "@/components/new-task/tab-component/NewTask";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Clock, Plus, List } from "lucide-react";
+import {
+  ArrowPathIcon,
+  ClockIcon,
+  PlusIcon,
+  ListBulletIcon,
+} from "@heroicons/react/24/outline";
 import { useTasksStore } from "@/stores/tasks-store";
 import { useRefreshStore } from "@/stores/refresh-store";
 import { useState, useEffect } from "react";
@@ -14,7 +19,7 @@ import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 export default function Tasks() {
   const [selectedTab, setSelectedTab] = React.useState("create");
-  const { fetchTasksAndCompletions, isLoading } = useTasksStore();
+  const { fetchTasksAndCompletions, isLoading, tasks } = useTasksStore();
   const { checkCanRefresh, updateRefreshTime } = useRefreshStore();
   const [, forceUpdate] = useState({});
   const [isHydrated, setIsHydrated] = useState(false);
@@ -81,7 +86,6 @@ export default function Tasks() {
 
   return (
     <div className="min-h-screen p-6 md:p-8">
-      <Toaster />
       <div className={selectedTab === "view-tasks" ? "" : "max-w-3xl"}>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -100,9 +104,9 @@ export default function Tasks() {
               className="self-start sm:self-auto"
             >
               {isHydrated && !tasksRefreshStatus.canRefresh ? (
-                <Clock className="h-4 w-4 mr-2" />
+                <ClockIcon className="h-4 w-4 mr-2" />
               ) : (
-                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+                <ArrowPathIcon className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
               )}
               {isHydrated && !tasksRefreshStatus.canRefresh
                 ? `${tasksRefreshStatus.formattedTime}`
@@ -130,14 +134,14 @@ export default function Tasks() {
               value="create"
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm px-4 py-2.5 rounded-md transition-all duration-200 text-sm font-medium"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <PlusIcon className="h-4 w-4 mr-2" />
               Create New Task
             </TabsTrigger>
             <TabsTrigger
               value="view-tasks"
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm px-4 py-2.5 rounded-md transition-all duration-200 text-sm font-medium"
             >
-              <List className="h-4 w-4 mr-2" />
+              <ListBulletIcon className="h-4 w-4 mr-2" />
               View Tasks
             </TabsTrigger>
           </TabsList>
@@ -149,9 +153,14 @@ export default function Tasks() {
           </TabsContent>
 
           <TabsContent value="view-tasks" className="mt-0">
-            <div className="enterprise-card bg-card rounded-lg border border-border/50 p-6">
+            <div className="enterprise-card bg-card rounded-lg border border-border/50">
               <ViewTasks />
             </div>
+            {selectedTab === "view-tasks" && (
+              <p className="text-sm text-muted-foreground text-center mt-4">
+                Showing {tasks.length} task{tasks.length !== 1 ? 's' : ''}
+              </p>
+            )}
           </TabsContent>
         </Tabs>
       </div>
