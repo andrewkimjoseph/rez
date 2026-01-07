@@ -232,13 +232,13 @@ export default function PrivacyPolicyPage() {
               </ul>
               <p className="text-muted-foreground leading-relaxed mt-4">
                 To exercise these rights, please contact us using the information provided in the 
-                "Contact Us" section below.
+                &quot;Contact Us&quot; section below.
               </p>
             </section>
 
             {/* Children's Privacy */}
             <section>
-              <h2 className="text-2xl font-semibold mb-4">8. Children's Privacy</h2>
+              <h2 className="text-2xl font-semibold mb-4">8. Children&apos;s Privacy</h2>
               <p className="text-muted-foreground leading-relaxed">
                 Our service is not intended for individuals under the age of 18. We do not knowingly 
                 collect personal information from children under 18. If you become aware that a child 
@@ -264,7 +264,7 @@ export default function PrivacyPolicyPage() {
               <h2 className="text-2xl font-semibold mb-4">10. Changes to This Privacy Policy</h2>
               <p className="text-muted-foreground leading-relaxed">
                 We may update this Privacy Policy from time to time. We will notify you of any changes 
-                by posting the new Privacy Policy on this page and updating the "Last updated" date. 
+                by posting the new Privacy Policy on this page and updating the &quot;Last updated&quot; date. 
                 You are advised to review this Privacy Policy periodically for any changes. Changes to 
                 this Privacy Policy are effective when they are posted on this page.
               </p>

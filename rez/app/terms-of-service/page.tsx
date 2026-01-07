@@ -171,7 +171,7 @@ export default function TermsOfServicePage() {
               <p className="text-muted-foreground leading-relaxed">
                 You agree to indemnify, defend, and hold harmless Canvassing, its affiliates, 
                 officers, directors, employees, and agents from and against any claims, liabilities, 
-                damages, losses, and expenses, including reasonable attorneys' fees, arising out of 
+                damages, losses, and expenses, including reasonable attorneys&apos; fees, arising out of 
                 or in any way connected with your use of the service or violation of these Terms.
               </p>
             </section>
