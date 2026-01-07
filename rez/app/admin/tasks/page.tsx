@@ -32,6 +32,7 @@ import {
   ArrowLeftIcon,
   MagnifyingGlassIcon,
   EllipsisVerticalIcon,
+  PowerIcon,
 } from "@heroicons/react/24/outline";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -44,6 +45,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
 export default function AdminTasksPage() {
@@ -53,8 +55,10 @@ export default function AdminTasksPage() {
     tasks, 
     isLoadingTasks,
     isDeleting,
+    isUpdating,
     fetchAllTasks,
     deleteTask,
+    updateTask,
     error 
   } = useAdminStore();
   
@@ -64,6 +68,8 @@ export default function AdminTasksPage() {
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [taskToToggle, setTaskToToggle] = useState<Task | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -118,6 +124,30 @@ export default function AdminTasksPage() {
 
   const handleEditSuccess = () => {
     toast.success("Task updated successfully");
+  };
+
+  const handleStatusToggleClick = (task: Task) => {
+    setTaskToToggle(task);
+    setStatusDialogOpen(true);
+  };
+
+  const handleConfirmStatusToggle = async () => {
+    if (!taskToToggle?.id) return;
+    
+    const newStatus = !taskToToggle.isAvailable;
+    const success = await updateTask(taskToToggle.id, { isAvailable: newStatus });
+    if (success) {
+      setStatusDialogOpen(false);
+      setTaskToToggle(null);
+      toast.success(`Task ${newStatus ? 'activated' : 'deactivated'} successfully`);
+    } else {
+      toast.error('Failed to update task status');
+    }
+  };
+
+  const handleCancelStatusToggle = () => {
+    setStatusDialogOpen(false);
+    setTaskToToggle(null);
   };
 
   const getTaskTypeLabel = (type: string | null | undefined) => {
@@ -353,6 +383,15 @@ export default function AdminTasksPage() {
                             <PencilIcon className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => handleStatusToggleClick(task)}
+                            className="cursor-pointer"
+                          >
+                            <PowerIcon className={`h-4 w-4 mr-2 ${task.isAvailable ? '' : 'opacity-50'}`} />
+                            {task.isAvailable ? 'Deactivate' : 'Activate'}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => handleDeleteClick(task)}
                             variant="destructive"
@@ -404,6 +443,45 @@ export default function AdminTasksPage() {
                     Deleting...
                   </>
                 ) : 'Delete'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Status Toggle Confirmation Dialog */}
+        <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {taskToToggle?.isAvailable ? 'Deactivate Task' : 'Activate Task'}
+              </DialogTitle>
+              <DialogDescription>
+                Are you sure you want to {taskToToggle?.isAvailable ? 'deactivate' : 'activate'} &quot;{taskToToggle?.title || 'this task'}&quot;?
+                {taskToToggle?.isAvailable 
+                  ? ' Users will no longer be able to complete this task.'
+                  : ' This task will become available for users to complete.'
+                }
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={handleCancelStatusToggle}
+                disabled={isUpdating}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant={taskToToggle?.isAvailable ? "secondary" : "default"}
+                onClick={handleConfirmStatusToggle}
+                disabled={isUpdating}
+              >
+                {isUpdating ? (
+                  <>
+                    <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
+                    Updating...
+                  </>
+                ) : taskToToggle?.isAvailable ? 'Deactivate' : 'Activate'}
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -56,6 +56,9 @@ export async function PATCH(request: NextRequest) {
     const adminDocRef = rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(authResult.uid);
     const adminDoc = await adminDocRef.get();
     const adminData = adminDoc.data();
+    
+    // Get admin email - prefer from auth token, fallback to Firestore document
+    const adminEmail = authResult.email || adminData?.emailAddress || 'Unknown';
 
     // Verify task exists
     const taskRef = paxDB.collection(COLLECTIONS.TASKS).doc(taskId);
@@ -67,6 +70,9 @@ export async function PATCH(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    const oldTaskData = taskDoc.data();
+    const oldIsAvailable = oldTaskData?.isAvailable;
 
     // Filter out undefined values
     const updateData: Record<string, unknown> = {};
@@ -81,6 +87,15 @@ export async function PATCH(request: NextRequest) {
         { error: 'No valid fields to update' },
         { status: 400 }
       );
+    }
+
+    // Determine action type: if only isAvailable changed, use activated/deactivated
+    const isStatusChange = 'isAvailable' in updateData && Object.keys(updateData).length === 1;
+    const newIsAvailable = updateData.isAvailable as boolean | undefined;
+    let action: 'updated' | 'activated' | 'deactivated' = 'updated';
+    
+    if (isStatusChange && typeof newIsAvailable === 'boolean' && typeof oldIsAvailable === 'boolean') {
+      action = newIsAvailable ? 'activated' : 'deactivated';
     }
 
     // Update the task
@@ -101,20 +116,24 @@ export async function PATCH(request: NextRequest) {
         type: taskData?.type || '',
         category: taskData?.category || '',
         difficulty: taskData?.levelOfDifficulty || '',
-        rezTaskMasterEmailAddress: taskData?.rezTaskMasterEmailAddress || adminData?.emailAddress,
-        action: 'updated',
+        rezTaskMasterEmailAddress: taskData?.rezTaskMasterEmailAddress || adminEmail,
+        action,
+        updatedByEmail: adminEmail,
         estimatedTimeOfCompletionInMinutes: taskData?.estimatedTimeOfCompletionInMinutes,
         targetNumberOfParticipants: taskData?.targetNumberOfParticipants,
         rewardAmountPerParticipant: taskData?.rewardAmountPerParticipant,
       };
 
+      // Fire and forget - don't await to avoid blocking the response
       fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/notifyRezTotifierOfUpdatedOrDeletedTask`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(notificationData),
-      }).catch(() => {});
+      }).catch(() => {
+        // Ignore notification errors
+      });
     } catch {
-      // Ignore notification errors
+      // Ignore notification errors - don't fail the main request
     }
 
     return NextResponse.json({

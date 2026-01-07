@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -11,101 +10,14 @@ import {
 } from "@/components/ui/table";
 import { useTasksData } from "@/hooks/use-tasks-data";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Task } from "@/firebase/firestore/models/Task";
-import { useTasksStore } from "@/stores/tasks-store";
-import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import {
-  TrashIcon,
   XCircleIcon,
   ArrowPathIcon,
-  PowerIcon,
-  PencilIcon,
-  EllipsisVerticalIcon,
 } from "@heroicons/react/24/outline";
-import EditTaskDialog from "../../EditTaskDialog";
-import { toast } from "sonner";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 
 export default function ViewTasks() {
-  const { tasks, taskCompletions, isLoading, error, refetch } = useTasksData({ autoFetch: false });
-  const { deleteTask, isDeleting, updateTaskStatus, isUpdatingStatus } = useTasksStore();
-  const user = useTaskMasterStore((state) => state.user);
-  const isSuperAdmin = user?.isSuperAdmin === true;
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
-  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
-  const [taskToToggle, setTaskToToggle] = useState<Task | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
-
-  const handleDeleteClick = (task: Task) => {
-    setTaskToDelete(task);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleEditClick = (task: Task) => {
-    setTaskToEdit(task);
-    setEditDialogOpen(true);
-  };
-
-  const handleEditSuccess = async () => {
-    await refetch();
-  };
-
-  const handleStatusToggleClick = (task: Task) => {
-    setTaskToToggle(task);
-    setStatusDialogOpen(true);
-  };
-
-  const handleConfirmStatusToggle = async () => {
-    if (!taskToToggle?.id) return;
-    
-    const newStatus = !taskToToggle.isAvailable;
-    const success = await updateTaskStatus(taskToToggle.id, newStatus);
-    if (success) {
-      setStatusDialogOpen(false);
-      setTaskToToggle(null);
-      toast.success(`Task ${newStatus ? 'activated' : 'deactivated'} successfully`);
-    } else {
-      toast.error('Failed to update task status');
-    }
-  };
-
-  const handleCancelStatusToggle = () => {
-    setStatusDialogOpen(false);
-    setTaskToToggle(null);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!taskToDelete?.id) return;
-    
-    const success = await deleteTask(taskToDelete.id);
-    if (success) {
-      setDeleteDialogOpen(false);
-      setTaskToDelete(null);
-      await refetch();
-    }
-  };
-
-  const handleCancelDelete = () => {
-    setDeleteDialogOpen(false);
-    setTaskToDelete(null);
-  };
+  const { tasks, taskCompletions, isLoading, error } = useTasksData({ autoFetch: false });
 
   const getTaskTypeLabel = (type: string | null | undefined) => {
     switch (type) {
@@ -222,7 +134,6 @@ export default function ViewTasks() {
               <TableHead className="text-right font-semibold">Target</TableHead>
               <TableHead className="text-right font-semibold">Completions</TableHead>
               <TableHead className="font-semibold">Created</TableHead>
-              <TableHead className="w-[120px] text-center font-semibold">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -268,135 +179,11 @@ export default function ViewTasks() {
                 <TableCell className="text-muted-foreground">
                   {formatTaskTimestamp(task.timeCreated)}
                 </TableCell>
-                <TableCell className="text-center">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                      >
-                        <EllipsisVerticalIcon className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {isSuperAdmin && (
-                        <>
-                          <DropdownMenuItem
-                            onClick={() => handleEditClick(task)}
-                            className="cursor-pointer"
-                          >
-                            <PencilIcon className="h-4 w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                        </>
-                      )}
-                      <DropdownMenuItem
-                        onClick={() => handleStatusToggleClick(task)}
-                        className="cursor-pointer"
-                      >
-                        <PowerIcon className={`h-4 w-4 mr-2 ${task.isAvailable ? '' : 'opacity-50'}`} />
-                        {task.isAvailable ? 'Deactivate' : 'Activate'}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => handleDeleteClick(task)}
-                        variant="destructive"
-                        className="cursor-pointer"
-                      >
-                        <TrashIcon className="h-4 w-4 mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Task</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete &quot;{taskToDelete?.title || 'this task'}&quot;? 
-              This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={handleCancelDelete}
-              disabled={isDeleting}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleConfirmDelete}
-              disabled={isDeleting}
-            >
-              {isDeleting ? (
-                <>
-                  <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
-                  Deleting...
-                </>
-              ) : 'Delete'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Status Toggle Confirmation Dialog */}
-      <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {taskToToggle?.isAvailable ? 'Deactivate Task' : 'Activate Task'}
-            </DialogTitle>
-            <DialogDescription>
-              Are you sure you want to {taskToToggle?.isAvailable ? 'deactivate' : 'activate'} &quot;{taskToToggle?.title || 'this task'}&quot;?
-              {taskToToggle?.isAvailable 
-                ? ' Users will no longer be able to complete this task.'
-                : ' This task will become available for users to complete.'
-              }
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={handleCancelStatusToggle}
-              disabled={isUpdatingStatus}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant={taskToToggle?.isAvailable ? "secondary" : "default"}
-              onClick={handleConfirmStatusToggle}
-              disabled={isUpdatingStatus}
-            >
-              {isUpdatingStatus ? (
-                <>
-                  <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
-                  Updating...
-                </>
-              ) : taskToToggle?.isAvailable ? 'Deactivate' : 'Activate'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Task Dialog */}
-      <EditTaskDialog
-        task={taskToEdit}
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        onSuccess={handleEditSuccess}
-      />
     </div>
   );
 }

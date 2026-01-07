@@ -25,6 +25,9 @@ export async function DELETE(request: NextRequest) {
     const adminDocRef = rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(authResult.uid);
     const adminDoc = await adminDocRef.get();
     const adminData = adminDoc.data();
+    
+    // Get admin email - prefer from auth token, fallback to Firestore document
+    const adminEmail = authResult.email || adminData?.emailAddress || 'Unknown';
 
     // Fetch task data before deletion for notification
     const taskRef = paxDB.collection(COLLECTIONS.TASKS).doc(taskId);
@@ -50,8 +53,9 @@ export async function DELETE(request: NextRequest) {
         type: taskData?.type || '',
         category: taskData?.category || '',
         difficulty: taskData?.levelOfDifficulty || '',
-        rezTaskMasterEmailAddress: taskData?.rezTaskMasterEmailAddress || adminData?.emailAddress,
+        rezTaskMasterEmailAddress: taskData?.rezTaskMasterEmailAddress || adminEmail,
         action: 'deleted',
+        updatedByEmail: adminEmail,
       };
 
       fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/notifyRezTotifierOfUpdatedOrDeletedTask`, {

@@ -16,6 +16,7 @@ interface TaskNotificationData {
   difficulty: string;
   rezTaskMasterEmailAddress: string;
   action: 'updated' | 'deleted' | 'activated' | 'deactivated';
+  updatedByEmail?: string;
   tallyFormUrl?: string;
   estimatedTimeOfCompletionInMinutes?: number;
   targetNumberOfParticipants?: number;
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { taskId, title, type, category, difficulty, rezTaskMasterEmailAddress, action } = taskData;
+    const { taskId, title, type, category, difficulty, rezTaskMasterEmailAddress, action, updatedByEmail } = taskData;
 
     if (!taskId) {
       return NextResponse.json(
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
       `*Difficulty:* ${escapeMarkdown(difficulty || "Not specified")}\n` +
       `*Creator Email:* ${escapeMarkdown(rezTaskMasterEmailAddress || "Not provided")}\n`;
 
-    // Only include task details for updates (deleted/activated/deactivated tasks might not need all fields)
+    // Include task details for updates
     if (action === 'updated') {
       messageText += 
         `*Estimated Time:* ${taskData.estimatedTimeOfCompletionInMinutes || 'N/A'} minutes\n` +
@@ -124,7 +125,28 @@ export async function POST(request: NextRequest) {
         `*Reward per Participant:* $${taskData.rewardAmountPerParticipant || 'N/A'}\n`;
     }
 
-    messageText += `*${actionText} At (Kenya):* ${new Date().toLocaleString("en-US", {
+    // Always show who performed the action
+    const byEmail = updatedByEmail && typeof updatedByEmail === 'string' && updatedByEmail.trim().length > 0
+      ? updatedByEmail.trim()
+      : 'Unknown';
+    
+    // Add the "By" field based on action type
+    let byField = '';
+    if (action === 'activated') {
+      byField = `*Activated By:* ${escapeMarkdown(byEmail)}\n`;
+    } else if (action === 'deactivated') {
+      byField = `*Deactivated By:* ${escapeMarkdown(byEmail)}\n`;
+    } else if (action === 'updated') {
+      byField = `*Updated By:* ${escapeMarkdown(byEmail)}\n`;
+    } else if (action === 'deleted') {
+      byField = `*Deleted By:* ${escapeMarkdown(byEmail)}\n`;
+    } else {
+      byField = `*Modified By:* ${escapeMarkdown(byEmail)}\n`;
+    }
+    
+    messageText += byField;
+
+    messageText += `\n*${actionText} At (Kenya):* ${new Date().toLocaleString("en-US", {
       timeZone: "Africa/Nairobi",
     })}`;
 
