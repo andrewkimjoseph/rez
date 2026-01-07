@@ -49,7 +49,7 @@ export default function PrivacyPolicyPage() {
             <section>
               <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Canvassing ("we," "us," or "our") operates Rez, a research management platform. 
+                Canvassing (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) operates Rez, a research management platform. 
                 We are committed to protecting your privacy and ensuring the security of your personal 
                 information. This Privacy Policy explains how we collect, use, disclose, and safeguard 
                 your information when you use our service.

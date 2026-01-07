@@ -49,9 +49,9 @@ export default function TermsOfServicePage() {
             <section>
               <h2 className="text-2xl font-semibold mb-4">1. Agreement to Terms</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Welcome to Rez, a research platform operated by Canvassing ("we," "us," or "our"). 
+                Welcome to Rez, a research platform operated by Canvassing (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;). 
                 By accessing or using our service, you agree to be bound by these Terms of Service 
-                ("Terms"). If you disagree with any part of these terms, you may not access the service.
+                (&quot;Terms&quot;). If you disagree with any part of these terms, you may not access the service.
               </p>
             </section>
 
