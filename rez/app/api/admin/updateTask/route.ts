@@ -82,6 +82,22 @@ export async function PATCH(request: NextRequest) {
       }
     });
 
+    // If super admin is reassigning task to different task master, validate the email
+    if (updateData.rezTaskMasterEmailAddress) {
+      const newTaskMasterEmail = updateData.rezTaskMasterEmailAddress as string;
+      const taskMasterRef = rezDB.collection(COLLECTIONS.TASK_MASTERS)
+        .where('emailAddress', '==', newTaskMasterEmail)
+        .limit(1);
+      const taskMasterSnapshot = await taskMasterRef.get();
+      
+      if (taskMasterSnapshot.empty) {
+        return NextResponse.json(
+          { error: 'Invalid task master email address' },
+          { status: 400 }
+        );
+      }
+    }
+
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
         { error: 'No valid fields to update' },

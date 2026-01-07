@@ -82,7 +82,13 @@ export default function NewTask() {
   const { createNewTaskClicked, createNewTaskComplete, createNewTaskFailed } =
     useAmplitudeEvents();
   // Check if user can create a new task (once per week limit)
+  // Super admins are exempt from rate limiting
   const getTaskCreationStatus = () => {
+    // Super admins can always create tasks
+    if (user?.isSuperAdmin === true) {
+      return { canCreate: true, lastTaskDate: null, daysLeft: 0 };
+    }
+
     if (!user?.emailAddress || !tasks.length) {
       return { canCreate: true, lastTaskDate: null, daysLeft: 0 };
     }
@@ -181,6 +187,12 @@ export default function NewTask() {
       setIsCreating(true);
       createNewTaskClicked();
       try {
+        // Get the last task creation timestamp to send to API (avoids DB reads)
+        let lastTaskCreatedAt: number | null = null;
+        if (taskCreationStatus.lastTaskDate) {
+          lastTaskCreatedAt = taskCreationStatus.lastTaskDate.getTime();
+        }
+
         // Create the task via API route
         const response = await fetch("/api/createTask", {
           method: "POST",
@@ -196,6 +208,12 @@ export default function NewTask() {
             link: data.link,
             instructions: data.instructions,
             feedback: data.feedback,
+            lastTaskCreatedAt, // Send timestamp to avoid server DB reads
+            isSuperAdmin: user?.isSuperAdmin === true, // Send super admin status to avoid server DB reads
+            // Super admin can assign to different task master
+            assignedTaskMasterEmailAddress: user?.isSuperAdmin && data.assignToTaskMaster
+              ? data.assignedTaskMasterEmailAddress
+              : undefined,
           }),
         });
 

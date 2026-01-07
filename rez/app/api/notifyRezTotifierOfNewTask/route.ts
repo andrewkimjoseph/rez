@@ -14,7 +14,8 @@ interface TaskNotificationData {
   type: string;
   category: string;
   difficulty: string;
-  rezTaskMasterEmailAddress: string;
+  creatorEmail: string; // Person who created the task
+  rezTaskMasterEmailAddress: string; // Person assigned to the task (assignee)
   tallyFormUrl?: string;
   estimatedTimeOfCompletionInMinutes?: number;
   targetNumberOfParticipants?: number;
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { taskId, title, type, category, difficulty, rezTaskMasterEmailAddress } = taskData;
+    const { taskId, title, type, category, difficulty, creatorEmail, rezTaskMasterEmailAddress } = taskData;
 
     if (!taskId) {
       return NextResponse.json(
@@ -72,7 +73,8 @@ export async function POST(request: NextRequest) {
         `*Type:* ${escapeMarkdown(type || "Not specified")}\n` +
         `*Category:* ${escapeMarkdown(category || "Not specified")}\n` +
         `*Difficulty:* ${escapeMarkdown(difficulty || "Not specified")}\n` +
-        `*Creator Email:* ${escapeMarkdown(rezTaskMasterEmailAddress || "Not provided")}\n` +
+        `*Creator Email:* ${escapeMarkdown(creatorEmail || "Not provided")}\n` +
+        `*Assignee Email:* ${escapeMarkdown(rezTaskMasterEmailAddress || "Not provided")}\n` +
         `*Estimated Time:* ${taskData.estimatedTimeOfCompletionInMinutes || 'N/A'} minutes\n` +
         `*Target Participants:* ${taskData.targetNumberOfParticipants || 'N/A'}\n` +
         `*Reward per Participant:* $${taskData.rewardAmountPerParticipant || 'N/A'}\n` +

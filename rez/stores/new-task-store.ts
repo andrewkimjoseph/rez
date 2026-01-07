@@ -21,6 +21,9 @@ export interface NewTaskData {
   instructions?: string; // Instructions for completing the task
   feedback?: string; // Link to feedback form (for checkOutApp)
   // Step 5: Review (no extra fields, just review all above)
+  // Super admin only: Assign to different task master
+  assignToTaskMaster?: boolean;
+  assignedTaskMasterEmailAddress?: string;
 }
 
 interface NewTaskStore {

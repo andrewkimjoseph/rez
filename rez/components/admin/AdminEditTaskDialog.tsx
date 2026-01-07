@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supportedTokens } from "@/utils/currencies";
 import Image from "next/image";
+import { useTaskMasterStore } from "@/stores/taskmaster-store";
 
 interface AdminEditTaskDialogProps {
   task: Task | null;
@@ -82,6 +83,20 @@ export default function AdminEditTaskDialog({
   
   // Contract
   const [managerContractAddress, setManagerContractAddress] = useState("");
+  
+  // Task Master Assignment (Super Admin only)
+  const [assignToTaskMaster, setAssignToTaskMaster] = useState(false);
+  const [assignedTaskMasterEmailAddress, setAssignedTaskMasterEmailAddress] = useState("");
+  const { user } = useTaskMasterStore();
+  const { taskMasters, fetchAllTaskMasters } = useAdminStore();
+  const isSuperAdmin = user?.isSuperAdmin === true;
+
+  // Fetch task masters if super admin
+  useEffect(() => {
+    if (isSuperAdmin && taskMasters.length === 0) {
+      fetchAllTaskMasters();
+    }
+  }, [isSuperAdmin, taskMasters.length, fetchAllTaskMasters]);
 
   // Initialize form with task data when task changes
   useEffect(() => {
@@ -103,6 +118,9 @@ export default function AdminEditTaskDialog({
       setIsAvailable(task.isAvailable || false);
       setIsTest(task.isTest || false);
       setManagerContractAddress(task.managerContractAddress || "");
+      // Initialize task master assignment
+      setAssignedTaskMasterEmailAddress(task.rezTaskMasterEmailAddress || "");
+      setAssignToTaskMaster(false); // Start with unchecked
     }
   }, [task]);
 
@@ -137,6 +155,13 @@ export default function AdminEditTaskDialog({
       updateData.isTest = isTest;
     if (managerContractAddress !== (task.managerContractAddress || "")) 
       updateData.managerContractAddress = managerContractAddress;
+    
+    // Super admin can reassign task to different task master
+    if (isSuperAdmin && assignToTaskMaster && assignedTaskMasterEmailAddress) {
+      if (assignedTaskMasterEmailAddress !== (task.rezTaskMasterEmailAddress || "")) {
+        updateData.rezTaskMasterEmailAddress = assignedTaskMasterEmailAddress;
+      }
+    }
 
     if (Object.keys(updateData).length === 0) {
       toast.info("No changes detected");
@@ -470,6 +495,60 @@ export default function AdminEditTaskDialog({
                 />
               </div>
             </div>
+
+            {/* Task Master Assignment (Super Admin only) */}
+            {isSuperAdmin && (
+              <div className="space-y-4 p-4 rounded-lg border border-primary/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-base font-semibold">Assign to Task Master</Label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Reassign this task to a different task master
+                    </p>
+                  </div>
+                  <Switch
+                    checked={assignToTaskMaster}
+                    onCheckedChange={(checked) => {
+                      setAssignToTaskMaster(checked);
+                      if (!checked) {
+                        setAssignedTaskMasterEmailAddress(task?.rezTaskMasterEmailAddress || "");
+                      }
+                    }}
+                  />
+                </div>
+                {assignToTaskMaster && (
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-assigned-task-master-select">Select Task Master</Label>
+                    {taskMasters.length > 0 ? (
+                      <Select
+                        value={assignedTaskMasterEmailAddress}
+                        onValueChange={setAssignedTaskMasterEmailAddress}
+                      >
+                        <SelectTrigger id="edit-assigned-task-master-select">
+                          <SelectValue placeholder="Select a task master..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {taskMasters
+                            .filter((tm) => tm.emailAddress && tm.emailAddress !== user?.emailAddress)
+                            .map((tm) => (
+                              <SelectItem key={tm.id} value={tm.emailAddress || ""}>
+                                {tm.name || tm.emailAddress} ({tm.emailAddress})
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Loading task masters...</p>
+                    )}
+                    {task && (
+                      <p className="text-xs text-muted-foreground">
+                        Current: {task.rezTaskMasterEmailAddress || "Not assigned"}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
 

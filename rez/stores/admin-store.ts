@@ -21,6 +21,7 @@ export interface AdminUpdateTaskData {
   numberOfCooldownHours?: number;
   paymentTerms?: string;
   managerContractAddress?: string;
+  rezTaskMasterEmailAddress?: string; // Super admin can reassign task to different task master
 }
 
 export interface AdminUpdateTaskMasterData {
