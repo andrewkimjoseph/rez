@@ -29,9 +29,17 @@ import {
   ArrowPathIcon,
   PowerIcon,
   PencilIcon,
+  EllipsisVerticalIcon,
 } from "@heroicons/react/24/outline";
 import EditTaskDialog from "../../EditTaskDialog";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 export default function ViewTasks() {
   const { tasks, taskCompletions, isLoading, error, refetch } = useTasksData({ autoFetch: false });
@@ -261,40 +269,47 @@ export default function ViewTasks() {
                   {formatTaskTimestamp(task.timeCreated)}
                 </TableCell>
                 <TableCell className="text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    {isSuperAdmin && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
-                        onClick={() => handleEditClick(task)}
-                        title="Edit task"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
                       >
-                        <PencilIcon className="h-4 w-4" />
+                        <EllipsisVerticalIcon className="h-4 w-4" />
                       </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={`h-8 w-8 ${task.isAvailable 
-                        ? 'text-muted-foreground hover:text-amber-600 hover:bg-amber-500/10' 
-                        : 'text-muted-foreground hover:text-emerald-600 hover:bg-emerald-500/10'
-                      }`}
-                      onClick={() => handleStatusToggleClick(task)}
-                      title={task.isAvailable ? 'Deactivate task' : 'Activate task'}
-                    >
-                      <PowerIcon className={`h-4 w-4 ${task.isAvailable ? '' : 'opacity-50'}`} />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => handleDeleteClick(task)}
-                      title="Delete task"
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </Button>
-                  </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {isSuperAdmin && (
+                        <>
+                          <DropdownMenuItem
+                            onClick={() => handleEditClick(task)}
+                            className="cursor-pointer"
+                          >
+                            <PencilIcon className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                        </>
+                      )}
+                      <DropdownMenuItem
+                        onClick={() => handleStatusToggleClick(task)}
+                        className="cursor-pointer"
+                      >
+                        <PowerIcon className={`h-4 w-4 mr-2 ${task.isAvailable ? '' : 'opacity-50'}`} />
+                        {task.isAvailable ? 'Deactivate' : 'Activate'}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => handleDeleteClick(task)}
+                        variant="destructive"
+                        className="cursor-pointer"
+                      >
+                        <TrashIcon className="h-4 w-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}

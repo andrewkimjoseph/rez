@@ -25,6 +25,7 @@ import {
   UserIcon,
   UserMinusIcon,
   UserPlusIcon,
+  EllipsisVerticalIcon,
 } from "@heroicons/react/24/outline";
 import {
   Dialog,
@@ -39,6 +40,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { toast } from "sonner";
 import AdminEditTaskMasterDialog from "@/components/admin/AdminEditTaskMasterDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 export default function AdminTaskMastersPage() {
   const router = useRouter();
@@ -334,36 +342,47 @@ export default function AdminTaskMastersPage() {
                       {formatTimestamp(taskMaster.timeCreated)}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center justify-start gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
-                          onClick={() => handleEditClick(taskMaster)}
-                          title="Edit task master"
-                        >
-                          <PencilIcon className="h-4 w-4" />
-                        </Button>
-                        {!(taskMaster as TaskMaster & { isSuperAdmin?: boolean }).isSuperAdmin && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className={`h-8 w-8 ${
-                              (taskMaster as TaskMaster & { disabled?: boolean }).disabled
-                                ? 'text-muted-foreground hover:text-emerald-600 hover:bg-emerald-500/10'
-                                : 'text-muted-foreground hover:text-destructive hover:bg-destructive/10'
-                            }`}
-                            onClick={() => handleToggleStatusClick(taskMaster as TaskMaster & { disabled?: boolean; isSuperAdmin?: boolean })}
-                            title={(taskMaster as TaskMaster & { disabled?: boolean }).disabled ? "Enable task master" : "Disable task master"}
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
                           >
-                            {(taskMaster as TaskMaster & { disabled?: boolean }).disabled ? (
-                              <UserPlusIcon className="h-4 w-4" />
-                            ) : (
-                              <UserMinusIcon className="h-4 w-4" />
-                            )}
+                            <EllipsisVerticalIcon className="h-4 w-4" />
                           </Button>
-                        )}
-                      </div>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => handleEditClick(taskMaster)}
+                            className="cursor-pointer"
+                          >
+                            <PencilIcon className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          {!(taskMaster as TaskMaster & { isSuperAdmin?: boolean }).isSuperAdmin && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => handleToggleStatusClick(taskMaster as TaskMaster & { disabled?: boolean; isSuperAdmin?: boolean })}
+                                className="cursor-pointer"
+                              >
+                                {(taskMaster as TaskMaster & { disabled?: boolean }).disabled ? (
+                                  <>
+                                    <UserPlusIcon className="h-4 w-4 mr-2" />
+                                    Enable
+                                  </>
+                                ) : (
+                                  <>
+                                    <UserMinusIcon className="h-4 w-4 mr-2" />
+                                    Disable
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}

@@ -31,6 +31,7 @@ import {
   XCircleIcon,
   ArrowLeftIcon,
   MagnifyingGlassIcon,
+  EllipsisVerticalIcon,
 } from "@heroicons/react/24/outline";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -38,6 +39,12 @@ import Image from "next/image";
 import { toast } from "sonner";
 import AdminEditTaskDialog from "@/components/admin/AdminEditTaskDialog";
 import { getTokenInfo } from "@/utils/currencies";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function AdminTasksPage() {
   const router = useRouter();
@@ -328,26 +335,34 @@ export default function AdminTasksPage() {
                       {formatTimestamp(task.timeCreated)}
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
-                          onClick={() => handleEditClick(task)}
-                          title="Edit task"
-                        >
-                          <PencilIcon className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDeleteClick(task)}
-                          title="Delete task"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          >
+                            <EllipsisVerticalIcon className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => handleEditClick(task)}
+                            className="cursor-pointer"
+                          >
+                            <PencilIcon className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteClick(task)}
+                            variant="destructive"
+                            className="cursor-pointer"
+                          >
+                            <TrashIcon className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
