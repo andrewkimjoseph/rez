@@ -16,7 +16,11 @@ import {
   ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 
-export default function ViewTasks() {
+interface ViewAllTasksProps {
+  searchQuery?: string;
+}
+
+export default function ViewTasks({ searchQuery = "" }: ViewAllTasksProps) {
   const { tasks, taskCompletions, isLoading, error } = useTasksData({ autoFetch: false });
 
   const getTaskTypeLabel = (type: string | null | undefined) => {
@@ -37,7 +41,19 @@ export default function ViewTasks() {
     return taskCompletions.filter(completion => completion.taskId === taskId).length;
   };
 
-  const sortedTasks = [...tasks].sort((a, b) => {
+  // Filter tasks based on search query
+  const filteredTasks = tasks.filter(task => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      (task.title?.toLowerCase().includes(query)) ||
+      (task.id?.toLowerCase().includes(query)) ||
+      (task.category?.toLowerCase().includes(query)) ||
+      (task.rezTaskMasterEmailAddress?.toLowerCase().includes(query))
+    );
+  });
+
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
     const getDeadlineTime = (deadline: unknown) => {
       if (!deadline) return 0;
       const d = deadline as Record<string, unknown>;
@@ -122,7 +138,16 @@ export default function ViewTasks() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-border/50 overflow-hidden">
+      {sortedTasks.length === 0 && searchQuery ? (
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className="p-3 rounded-full bg-muted mb-3">
+            <XCircleIcon className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <p className="font-medium text-foreground">No tasks match your search</p>
+          <p className="text-sm text-muted-foreground mt-1">Try a different search term</p>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-border/50 overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/30 hover:bg-muted/30">
@@ -184,6 +209,7 @@ export default function ViewTasks() {
           </TableBody>
         </Table>
       </div>
+      )}
     </div>
   );
 }
