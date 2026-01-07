@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signInTaskMasterWithGoogle } from "@/firebase/auth/auth";
 import { useState, useEffect } from "react";
@@ -78,6 +79,21 @@ export default function SignInPage() {
             rez_task_master_name: taskMaster.name,
           });
           signInWithGoogleComplete(taskMaster);
+          // Fire-and-forget notification to RezTotifier (Telegram) about new account
+          try {
+            fetch(`/api/notifyRezTotifierOfNewAccount`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                id: taskMaster.id,
+                name: taskMaster.name,
+                emailAddress: taskMaster.emailAddress,
+                profilePictureURI: taskMaster.profilePictureURI,
+              }),
+            }).catch(() => {});
+          } catch (_) {
+            // Silently ignore notification errors in client
+          }
         }
       }
       router.push("/organization-onboarding");
@@ -102,36 +118,46 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
+    <div className="min-h-screen flex flex-col lg:flex-row overflow-hidden">
       {/* Left Side - Sign In Form */}
-      <div className="flex-1 flex items-center justify-center bg-background p-6 lg:p-12">
-        <div className="w-full max-w-md space-y-8">
+      <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-background via-background to-background/95 p-6 lg:p-12 relative">
+        {/* Subtle background decoration */}
+        <div className="absolute inset-0 opacity-[0.02] pointer-events-none">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="dots" width="32" height="32" patternUnits="userSpaceOnUse">
+                <circle cx="16" cy="16" r="1.5" fill="currentColor" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#dots)" />
+          </svg>
+        </div>
+
+        <div className="w-full max-w-md space-y-8 relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
           {/* Logo & Header */}
-          <div className="text-center space-y-2">
-            <div className="flex justify-center mb-6">
-              <div className="p-4 rounded-2xl bg-primary/5">
-                <Image
-                  src="/rez-logo.svg"
-                  alt="Rez Logo"
-                  width={64}
-                  height={64}
-                  className="w-16 h-16"
-                />
-              </div>
+          <div className="text-center space-y-4">
+            <div className="flex justify-center mb-4">
+              <Image
+                src="/rez-logo.svg"
+                alt="Rez Logo"
+                width={64}
+                height={64}
+                className="w-16 h-16"
+              />
             </div>
-            <h1 className="text-3xl font-semibold tracking-tight">
+            <h1 className="text-4xl font-bold tracking-tight">
               Welcome to <span className="rez-gradient-text">Rez</span>
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-base">
               Sign in to manage your research tasks
             </p>
           </div>
 
           {/* Sign In Card */}
-          <div className="enterprise-card bg-card rounded-xl border border-border/50 p-8 shadow-sm">
+          <div className="enterprise-card bg-card rounded-2xl border border-border/50 p-8 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
             <div className="space-y-6">
               <div className="space-y-2 text-center">
-                <h2 className="text-lg font-medium text-foreground">Sign in to continue</h2>
+                <h2 className="text-xl font-semibold text-foreground">Sign in to continue</h2>
                 <p className="text-sm text-muted-foreground">
                   Use your Google account to get started
                 </p>
@@ -139,7 +165,7 @@ export default function SignInPage() {
 
               <Button
                 size="lg"
-                className="w-full h-12 text-base"
+                className="w-full h-14 text-base font-medium shadow-sm hover:shadow-md transition-all duration-200 border-2 hover:border-primary/20"
                 variant="outline"
                 onClick={handleGoogleSignIn}
                 disabled={loading}
@@ -164,79 +190,92 @@ export default function SignInPage() {
               </Button>
 
               {error && (
-                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-                  <p className="text-sm text-destructive text-center">{error}</p>
+                <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 animate-in slide-in-from-top-2 duration-200">
+                  <p className="text-sm text-destructive text-center font-medium">{error}</p>
                 </div>
               )}
             </div>
           </div>
 
           {/* Footer */}
-          <p className="text-xs text-center text-muted-foreground">
-            By signing in, you agree to our terms of service and privacy policy.
+          <p className="text-xs text-center text-muted-foreground leading-relaxed">
+            By signing in, you agree to our{" "}
+            <Link href="/terms-of-service" className="underline hover:text-foreground transition-colors">terms of service</Link>{" "}
+            and{" "}
+            <Link href="/privacy-policy" className="underline hover:text-foreground transition-colors">privacy policy</Link>.
           </p>
         </div>
       </div>
 
-      {/* Right Side - Hero Image */}
-      <div className="hidden lg:flex flex-1 relative rez-gradient overflow-hidden">
-        {/* Decorative Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1"/>
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-          </svg>
-        </div>
+      {/* Right Side - Hero */}
+      <div className="hidden lg:flex flex-1 relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden min-h-screen">
+        {/* Decorative grid pattern */}
+        <div 
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+            backgroundSize: '32px 32px'
+          }}
+        />
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col items-center justify-center w-full p-12">
+        <div className="relative z-10 flex flex-col items-center justify-center w-full p-12 animate-in fade-in slide-in-from-right-4 duration-700 min-h-screen">
           <div className="max-w-lg text-center space-y-6">
             {/* Hero Image */}
-            <div className="relative w-80 h-80 mx-auto mb-8">
-              <Image
-                src="/friends-posing.png"
-                alt="Research participants"
-                fill
-                className="object-contain"
-                priority
-              />
+            <div className="relative w-[500px] h-[500px] mx-auto mb-8 group">
+              <div className="absolute inset-0 bg-emerald-500/10 rounded-full blur-2xl group-hover:blur-3xl transition-all duration-500" />
+              <div className="relative w-full h-full">
+                <Image
+                  src="/friends-posing.png"
+                  alt="Research participants"
+                  fill
+                  className="object-contain drop-shadow-2xl group-hover:scale-105 transition-transform duration-500"
+                  priority
+                />
+              </div>
             </div>
 
             {/* Tagline */}
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-white">
+            <div className="space-y-5">
+              <h2 className="text-3xl font-bold text-white tracking-tight">
                 Reach Real Users
               </h2>
-              <p className="text-lg text-white/80 leading-relaxed">
+              <p className="text-lg text-white/90 leading-relaxed max-w-md mx-auto">
                 Connect with users who actively use stablecoins in their daily lives. 
                 Get authentic insights for your research.
               </p>
             </div>
 
             {/* Stats or Features */}
-            <div className="flex justify-center gap-8 pt-6">
-              <div className="text-center">
-                <p className="text-3xl font-semibold text-white">1000+</p>
-                <p className="text-sm text-white/70">Active Users</p>
+            {/* <div className="flex justify-center gap-12 pt-8 border-t border-white/10">
+              <div className="text-center group">
+                <p className="text-4xl font-bold text-white mb-1 group-hover:scale-110 transition-transform duration-300">500+</p>
+                <p className="text-sm text-white/80 font-medium">Active Users</p>
               </div>
-              <div className="text-center">
-                <p className="text-3xl font-semibold text-white">50+</p>
-                <p className="text-sm text-white/70">Countries</p>
+              <div className="text-center group">
+                <p className="text-4xl font-bold text-white mb-1 group-hover:scale-110 transition-transform duration-300">2+</p>
+                <p className="text-sm text-white/80 font-medium">Countries</p>
               </div>
-              <div className="text-center">
-                <p className="text-3xl font-semibold text-white">24h</p>
-                <p className="text-sm text-white/70">Avg Response</p>
+              <div className="text-center group">
+                <p className="text-4xl font-bold text-white mb-1 group-hover:scale-110 transition-transform duration-300">12h</p>
+                <p className="text-sm text-white/80 font-medium">Avg Response</p>
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Powered by badge */}
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
-            <p className="text-sm text-white/60">Powered by Canvassing</p>
+            <p className="text-sm text-white/70 font-medium">
+              Powered by{" "}
+              <a 
+                href="https://thecanvassing.xyz" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="underline hover:text-white transition-colors"
+              >
+                Canvassing
+              </a>
+            </p>
           </div>
         </div>
       </div>
