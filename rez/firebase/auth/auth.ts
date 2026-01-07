@@ -1,6 +1,5 @@
-import { signInWithPopup, GoogleAuthProvider, signOut, User, deleteUser } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider, signOut, User } from 'firebase/auth';
 import { auth, initFirebase } from '@/firebase/clientConfig';
-import { allowedResearcherEmailAddresses } from '@/data/allowedResearcherEmailAddresses';
 
 initFirebase();
 
@@ -9,16 +8,6 @@ const provider = new GoogleAuthProvider();
 export async function signInTaskMasterWithGoogle() {
   try {
     const result = await signInWithPopup(auth, provider);
-    const email = result.user.email;
-    if (!email || !allowedResearcherEmailAddresses.includes(email)) {
-      await signOutTaskMaster();
-      try {
-        await deleteUser(result.user);
-      } catch (deleteError) {
-        // Ignore delete errors (e.g., if user already deleted or not authenticated)
-      }
-      throw { code: 'auth/email-not-allowed', message: 'This email is not allowed to sign in.' };
-    }
     return result.user;
   } catch (error) {
     throw error;
