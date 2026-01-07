@@ -140,13 +140,7 @@ export default function OrganizationOnboardingPage() {
         });
       }
     }
-    toast("Organization created!", {
-      description: (
-        <pre className="mt-2 w-[320px] rounded-md bg-neutral-950 p-4">
-          <code className="text-white">{JSON.stringify(org, null, 2)}</code>
-        </pre>
-      ),
-    });
+    toast.success("Organization created successfully!");
     setLoading(false);
     organizationOnboardingComplete();
     router.push("/dashboard");
