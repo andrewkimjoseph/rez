@@ -5,4 +5,5 @@ export const allowedResearcherEmailAddresses = [
   "benwrites20@gmail.com", // Researcher Three
   "joegikenye@gmail.com", // Researcher Four
   "andrewkimjoseph@gmail.com", // Researcher Five
+  "andrewkimjoseph254@gmail.com"
 ];
