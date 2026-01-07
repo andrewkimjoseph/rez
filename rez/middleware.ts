@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // List of public routes
-const PUBLIC_PATHS = ['/sign-in'];
+const PUBLIC_PATHS = ['/sign-in', '/terms-of-service', '/privacy-policy'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -15,18 +15,21 @@ export function middleware(request: NextRequest) {
 
   // Allow public routes
   if (PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {
-    // If user is already signed in, redirect away from /sign-in
-    const token = request.cookies.get('firebaseToken');
-    if (token) {
-      // Optionally, parse a user cookie for organizationId
-      const orgId = request.cookies.get('organizationId');
-      if (!orgId) {
-        const onboardingUrl = new URL('/organization-onboarding', request.url);
-        return NextResponse.redirect(onboardingUrl);
+    // If user is already signed in, redirect away from /sign-in only
+    // Other public routes like /terms-of-service and /privacy-policy should be accessible
+    if (pathname === '/sign-in') {
+      const token = request.cookies.get('firebaseToken');
+      if (token) {
+        // Optionally, parse a user cookie for organizationId
+        const orgId = request.cookies.get('organizationId');
+        if (!orgId) {
+          const onboardingUrl = new URL('/organization-onboarding', request.url);
+          return NextResponse.redirect(onboardingUrl);
+        }
+        // Redirect to dashboard if already has org
+        const dashboardUrl = new URL('/dashboard', request.url);
+        return NextResponse.redirect(dashboardUrl);
       }
-      // Redirect to dashboard if already has org
-      const dashboardUrl = new URL('/dashboard', request.url);
-      return NextResponse.redirect(dashboardUrl);
     }
     return NextResponse.next();
   }

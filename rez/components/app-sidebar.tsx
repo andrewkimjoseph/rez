@@ -7,6 +7,7 @@ import {
   Cog6ToothIcon,
   ArrowTopRightOnSquareIcon,
   ShieldCheckIcon,
+  DocumentTextIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import React from "react";
@@ -63,6 +64,20 @@ const externalItems = [
     url: "/pax",
     iconElement: <Image src="/pax.png" alt="Pax Logo" width={18} height={18} className="rounded-sm" />,
     external: false,
+  },
+];
+
+// Legal links
+const legalItems = [
+  {
+    title: "Terms of Service",
+    url: "/terms-of-service",
+    icon: DocumentTextIcon,
+  },
+  {
+    title: "Privacy Policy",
+    url: "/privacy-policy",
+    icon: DocumentTextIcon,
   },
 ];
 
@@ -191,7 +206,7 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      {/* Footer with External Links */}
+      {/* Footer with External Links and Legal */}
       <SidebarFooter className="px-2 pb-4">
         <Separator className="mb-3 bg-sidebar-border/50" />
         <SidebarMenu>
@@ -208,6 +223,20 @@ export function AppSidebar() {
                   {item.external && (
                     <ArrowTopRightOnSquareIcon className="w-3 h-3 ml-auto opacity-50" />
                   )}
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+          {legalItems.map((item) => (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton 
+                asChild
+                isActive={isActive(item.url)}
+                className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent"
+              >
+                <Link href={item.url}>
+                  <item.icon className="w-[18px] h-[18px] shrink-0 opacity-60" />
+                  <span className="font-medium text-sidebar-foreground/70 text-sm">{item.title}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

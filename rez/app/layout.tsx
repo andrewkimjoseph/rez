@@ -11,6 +11,7 @@ import { TallyWidget } from "@/components/tally-widget";
 import { AmplitudeProvider } from "@/providers/AmplitudeProvider";
 import { AuthHydrator } from "@/components/auth-hydrator";
 import { Toaster } from "@/components/toaster";
+import { useTaskMasterStore } from "@/stores/taskmaster-store";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -24,8 +25,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
+  const { user } = useTaskMasterStore();
   const isSignInPageOrOnboarding =
     pathname === "/sign-in" || pathname === "/organization-onboarding";
+  
+  // Hide navbar/sidebar for terms/privacy pages when user is not logged in
+  const isPublicLegalPage = pathname === "/terms-of-service" || pathname === "/privacy-policy";
+  const shouldHideNavAndSidebar = isSignInPageOrOnboarding || (isPublicLegalPage && !user);
 
   return (
     <html lang="en">
@@ -41,9 +47,9 @@ export default function RootLayout({
         <AuthHydrator />
         <AmplitudeProvider>
           <SidebarProvider>
-            {!isSignInPageOrOnboarding && <AppSidebar />}
+            {!shouldHideNavAndSidebar && <AppSidebar />}
             <main className="flex flex-col w-full min-h-screen">
-              {!isSignInPageOrOnboarding && <AppNavbar />}
+              {!shouldHideNavAndSidebar && <AppNavbar />}
               <div className="flex-1 enterprise-gradient relative">
                 <div className="absolute inset-0 rez-gradient-subtle pointer-events-none" />
                 <div className="relative">{children}</div>
