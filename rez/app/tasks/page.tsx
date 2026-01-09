@@ -16,8 +16,6 @@ import { useRefreshStore } from "@/stores/refresh-store";
 import { useState, useEffect } from "react";
 import ViewTasks from "@/components/view-task/tab-component/tab-component/ViewAllTasks";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
-import { Input } from "@/components/ui/input";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
 export default function Tasks() {
   const [selectedTab, setSelectedTab] = React.useState("create");
@@ -25,7 +23,6 @@ export default function Tasks() {
   const { checkCanRefresh, updateRefreshTime } = useRefreshStore();
   const [, forceUpdate] = useState({});
   const [isHydrated, setIsHydrated] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const { viewTasksTabClicked, createNewTaskTabClicked, refreshClicked } = useAmplitudeEvents();
 
   const tasksRefreshStatus = checkCanRefresh();
@@ -156,19 +153,8 @@ export default function Tasks() {
           </TabsContent>
 
           <TabsContent value="view-tasks" className="mt-0">
-            {/* Search - outside the card */}
-            <div className="relative max-w-md mb-6">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by title, ID, category, or creator email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
             <div className="enterprise-card bg-card rounded-lg border border-border/50">
-              <ViewTasks searchQuery={searchQuery} />
+              <ViewTasks />
             </div>
             {selectedTab === "view-tasks" && (
               <p className="text-sm text-muted-foreground text-center mt-4">
