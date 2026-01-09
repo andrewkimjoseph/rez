@@ -223,7 +223,7 @@ export default function SignInPage() {
           <div className="max-w-lg text-center space-y-6">
             {/* Hero Image */}
             <div className="relative w-[500px] h-[500px] mx-auto mb-8 group">
-              <div className="absolute inset-0 bg-emerald-500/10 rounded-full blur-2xl group-hover:blur-3xl transition-all duration-500" />
+              <div className="absolute inset-0 bg-[#EFECFD]/30 rounded-full blur-2xl group-hover:blur-3xl transition-all duration-500" />
               <div className="relative w-full h-full">
                 <Image
                   src="/friends-posing.png"

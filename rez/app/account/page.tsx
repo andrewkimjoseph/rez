@@ -66,7 +66,7 @@ export default function Account() {
         <TabsList className="bg-white">
           <TabsTrigger
             value="profile"
-            className="data-[state=active]:bg-[#363062] data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-[#363062] px-6 py-2"
+            className="data-[state=active]:bg-[#5C29A3] data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-[#5C29A3] px-6 py-2"
           >
             Profile
           </TabsTrigger>

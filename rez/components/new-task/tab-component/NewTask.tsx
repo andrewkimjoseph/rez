@@ -39,10 +39,10 @@ function Stepper({ step }: { step: TaskStep }) {
             <div
               className={`rounded-full w-8 h-8 flex items-center justify-center font-bold border-2 ${
                 current
-                  ? "bg-[#363062] text-white border-[#363062]"
+                  ? "bg-[#5C29A3] text-white border-[#5C29A3]"
                   : completed
-                  ? "bg-[#ececec] text-[#363062] border-[#363062]"
-                  : "bg-white text-[#363062] border-[#ececec]"
+                  ? "bg-[#ececec] text-[#5C29A3] border-[#5C29A3]"
+                  : "bg-white text-[#5C29A3] border-[#ececec]"
               }`}
             >
               {idx + 1}

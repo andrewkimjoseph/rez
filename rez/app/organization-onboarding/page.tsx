@@ -297,8 +297,8 @@ export default function OrganizationOnboardingPage() {
         {/* Content */}
         <div className="relative z-10 text-center px-12 max-w-lg">
           <div className="mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-emerald-500/20 mb-6">
-              <svg className="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-[#EFECFD]/40 mb-6">
+              <svg className="w-10 h-10 text-[#5C29A3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </div>
@@ -314,24 +314,24 @@ export default function OrganizationOnboardingPage() {
 
           <div className="space-y-4 text-left">
             <div className="flex items-center gap-3 text-slate-200">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/30 flex items-center justify-center">
-                <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#EFECFD]/40 flex items-center justify-center">
+                <svg className="w-3.5 h-3.5 text-[#5C29A3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               <span>Launch surveys in minutes</span>
             </div>
             <div className="flex items-center gap-3 text-slate-200">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/30 flex items-center justify-center">
-                <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#EFECFD]/40 flex items-center justify-center">
+                <svg className="w-3.5 h-3.5 text-[#5C29A3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               <span>Access verified participants globally</span>
             </div>
             <div className="flex items-center gap-3 text-slate-200">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/30 flex items-center justify-center">
-                <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#EFECFD]/40 flex items-center justify-center">
+                <svg className="w-3.5 h-3.5 text-[#5C29A3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
               </div>

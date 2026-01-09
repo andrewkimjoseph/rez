@@ -15,7 +15,7 @@ const data = [
 const chartConfig = {
   completions: {
     label: 'Completions',
-    color: '#363062',
+    color: '#5C29A3',
   },
 };
 
@@ -30,7 +30,7 @@ export default function TaskCompletionsOverTime() {
           <YAxis />
           <Tooltip />
           <Legend />
-          <Line type="monotone" dataKey="completions" stroke="#363062" strokeWidth={2} />
+          <Line type="monotone" dataKey="completions" stroke="#5C29A3" strokeWidth={2} />
         </LineChart>
       </>
     </ChartContainer>

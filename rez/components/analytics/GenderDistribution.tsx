@@ -9,10 +9,10 @@ const data = [
   { name: 'Other', value: 40 },
 ];
 
-const COLORS = ['#363062', '#f857a6', '#ff9966'];
+const COLORS = ['#5C29A3', '#f857a6', '#ff9966'];
 
 const chartConfig = {
-  Male: { label: 'Male', color: '#363062' },
+  Male: { label: 'Male', color: '#5C29A3' },
   Female: { label: 'Female', color: '#f857a6' },
   Other: { label: 'Other', color: '#ff9966' },
 };

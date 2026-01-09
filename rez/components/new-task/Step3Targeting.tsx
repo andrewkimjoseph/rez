@@ -39,7 +39,7 @@ export default function Step3Targeting() {
                 type="checkbox"
                 checked={!!data.countries?.includes(country)}
                 onChange={() => handleCountryChange(country)}
-                className="accent-[#363062]"
+                className="accent-[#5C29A3]"
               />
               <span>{country}</span>
             </label>
@@ -58,7 +58,7 @@ export default function Step3Targeting() {
                 name="gender"
                 checked={data.gender === 'Male'}
                 onChange={() => updateData({ gender: 'Male' })}
-                className="accent-[#363062]"
+                className="accent-[#5C29A3]"
               />
               Male
             </label>
@@ -68,7 +68,7 @@ export default function Step3Targeting() {
                 name="gender"
                 checked={data.gender === 'Female'}
                 onChange={() => updateData({ gender: 'Female' })}
-                className="accent-[#363062]"
+                className="accent-[#5C29A3]"
               />
               Female
             </label>
@@ -78,7 +78,7 @@ export default function Step3Targeting() {
                 name="gender"
                   checked={data.gender === 'All' || !data.gender}
                 onChange={() => updateData({ gender: 'All' })}
-                className="accent-[#363062]"
+                className="accent-[#5C29A3]"
               />
               All
             </label>

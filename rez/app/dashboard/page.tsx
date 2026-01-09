@@ -84,8 +84,8 @@ export default function Dashboard() {
       description: "Currently available",
       value: activeTasks,
       icon: ChartBarIcon,
-      iconBg: "bg-emerald-500/10",
-      iconColor: "text-emerald-600",
+      iconBg: "bg-[#EFECFD]",
+      iconColor: "text-[#5C29A3]",
     },
     {
       title: "Total Completions",

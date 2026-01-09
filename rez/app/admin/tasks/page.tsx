@@ -331,7 +331,7 @@ export default function AdminTasksPage() {
                     <TableCell>
                       <Badge 
                         variant={task.isAvailable ? "default" : "secondary"}
-                        className={task.isAvailable ? "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/20 border-0" : ""}
+                        className={task.isAvailable ? "bg-[#EFECFD] text-[#5C29A3] hover:bg-[#EFECFD]/80 border-0" : ""}
                       >
                         {task.isAvailable ? 'Active' : 'Inactive'}
                       </Badge>

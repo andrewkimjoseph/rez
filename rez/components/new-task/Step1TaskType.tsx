@@ -11,7 +11,7 @@ export default function Step1TaskType() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card
           className={`p-4 cursor-pointer border-2 transition-all ${
-            type === 'fillAForm' ? 'border-[#363062] bg-[#363062]/5' : 'border-gray-200 hover:border-gray-300'
+            type === 'fillAForm' ? 'border-[#5C29A3] bg-[#5C29A3]/5' : 'border-gray-200 hover:border-gray-300'
           }`}
           onClick={() => updateData({ type: 'fillAForm' })}
         >
@@ -23,7 +23,7 @@ export default function Step1TaskType() {
 
         <Card
           className={`p-4 cursor-pointer border-2 transition-all ${
-            type === 'checkOutApp' ? 'border-[#363062] bg-[#363062]/5' : 'border-gray-200 hover:border-gray-300'
+            type === 'checkOutApp' ? 'border-[#5C29A3] bg-[#5C29A3]/5' : 'border-gray-200 hover:border-gray-300'
           }`}
           onClick={() => updateData({ type: 'checkOutApp' })}
         >

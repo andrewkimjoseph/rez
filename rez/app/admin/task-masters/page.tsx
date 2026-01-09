@@ -418,7 +418,7 @@ export default function AdminTaskMastersPage() {
                   </span>
                 )}
                 {taskMasterToToggle?.disabled && (
-                  <span className="block mt-2 text-emerald-600">
+                  <span className="block mt-2 text-[#5C29A3]">
                     This will allow them to sign in to the platform again.
                   </span>
                 )}
