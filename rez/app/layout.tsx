@@ -1,6 +1,6 @@
 "use client";
 
-import { DM_Sans } from "next/font/google";
+import { Sen } from "next/font/google";
 import "./globals.css";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -13,10 +13,10 @@ import { AuthHydrator } from "@/components/auth-hydrator";
 import { Toaster } from "@/components/toaster";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+const sen = Sen({
+  variable: "--font-sen",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export default function RootLayout({
@@ -43,7 +43,7 @@ export default function RootLayout({
         <meta property="og:description" content="Rez, by Canvassing" />
         <meta property="og:image" content="/rez-favicon.svg" />
       </head>
-      <body className={`${dmSans.variable} font-[family-name:var(--font-dm-sans)] antialiased`}>
+      <body className={`${sen.variable} font-[family-name:var(--font-sen)] antialiased`}>
         <AuthHydrator />
         <AmplitudeProvider>
           <SidebarProvider>

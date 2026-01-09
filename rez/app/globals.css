@@ -57,21 +57,21 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0.024 265);
   
-  /* Primary - Deep Indigo/Navy */
-  --primary: oklch(0.318 0.087 275);
+  /* Primary - Purple (#5C29A3) */
+  --primary: oklch(0.385 0.155 278);
   --primary-foreground: oklch(0.985 0.002 260);
   
   /* Secondary - Warm Gray */
   --secondary: oklch(0.955 0.004 260);
-  --secondary-foreground: oklch(0.318 0.087 275);
+  --secondary-foreground: oklch(0.385 0.155 278);
   
   /* Muted - Subtle Gray */
   --muted: oklch(0.955 0.004 260);
   --muted-foreground: oklch(0.485 0.018 260);
   
-  /* Accent - Teal/Cyan accent */
-  --accent: oklch(0.92 0.025 200);
-  --accent-foreground: oklch(0.318 0.087 275);
+  /* Accent - Light Purple hover (#EFECFD) */
+  --accent: oklch(0.95 0.035 278);
+  --accent-foreground: oklch(0.385 0.155 278);
   
   /* Destructive */
   --destructive: oklch(0.577 0.2 25);
@@ -79,24 +79,24 @@
   /* Borders & Inputs */
   --border: oklch(0.908 0.006 260);
   --input: oklch(0.908 0.006 260);
-  --ring: oklch(0.318 0.087 275);
+  --ring: oklch(0.385 0.155 278);
   
   /* Chart Colors - Professional palette */
-  --chart-1: oklch(0.318 0.087 275);
+  --chart-1: oklch(0.385 0.155 278);
   --chart-2: oklch(0.55 0.15 195);
   --chart-3: oklch(0.65 0.18 145);
   --chart-4: oklch(0.75 0.12 85);
   --chart-5: oklch(0.60 0.15 25);
   
-  /* Sidebar - Deep Navy */
-  --sidebar: oklch(0.185 0.055 275);
+  /* Sidebar - Deep Purple (darker version of #5C29A3) */
+  --sidebar: oklch(0.25 0.12 278);
   --sidebar-foreground: oklch(0.92 0.01 260);
-  --sidebar-primary: oklch(0.65 0.18 200);
+  --sidebar-primary: oklch(0.65 0.18 278);
   --sidebar-primary-foreground: oklch(0.985 0.002 260);
-  --sidebar-accent: oklch(0.25 0.045 275);
+  --sidebar-accent: oklch(0.30 0.10 278);
   --sidebar-accent-foreground: oklch(0.92 0.01 260);
-  --sidebar-border: oklch(0.28 0.04 275);
-  --sidebar-ring: oklch(0.65 0.18 200);
+  --sidebar-border: oklch(0.35 0.08 278);
+  --sidebar-ring: oklch(0.65 0.18 278);
 }
 
 .dark {
@@ -106,31 +106,31 @@
   --card-foreground: oklch(0.955 0.004 260);
   --popover: oklch(0.17 0.03 265);
   --popover-foreground: oklch(0.955 0.004 260);
-  --primary: oklch(0.65 0.18 200);
+  --primary: oklch(0.65 0.18 278);
   --primary-foreground: oklch(0.12 0.025 265);
   --secondary: oklch(0.24 0.035 265);
   --secondary-foreground: oklch(0.955 0.004 260);
   --muted: oklch(0.24 0.035 265);
   --muted-foreground: oklch(0.65 0.015 260);
-  --accent: oklch(0.24 0.035 265);
+  --accent: oklch(0.28 0.03 278);
   --accent-foreground: oklch(0.955 0.004 260);
   --destructive: oklch(0.65 0.2 22);
   --border: oklch(0.28 0.03 265);
   --input: oklch(0.24 0.035 265);
-  --ring: oklch(0.65 0.18 200);
-  --chart-1: oklch(0.65 0.18 200);
+  --ring: oklch(0.65 0.18 278);
+  --chart-1: oklch(0.65 0.18 278);
   --chart-2: oklch(0.65 0.15 160);
   --chart-3: oklch(0.75 0.12 85);
   --chart-4: oklch(0.60 0.18 300);
   --chart-5: oklch(0.65 0.18 25);
-  --sidebar: oklch(0.12 0.025 265);
+  --sidebar: oklch(0.18 0.10 278);
   --sidebar-foreground: oklch(0.92 0.01 260);
-  --sidebar-primary: oklch(0.65 0.18 200);
+  --sidebar-primary: oklch(0.65 0.18 278);
   --sidebar-primary-foreground: oklch(0.985 0.002 260);
-  --sidebar-accent: oklch(0.2 0.03 265);
+  --sidebar-accent: oklch(0.22 0.08 278);
   --sidebar-accent-foreground: oklch(0.92 0.01 260);
-  --sidebar-border: oklch(0.28 0.03 265);
-  --sidebar-ring: oklch(0.65 0.18 200);
+  --sidebar-border: oklch(0.30 0.06 278);
+  --sidebar-ring: oklch(0.65 0.18 278);
 }
 
 @layer base {
@@ -195,7 +195,7 @@
   }
   
   .text-gradient-enterprise {
-    background: linear-gradient(135deg, oklch(0.318 0.087 275) 0%, oklch(0.45 0.15 200) 100%);
+    background: linear-gradient(135deg, oklch(0.385 0.155 278) 0%, oklch(0.45 0.15 200) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -210,7 +210,7 @@
   }
   
   [data-sonner-toast] {
-    font-family: var(--font-dm-sans);
+    font-family: var(--font-sen);
     font-weight: 500;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
