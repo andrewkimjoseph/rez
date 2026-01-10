@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 
 export default function AboutStep3QuestionsTasks() {
   // Demo version for "Fill a Form" type - no functionality, just displays the UI with demo data
-  const taskType = 'fillAForm'; // Could also be 'checkOutApp'
+  const taskType: 'fillAForm' | 'checkOutApp' = 'fillAForm'; // Could also be 'checkOutApp'
 
   const getLinkLabel = () => {
     if (taskType === 'fillAForm') return 'Link to form';
