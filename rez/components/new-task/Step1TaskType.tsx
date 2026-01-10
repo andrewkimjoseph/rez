@@ -7,7 +7,7 @@ export default function Step1TaskType() {
 
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-2">Select Task Type</h2>
+      <h2 className="text-lg font-semibold mb-2">Select Type</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card
           className={`p-4 cursor-pointer border-2 transition-all ${

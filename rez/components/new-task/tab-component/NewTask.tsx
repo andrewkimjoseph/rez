@@ -17,10 +17,10 @@ import {
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 const stepTitles = [
-  "Task Type",
-  "Task Details",
+  "Type",
+  "Details",
   // "Targeting", // commented out
-  "Questions & Tasks",
+  "Links",
   "Review",
 ];
 
@@ -159,7 +159,7 @@ export default function NewTask() {
         // Step 2: Task Details - requires title, category, and difficulty
         return !!(data.title && data.category && data.difficulty);
       case 3:
-        // Step 3: Questions & Tasks - requires link, and for checkOutApp also requires instructions and feedback
+        // Step 3: Links - requires link, and for checkOutApp also requires instructions and feedback
         if (data.type === 'checkOutApp') {
           return !!(data.link && data.instructions && data.feedback);
         }
