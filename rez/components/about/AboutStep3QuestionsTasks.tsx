@@ -2,9 +2,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
+
 export default function AboutStep3QuestionsTasks() {
   // Demo version for "Fill a Form" type - no functionality, just displays the UI with demo data
-  const taskType: 'fillAForm' | 'checkOutApp' = 'fillAForm'; // Could also be 'checkOutApp'
+  const taskType = 'fillAForm' as 'fillAForm' | 'checkOutApp';
 
   const getLinkLabel = () => {
     if (taskType === 'fillAForm') return 'Link to form';
@@ -32,7 +33,7 @@ export default function AboutStep3QuestionsTasks() {
       </div>
 
       {/* Show instructions and feedback for checkOutApp type */}
-      {taskType === 'checkOutApp' && (
+      {taskType === "checkOutApp" && (
         <>
           <div className="space-y-2">
             <Label htmlFor="instructions">Instructions</Label>
