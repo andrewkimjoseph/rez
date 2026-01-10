@@ -29,8 +29,8 @@ export default function RootLayout({
   const isSignInPageOrOnboarding =
     pathname === "/sign-in" || pathname === "/organization-onboarding";
   
-  // Hide navbar/sidebar for terms/privacy pages when user is not logged in
-  const isPublicLegalPage = pathname === "/terms-of-service" || pathname === "/privacy-policy";
+  // Hide navbar/sidebar for terms/privacy/about pages when user is not logged in
+  const isPublicLegalPage = pathname === "/terms-of-service" || pathname === "/privacy-policy" || pathname === "/about";
   const shouldHideNavAndSidebar = isSignInPageOrOnboarding || (isPublicLegalPage && !user);
 
   return (

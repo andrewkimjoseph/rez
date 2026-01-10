@@ -8,6 +8,7 @@ import {
   ArrowTopRightOnSquareIcon,
   ShieldCheckIcon,
   DocumentTextIcon,
+  InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import React from "react";
@@ -69,6 +70,11 @@ const externalItems = [
 
 // Legal links
 const legalItems = [
+  {
+    title: "About",
+    url: "/about",
+    icon: InformationCircleIcon,
+  },
   {
     title: "Terms of Service",
     url: "/terms-of-service",

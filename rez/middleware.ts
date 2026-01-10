@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // List of public routes
-const PUBLIC_PATHS = ['/sign-in', '/terms-of-service', '/privacy-policy'];
+const PUBLIC_PATHS = ['/sign-in', '/terms-of-service', '/privacy-policy', '/about'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
