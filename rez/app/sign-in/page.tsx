@@ -208,10 +208,10 @@ export default function SignInPage() {
       </div>
 
       {/* Right Side - Hero */}
-      <div className="hidden lg:flex flex-1 relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden min-h-screen">
+      <div className="hidden lg:flex flex-1 relative bg-gradient-to-br from-primary via-primary/90 to-primary/80 overflow-hidden min-h-screen">
         {/* Decorative grid pattern */}
         <div 
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0 opacity-[0.1] pointer-events-none"
           style={{
             backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
             backgroundSize: '32px 32px'
@@ -223,7 +223,7 @@ export default function SignInPage() {
           <div className="max-w-lg text-center space-y-6">
             {/* Hero Image */}
             <div className="relative w-[500px] h-[500px] mx-auto mb-8 group">
-              <div className="absolute inset-0 bg-[#EFECFD]/30 rounded-full blur-2xl group-hover:blur-3xl transition-all duration-500" />
+              <div className="absolute inset-0 bg-white/10 rounded-full blur-2xl group-hover:blur-3xl transition-all duration-500" />
               <div className="relative w-full h-full">
                 <Image
                   src="/friends-posing.png"
