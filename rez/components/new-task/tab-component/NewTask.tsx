@@ -13,8 +13,10 @@ import {
   ArrowPathIcon,
   ClockIcon,
   ExclamationCircleIcon,
+  QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
+import Link from "next/link";
 
 const stepTitles = [
   "Type",
@@ -304,32 +306,46 @@ export default function NewTask() {
   }
 
   return (
-    <Card className="p-6">
-      <Stepper step={step} />
-      <TaskStepContent step={step} />
-      <div className="flex justify-between mt-8">
-        <Button
-          variant="outline"
-          onClick={prevStep}
-          disabled={step === 1 || isCreating}
-        >
-          Back
-        </Button>
-        <Button onClick={handleContinue} disabled={isCreating || !canProceed()}>
-          {step === 4 ? (
-            isCreating ? (
-              <>
-                <ArrowPathIcon className="animate-spin" />
-                Creating Task...
-              </>
-            ) : (
-              "Finish"
-            )
-          ) : (
-            "Continue"
-          )}
-        </Button>
+    <>
+      <div className="flex justify-end mb-4">
+        <Link href="/about#how-to-create-a-task">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="text-muted-foreground hover:text-foreground text-xs"
+          >
+            <QuestionMarkCircleIcon className="h-3.5 w-3.5 mr-1.5" />
+            Need help? Learn how to create a task
+          </Button>
+        </Link>
       </div>
-    </Card>
+      <Card className="p-6">
+        <Stepper step={step} />
+        <TaskStepContent step={step} />
+        <div className="flex justify-between mt-8">
+          <Button
+            variant="outline"
+            onClick={prevStep}
+            disabled={step === 1 || isCreating}
+          >
+            Back
+          </Button>
+          <Button onClick={handleContinue} disabled={isCreating || !canProceed()}>
+            {step === 4 ? (
+              isCreating ? (
+                <>
+                  <ArrowPathIcon className="animate-spin" />
+                  Creating Task...
+                </>
+              ) : (
+                "Finish"
+              )
+            ) : (
+              "Continue"
+            )}
+          </Button>
+        </div>
+      </Card>
+    </>
   );
 }

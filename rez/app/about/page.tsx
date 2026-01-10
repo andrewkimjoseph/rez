@@ -193,7 +193,7 @@ export default function AboutPage() {
         <Separator className="my-8 sm:my-10 md:my-12" />
 
         {/* How It Works - Task Creation Guide */}
-        <section className="space-y-8">
+        <section id="how-to-create-a-task" className="space-y-8 scroll-mt-20">
           <div className="text-center space-y-3 sm:space-y-4">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground px-2">
               How to Create a Task
@@ -312,13 +312,6 @@ export default function AboutPage() {
                     <li>Ensure instructions are clear and comprehensive</li>
                     <li>Click &quot;Finish&quot; to publish your task to the Pax platform</li>
                   </ul>
-                  <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <p className="text-xs sm:text-sm text-blue-900">
-                      <strong>Note:</strong> Tasks are automatically configured with default settings including 
-                      target participants (100), estimated completion time (5 minutes), and rewards. 
-                      These can be adjusted by administrators if needed.
-                    </p>
-                  </div>
                 </div>
               </div>
             </CardHeader>
