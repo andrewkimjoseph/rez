@@ -9,11 +9,13 @@ import {
   ShieldCheckIcon,
   DocumentTextIcon,
   InformationCircleIcon,
+  PlusIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 import {
   Sidebar,
@@ -62,12 +64,13 @@ const settingsItems = [
 
 // External links
 const externalItems = [
-  {
-    title: "Pax: Analytics",
-    url: "/pax",
-    iconElement: <Image src="/pax.png" alt="Pax Logo" width={18} height={18} className="rounded-sm" />,
-    external: false,
-  },
+  // PAX ROUTE COMMENTED OUT - NOT ACCESSIBLE
+  // {
+  //   title: "Pax: Analytics",
+  //   url: "/pax",
+  //   iconElement: <Image src="/pax.png" alt="Pax Logo" width={18} height={18} className="rounded-sm" />,
+  //   external: false,
+  // },
 ];
 
 // Legal links
@@ -139,6 +142,21 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-2">
+        {/* Prominent Create Task Button */}
+        <div className="px-3 mb-4">
+          <Link href="/tasks" className="block">
+            <Button 
+              className="w-full rez-gradient hover:opacity-90 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 h-11 text-base group-data-[collapsible=icon]:w-12 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center"
+              size="lg"
+            >
+              <PlusIcon className="w-5 h-5 group-data-[collapsible=icon]:w-4 group-data-[collapsible=icon]:h-4" />
+              <span className="group-data-[collapsible=icon]:hidden ml-1">Create Task</span>
+            </Button>
+          </Link>
+        </div>
+
+        <Separator className="mb-3 bg-sidebar-border/50 group-data-[collapsible=icon]:hidden" />
+
         {/* Main Navigation */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs font-medium uppercase tracking-wider px-3 mb-1">
