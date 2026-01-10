@@ -14,47 +14,107 @@ import {
   ClockIcon,
   ExclamationCircleIcon,
   QuestionMarkCircleIcon,
+  CheckIcon,
+  Squares2X2Icon,
+  DocumentTextIcon,
+  LinkIcon,
+  ClipboardDocumentCheckIcon,
 } from "@heroicons/react/24/outline";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 import Link from "next/link";
 
-const stepTitles = [
-  "Type",
-  "Details",
-  // "Targeting", // commented out
-  "Links",
-  "Review",
+const stepConfig = [
+  { title: "Type", description: "Choose task type", icon: Squares2X2Icon },
+  { title: "Details", description: "Add information", icon: DocumentTextIcon },
+  { title: "Links", description: "Add resources", icon: LinkIcon },
+  { title: "Review", description: "Confirm & create", icon: ClipboardDocumentCheckIcon },
 ];
 
 function Stepper({ step }: { step: TaskStep }) {
-  // Only show 4 steps in the stepper
+  const totalSteps = 4;
+  // Calculate progress: 0 segments at step 1, 3 segments at step 4
+  const completedSegments = step - 1;
+
   return (
-    <div className="flex items-center justify-between mb-6">
-      {[0, 1, 2, 3].map((idx) => {
-        const current = idx + 1 === step;
-        const completed = idx + 1 < step;
-        return (
-          <div
-            key={stepTitles[idx]}
-            className="flex flex-col items-center flex-1"
-          >
+    <div className="mb-4">
+      {/* Steps with connecting lines */}
+      <div className="relative mb-4">
+        {/* Connecting lines between steps - positioned to align with circle centers */}
+        <div className="absolute top-5 inset-x-0 flex px-[calc(12.5%+4px)]">
+          {[0, 1, 2].map((segmentIndex) => (
             <div
-              className={`rounded-full w-8 h-8 flex items-center justify-center font-bold border-2 ${
-                current
-                  ? "bg-[#5C29A3] text-white border-[#5C29A3]"
-                  : completed
-                  ? "bg-[#ececec] text-[#5C29A3] border-[#5C29A3]"
-                  : "bg-white text-[#5C29A3] border-[#ececec]"
+              key={segmentIndex}
+              className={`h-0.5 flex-1 transition-colors duration-300 ${
+                segmentIndex < completedSegments ? 'bg-[#5C29A3]' : 'bg-gray-200'
               }`}
-            >
-              {idx + 1}
-            </div>
-            <span className="text-xs mt-2 text-center whitespace-nowrap">
-              {stepTitles[idx]}
-            </span>
-          </div>
-        );
-      })}
+            />
+          ))}
+        </div>
+
+        {/* Steps */}
+        <div className="relative flex justify-between">
+          {stepConfig.map((stepItem, idx) => {
+            const stepNumber = idx + 1;
+            const isCurrent = stepNumber === step;
+            const isCompleted = stepNumber < step;
+            const IconComponent = stepItem.icon;
+
+            return (
+              <div
+                key={stepItem.title}
+                className="flex flex-col items-center"
+              >
+                {/* Step circle */}
+                <div
+                  className={`relative z-10 rounded-full w-10 h-10 flex items-center justify-center font-semibold border-2 transition-all duration-300 ${
+                    isCurrent
+                      ? "bg-[#5C29A3] text-white border-[#5C29A3] shadow-lg shadow-[#5C29A3]/30 scale-110"
+                      : isCompleted
+                      ? "bg-[#5C29A3] text-white border-[#5C29A3]"
+                      : "bg-white text-gray-400 border-gray-200"
+                  }`}
+                >
+                  {isCompleted ? (
+                    <CheckIcon className="w-5 h-5" />
+                  ) : (
+                    <IconComponent className="w-5 h-5" />
+                  )}
+                </div>
+
+                {/* Step label */}
+                <div className="mt-2 text-center">
+                  <div className={`text-sm font-medium transition-colors duration-300 ${
+                    isCurrent
+                      ? "text-[#5C29A3]"
+                      : isCompleted
+                      ? "text-gray-700"
+                      : "text-gray-400"
+                  }`}>
+                    {stepItem.title}
+                  </div>
+                  <div className={`text-xs mt-0.5 transition-colors duration-300 hidden sm:block ${
+                    isCurrent
+                      ? "text-[#5C29A3]/70"
+                      : "text-gray-400"
+                  }`}>
+                    {stepItem.description}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Current step indicator */}
+      <div className="text-center">
+        <span className="inline-flex items-center gap-2 text-sm text-gray-500 bg-gray-50 px-4 py-1.5 rounded-full">
+          <span className="font-medium text-[#5C29A3]">Step {step}</span>
+          <span>of {totalSteps}</span>
+          <span className="text-gray-300">|</span>
+          <span>{stepConfig[step - 1]?.description}</span>
+        </span>
+      </div>
     </div>
   );
 }

@@ -1,75 +1,63 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-
+import { Card } from '@/components/ui/card';
+import {
+  CheckCircleIcon,
+  GlobeAltIcon,
+} from '@heroicons/react/24/outline';
+import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
 
 export default function AboutStep3QuestionsTasks() {
-  // Demo version for "Fill a Form" type - no functionality, just displays the UI with demo data
-  const taskType = 'fillAForm' as 'fillAForm' | 'checkOutApp';
-
-  const getLinkLabel = () => {
-    if (taskType === 'fillAForm') return 'Link to form';
-    if (taskType === 'checkOutApp') return 'Link to product';
-    return 'Link';
-  };
-
-  const getLinkPlaceholder = () => {
-    if (taskType === 'fillAForm') return 'Paste your form URL here';
-    if (taskType === 'checkOutApp') return 'Paste your product/app URL here';
-    return 'Paste the URL here';
+  // Demo data for "Fill a Form" type
+  const demoData = {
+    link: 'https://forms.example.com/recycling-survey',
   };
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="link">{getLinkLabel()}</Label>
-        <Input
-          id="link"
-          value="https://forms.example.com/recycling-survey"
-          placeholder={getLinkPlaceholder()}
-          disabled
-          className="bg-muted/50"
-        />
+    <div>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold text-gray-900">Add your resources</h2>
+        <p className="text-sm text-gray-500 mt-0.5">
+          Provide the link where users will complete this task
+        </p>
       </div>
 
-      {/* Show instructions and feedback for checkOutApp type */}
-      {taskType === "checkOutApp" && (
-        <>
-          <div className="space-y-2">
-            <Label htmlFor="instructions">Instructions</Label>
-            <Textarea
-              id="instructions"
-              value="Explore the app and test the core features. Focus on the user experience and provide detailed feedback."
-              placeholder="Enter instructions for users on how to complete this task..."
-              rows={4}
-              disabled
-              className="bg-muted/50"
-            />
-            <div className="text-xs text-muted-foreground">
-              Provide clear instructions on what users need to do with the product/app.
+      <div className="space-y-4">
+        {/* Main Link Field */}
+        <Card className="p-4 border-2 border-gray-100">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-full bg-[#5C29A3]/10 flex items-center justify-center flex-shrink-0">
+              <GlobeAltIcon className="w-4 h-4 text-[#5C29A3]" />
+            </div>
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="link" className="text-sm font-semibold">Form URL</Label>
+                <CheckCircleSolidIcon className="w-4 h-4 text-green-500" />
+              </div>
+              <Input
+                id="link"
+                value={demoData.link}
+                disabled
+                className="bg-muted/50 border-green-200"
+              />
+              <p className="text-xs text-gray-400">
+                The URL where users will access and fill out your form or survey
+              </p>
             </div>
           </div>
+        </Card>
 
-          <div className="space-y-2">
-            <Label htmlFor="feedback">Link to feedback form</Label>
-            <Input
-              id="feedback"
-              value="https://forms.example.com/feedback"
-              placeholder="Paste the feedback form URL here"
-              disabled
-              className="bg-muted/50"
-            />
-            <div className="text-xs text-muted-foreground">
-              Users will submit their feedback through this form after completing the task.
-            </div>
+        {/* Completion status */}
+        <div className="pt-3 border-t border-gray-100">
+          <div className="flex items-center gap-2">
+            <CheckCircleIcon className="w-5 h-5 text-green-500" />
+            <span className="text-sm text-green-600 font-medium">All resources added</span>
           </div>
-        </>
-      )}
+        </div>
+      </div>
 
       <p className="text-sm text-muted-foreground mt-4 italic">
-        💡 {taskType === 'fillAForm' 
-          ? 'Paste the URL to your survey or form. Participants will complete it through the Pax app.'
-          : 'For app testing tasks, you also need to provide instructions and a feedback form URL.'}
+        Paste the URL to your survey or form. Participants will complete it through the Pax app.
       </p>
     </div>
   );

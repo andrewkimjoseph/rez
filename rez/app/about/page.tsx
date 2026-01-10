@@ -4,15 +4,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { 
-  ClipboardDocumentListIcon, 
-  UsersIcon, 
-  ChartBarIcon, 
+import {
+  ClipboardDocumentListIcon,
+  UsersIcon,
+  ChartBarIcon,
   CheckCircleIcon,
   GlobeAltIcon,
   BoltIcon,
   ArrowRightCircleIcon,
   UserGroupIcon,
+  Squares2X2Icon,
+  DocumentTextIcon,
+  LinkIcon,
+  ClipboardDocumentCheckIcon,
+  CheckIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import Link from "next/link";
@@ -24,41 +29,76 @@ import AboutStep2TaskDetails from "@/components/about/AboutStep2TaskDetails";
 import AboutStep3QuestionsTasks from "@/components/about/AboutStep3QuestionsTasks";
 import AboutStep4Review from "@/components/about/AboutStep4Review";
 
+const stepConfig = [
+  { title: "Type", description: "Choose task type", icon: Squares2X2Icon },
+  { title: "Details", description: "Add information", icon: DocumentTextIcon },
+  { title: "Links", description: "Add resources", icon: LinkIcon },
+  { title: "Review", description: "Confirm & create", icon: ClipboardDocumentCheckIcon },
+];
+
 function Stepper({ currentStep }: { currentStep: number }) {
-  const steps = [
-    { number: 1, title: "Type" },
-    { number: 2, title: "Details" },
-    { number: 3, title: "Links" },
-    { number: 4, title: "Review" },
-  ];
+  const completedSegments = currentStep - 1;
 
   return (
-    <div className="flex items-center justify-between mb-6 gap-1 sm:gap-2">
-      {steps.map((step) => {
-        const isCurrent = step.number === currentStep;
-        const isCompleted = step.number < currentStep;
-        return (
-          <div
-            key={step.number}
-            className="flex flex-col items-center flex-1 min-w-0"
-          >
+    <div className="mb-4">
+      <div className="relative mb-4">
+        {/* Connecting lines between steps */}
+        <div className="absolute top-4 sm:top-5 inset-x-0 flex px-[calc(12.5%+4px)]">
+          {[0, 1, 2].map((segmentIndex) => (
             <div
-              className={`rounded-full w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center font-bold border-2 text-xs sm:text-sm ${
-                isCurrent
-                  ? "bg-[#5C29A3] text-white border-[#5C29A3]"
-                  : isCompleted
-                  ? "bg-[#ececec] text-[#5C29A3] border-[#5C29A3]"
-                  : "bg-white text-[#5C29A3] border-[#ececec]"
+              key={segmentIndex}
+              className={`h-0.5 flex-1 ${
+                segmentIndex < completedSegments ? 'bg-[#5C29A3]' : 'bg-gray-200'
               }`}
-            >
-              {step.number}
-            </div>
-            <span className="text-[10px] sm:text-xs mt-1.5 sm:mt-2 text-center break-words leading-tight px-0.5">
-              {step.title}
-            </span>
-          </div>
-        );
-      })}
+            />
+          ))}
+        </div>
+
+        {/* Steps */}
+        <div className="relative flex justify-between">
+          {stepConfig.map((stepItem, idx) => {
+            const stepNumber = idx + 1;
+            const isCurrent = stepNumber === currentStep;
+            const isCompleted = stepNumber < currentStep;
+            const IconComponent = stepItem.icon;
+
+            return (
+              <div
+                key={stepItem.title}
+                className="flex flex-col items-center"
+              >
+                <div
+                  className={`relative z-10 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center font-semibold border-2 ${
+                    isCurrent
+                      ? "bg-[#5C29A3] text-white border-[#5C29A3] shadow-lg shadow-[#5C29A3]/30"
+                      : isCompleted
+                      ? "bg-[#5C29A3] text-white border-[#5C29A3]"
+                      : "bg-white text-gray-400 border-gray-200"
+                  }`}
+                >
+                  {isCompleted ? (
+                    <CheckIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                  ) : (
+                    <IconComponent className="w-4 h-4 sm:w-5 sm:h-5" />
+                  )}
+                </div>
+
+                <div className="mt-2 text-center">
+                  <div className={`text-xs sm:text-sm font-medium ${
+                    isCurrent
+                      ? "text-[#5C29A3]"
+                      : isCompleted
+                      ? "text-gray-700"
+                      : "text-gray-400"
+                  }`}>
+                    {stepItem.title}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
@@ -69,7 +109,7 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen p-4 sm:p-6 md:p-8">
-      <div className="max-w-6xl mx-auto space-y-8 sm:space-y-10 md:space-y-12">
+      <div className="max-w-4xl space-y-8 sm:space-y-10 md:space-y-12">
         {/* Hero Section */}
         <div className="text-center space-y-6">
           <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4">
