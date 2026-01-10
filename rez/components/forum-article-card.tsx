@@ -48,13 +48,11 @@ export function ForumArticleCard({
           <CardDescription className="line-clamp-3">{description}</CardDescription>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+          <div className="flex items-center justify-between text-sm text-gray-600 pb-3">
             <div className="flex items-center gap-1">
               <CalendarIcon className="h-4 w-4" />
               <span>{date}</span>
             </div>
-          </div>
-          <div className="flex items-center justify-end mb-4">
             <Button size="sm" variant="outline">
               Read More
             </Button>
