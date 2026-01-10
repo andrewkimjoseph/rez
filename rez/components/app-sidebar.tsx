@@ -63,7 +63,12 @@ const settingsItems = [
 ];
 
 // External links
-const externalItems = [
+const externalItems: Array<{
+  title: string;
+  url: string;
+  iconElement: React.ReactNode;
+  external: boolean;
+}> = [
   // PAX ROUTE COMMENTED OUT - NOT ACCESSIBLE
   // {
   //   title: "Pax: Analytics",
