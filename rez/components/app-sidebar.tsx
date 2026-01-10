@@ -26,9 +26,11 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
+import { useEffect } from "react";
 
 // Main navigation items
 const mainNavItems = [
@@ -100,10 +102,18 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { user } = useTaskMasterStore();
   const isSuperAdmin = user?.isSuperAdmin === true;
+  const { isMobile, setOpenMobile } = useSidebar();
 
   const isActive = (url: string) => {
     return pathname === url || pathname.startsWith(url + "/");
   };
+
+  // Close sidebar on mobile when pathname changes
+  useEffect(() => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  }, [pathname, isMobile, setOpenMobile]);
 
   return (
     <Sidebar 
