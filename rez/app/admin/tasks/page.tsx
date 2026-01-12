@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { useAdminStore } from "@/stores/admin-store";
+import { useSelectedTaskStore } from "@/stores/selected-task-store";
 import { Task } from "@/firebase/firestore/models/Task";
 import {
   Table,
@@ -33,6 +34,7 @@ import {
   MagnifyingGlassIcon,
   EllipsisVerticalIcon,
   PowerIcon,
+  EyeIcon,
 } from "@heroicons/react/24/outline";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -51,16 +53,17 @@ import {
 export default function AdminTasksPage() {
   const router = useRouter();
   const { user } = useTaskMasterStore();
-  const { 
-    tasks, 
+  const {
+    tasks,
     isLoadingTasks,
     isDeleting,
     isUpdating,
     fetchAllTasks,
     deleteTask,
     updateTask,
-    error 
+    error
   } = useAdminStore();
+  const { setTask } = useSelectedTaskStore();
   
   const [isHydrated, setIsHydrated] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
@@ -115,6 +118,11 @@ export default function AdminTasksPage() {
     } else {
       toast.error("Failed to delete task");
     }
+  };
+
+  const handleViewDetails = (task: Task) => {
+    setTask(task);
+    router.push(`/admin/tasks/${task.id}`);
   };
 
   const handleEditClick = (task: Task) => {
@@ -288,14 +296,14 @@ export default function AdminTasksPage() {
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
                   <TableHead className="w-[50px] font-semibold">#</TableHead>
-                  <TableHead className="font-semibold min-w-[150px]">Title</TableHead>
+                  <TableHead className="font-semibold min-w-[250px]">Title</TableHead>
                   <TableHead className="font-semibold">Creator</TableHead>
                   <TableHead className="font-semibold">Type</TableHead>
                   <TableHead className="font-semibold">Category</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
                   <TableHead className="text-right font-semibold">Target</TableHead>
                   <TableHead className="text-right font-semibold">Reward</TableHead>
-                  <TableHead className="font-semibold">Created</TableHead>
+                  <TableHead className="font-semibold w-[100px]">Created</TableHead>
                   <TableHead className="w-[100px] text-center font-semibold">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -306,12 +314,17 @@ export default function AdminTasksPage() {
                       {index + 1}
                     </TableCell>
                     <TableCell>
-                      <div className="max-w-[180px] truncate font-medium" title={task.title || ''}>
-                        {task.title || 'Untitled Task'}
-                      </div>
-                      <div className="text-xs text-muted-foreground truncate max-w-[180px]" title={task.id || ''}>
-                        {task.id}
-                      </div>
+                      <button
+                        onClick={() => handleViewDetails(task)}
+                        className="text-left group"
+                      >
+                        <div className="max-w-[250px] truncate font-medium group-hover:text-primary transition-colors" title={task.title || ''}>
+                          {task.title || 'Untitled Task'}
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate max-w-[250px]" title={task.id || ''}>
+                          {task.id}
+                        </div>
+                      </button>
                     </TableCell>
                     <TableCell>
                       <div className="text-sm text-muted-foreground truncate max-w-[150px]" title={task.rezTaskMasterEmailAddress || ''}>
@@ -376,6 +389,14 @@ export default function AdminTasksPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => handleViewDetails(task)}
+                            className="cursor-pointer"
+                          >
+                            <EyeIcon className="h-4 w-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => handleEditClick(task)}
                             className="cursor-pointer"
