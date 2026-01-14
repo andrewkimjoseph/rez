@@ -14,7 +14,7 @@ async function updateTokenCookie(user: any) {
     try {
       const token = await user.getIdToken();
       // Set cookie with secure flags (httpOnly is not set so client can read it)
-      document.cookie = `firebaseToken=${token}; path=/; max-age=3600; SameSite=Lax`;
+      document.cookie = `firebaseToken=${token}; path=/; max-age=604800; SameSite=Lax`;
     } catch (error) {
       console.error('Error updating token cookie:', error);
     }

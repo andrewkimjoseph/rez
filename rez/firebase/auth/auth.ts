@@ -40,7 +40,7 @@ export async function ensureFreshToken(): Promise<string | null> {
     // Force token refresh to get a fresh token
     const token = await user.getIdToken(true);
     // Update cookie with fresh token
-    document.cookie = `firebaseToken=${token}; path=/; max-age=3600; SameSite=Lax`;
+    document.cookie = `firebaseToken=${token}; path=/; max-age=604800; SameSite=Lax`;
     return token;
   } catch (error) {
     console.error('Error refreshing token:', error);
