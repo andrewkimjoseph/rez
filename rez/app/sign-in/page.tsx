@@ -54,9 +54,9 @@ export default function SignInPage() {
           setTaskMasterId(user.uid);
           identifyTaskMaster({
             rez_task_master_id: existingTaskMaster.id,
-            rez_task_master_email_address: existingTaskMaster.emailAddress,
-            rez_task_master_name: existingTaskMaster.name,
-            rez_task_master_org_id: existingTaskMaster.organizationId,
+            ...(existingTaskMaster.emailAddress && { rez_task_master_email_address: existingTaskMaster.emailAddress }),
+            ...(existingTaskMaster.name && { rez_task_master_name: existingTaskMaster.name }),
+            ...(existingTaskMaster.organizationId && { rez_task_master_org_id: existingTaskMaster.organizationId }),
           });
           signInWithGoogleComplete();
           return;
@@ -75,8 +75,8 @@ export default function SignInPage() {
           setTaskMasterId(user.uid);
           identifyTaskMaster({
             rez_task_master_id: taskMaster.id,
-            rez_task_master_email_address: taskMaster.emailAddress,
-            rez_task_master_name: taskMaster.name,
+            ...(taskMaster.emailAddress && { rez_task_master_email_address: taskMaster.emailAddress }),
+            ...(taskMaster.name && { rez_task_master_name: taskMaster.name }),
           });
           signInWithGoogleComplete(taskMaster);
           // Fire-and-forget notification to RezTotifier (Telegram) about new account
