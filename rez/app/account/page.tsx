@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,6 +18,7 @@ import {
 import { toast } from "sonner";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import Image from "next/image";
+import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 type AccountFormValues = {
   fullName: string;
@@ -30,6 +32,17 @@ type AccountFormValues = {
 
 export default function Account() {
   const user = useTaskMasterStore((state) => state.user);
+  const { accountPageViewed } = useAmplitudeEvents();
+
+  // Track page view
+  const hasTrackedPageView = useRef(false);
+  useEffect(() => {
+    if (!hasTrackedPageView.current) {
+      accountPageViewed();
+      hasTrackedPageView.current = true;
+    }
+  }, [accountPageViewed]);
+
   const form = useForm<AccountFormValues>({
     defaultValues: {
       fullName: user?.name || "",

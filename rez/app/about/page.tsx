@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
+import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 // Demo components (non-functional versions)
 import AboutStep1TaskType from "@/components/about/AboutStep1TaskType";
@@ -106,6 +108,16 @@ function Stepper({ currentStep }: { currentStep: number }) {
 export default function AboutPage() {
   const { user } = useTaskMasterStore();
   const isAuthenticated = !!user;
+  const { aboutPageViewed } = useAmplitudeEvents();
+
+  // Track page view
+  const hasTrackedPageView = useRef(false);
+  useEffect(() => {
+    if (!hasTrackedPageView.current) {
+      aboutPageViewed();
+      hasTrackedPageView.current = true;
+    }
+  }, [aboutPageViewed]);
 
   return (
     <div className="min-h-screen p-4 sm:p-6 md:p-8">

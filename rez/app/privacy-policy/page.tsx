@@ -1,13 +1,25 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
+import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 export default function PrivacyPolicyPage() {
   const router = useRouter();
+  const { privacyPolicyViewed } = useAmplitudeEvents();
+
+  // Track page view
+  const hasTrackedPageView = useRef(false);
+  useEffect(() => {
+    if (!hasTrackedPageView.current) {
+      privacyPolicyViewed();
+      hasTrackedPageView.current = true;
+    }
+  }, [privacyPolicyViewed]);
 
   return (
     <div className="min-h-screen p-6 md:p-8">
