@@ -33,6 +33,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { useEffect } from "react";
+import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 // Main navigation items
 const mainNavItems = [
@@ -111,6 +112,7 @@ export function AppSidebar() {
   const { user } = useTaskMasterStore();
   const isSuperAdmin = user?.isSuperAdmin === true;
   const { isMobile, setOpenMobile } = useSidebar();
+  const { sidebarCreateTaskClicked, adminDashboardClicked } = useAmplitudeEvents();
 
   const isActive = (url: string) => {
     return pathname === url || pathname.startsWith(url + "/");
@@ -149,8 +151,8 @@ export function AppSidebar() {
       <SidebarContent className="px-2">
         {/* Prominent Create Task Button */}
         <div className="px-3 mb-4">
-          <Link href="/tasks" className="block">
-            <Button 
+          <Link href="/tasks" className="block" onClick={() => sidebarCreateTaskClicked()}>
+            <Button
               className="w-full rez-gradient hover:opacity-90 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 h-11 text-base group-data-[collapsible=icon]:w-12 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center"
               size="lg"
             >
@@ -226,12 +228,12 @@ export function AppSidebar() {
                 <SidebarMenu>
                   {adminItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton 
+                      <SidebarMenuButton
                         asChild
                         isActive={isActive(item.url)}
                         className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-amber-500/10 data-[active=true]:bg-amber-500/20 data-[active=true]:text-amber-700"
                       >
-                        <Link href={item.url}>
+                        <Link href={item.url} onClick={() => adminDashboardClicked()}>
                           <item.icon className="w-[18px] h-[18px] shrink-0 text-amber-600" />
                           <span className="font-medium">{item.title}</span>
                         </Link>

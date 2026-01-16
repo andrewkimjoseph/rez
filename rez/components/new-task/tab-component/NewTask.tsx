@@ -141,8 +141,15 @@ export default function NewTask() {
   const { user } = useTaskMasterStore();
   const { tasks, fetchTasksAndCompletions } = useTasksStore();
   const [isCreating, setIsCreating] = useState(false);
-  const { createNewTaskClicked, createNewTaskComplete, createNewTaskFailed } =
-    useAmplitudeEvents();
+  const {
+    createNewTaskClicked,
+    createNewTaskComplete,
+    createNewTaskFailed,
+    taskCreationStep1Completed,
+    taskCreationStep2Completed,
+    taskCreationStep3Completed,
+    taskCreationStepBackClicked,
+  } = useAmplitudeEvents();
   // Check if user can create a new task (once per week limit)
   // Super admins are exempt from rate limiting
   const getTaskCreationStatus = () => {
@@ -313,8 +320,28 @@ export default function NewTask() {
         setIsCreating(false);
       }
     } else {
+      // Track step completions
+      if (step === 1) {
+        taskCreationStep1Completed({ task_type: data.type });
+      } else if (step === 2) {
+        taskCreationStep2Completed({
+          task_title: data.title,
+          task_category: data.category,
+          task_difficulty: data.difficulty,
+        });
+      } else if (step === 3) {
+        taskCreationStep3Completed({
+          has_instructions: !!data.instructions,
+          has_feedback: !!data.feedback,
+        });
+      }
       nextStep();
     }
+  };
+
+  const handleBack = () => {
+    taskCreationStepBackClicked({ from_step: step });
+    prevStep();
   };
 
   // Rate limiting banner component
@@ -385,7 +412,7 @@ export default function NewTask() {
         <div className="flex justify-between mt-8">
           <Button
             variant="outline"
-            onClick={prevStep}
+            onClick={handleBack}
             disabled={step === 1 || isCreating}
           >
             Back

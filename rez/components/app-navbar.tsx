@@ -28,7 +28,7 @@ export function AppNavbar() {
   const user = useTaskMasterStore((state) => state.user);
   const { clearTasksAndCompletions } = useTasksStore();
   const router = useRouter();
-  const { signOutClicked, signOutComplete, signOutFailed } = useAmplitudeEvents();
+  const { signOutClicked, signOutComplete, signOutFailed, accountSettingsClicked } = useAmplitudeEvents();
 
   // Get time-based greeting
   const getGreeting = () => {
@@ -127,7 +127,7 @@ export function AppNavbar() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/account" className="cursor-pointer">
+                <Link href="/account" className="cursor-pointer" onClick={() => accountSettingsClicked()}>
                   <UserIcon className="mr-2 h-4 w-4" />
                   Account Settings
                 </Link>

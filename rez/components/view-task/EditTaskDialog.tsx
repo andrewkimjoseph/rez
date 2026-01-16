@@ -28,6 +28,7 @@ import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import { supportedTokens } from "@/utils/currencies";
 import Image from "next/image";
+import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 interface EditTaskDialogProps {
   task: Task | null;
@@ -44,13 +45,18 @@ const taskTypes = [
 const categories = ["Finance", "Climate", "Education", "Health", "Technology", "Social", "Other"];
 const difficulties = ["Easy", "Medium", "Hard"];
 
-export default function EditTaskDialog({ 
-  task, 
-  open, 
+export default function EditTaskDialog({
+  task,
+  open,
   onOpenChange,
-  onSuccess 
+  onSuccess
 }: EditTaskDialogProps) {
   const { editTask, isEditing } = useTasksStore();
+  const {
+    taskEditComplete,
+    taskEditFailed,
+    taskEditCancelled,
+  } = useAmplitudeEvents();
   
   // Form state
   const [type, setType] = useState<string>("");
@@ -102,17 +108,28 @@ export default function EditTaskDialog({
     }
 
     const success = await editTask(task.id, updateData);
-    
+
     if (success) {
+      taskEditComplete({
+        task_id: task.id,
+        changed_fields: Object.keys(updateData),
+      });
       toast.success("Task updated successfully");
       onOpenChange(false);
       onSuccess?.();
     } else {
+      taskEditFailed({
+        task_id: task.id,
+        error_message: "Failed to update task",
+      });
       toast.error("Failed to update task");
     }
   };
 
   const handleCancel = () => {
+    if (task?.id) {
+      taskEditCancelled({ task_id: task.id });
+    }
     onOpenChange(false);
   };
 
