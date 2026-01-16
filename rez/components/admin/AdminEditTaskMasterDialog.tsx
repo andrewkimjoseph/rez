@@ -21,6 +21,7 @@ import {
   ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
+import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 interface AdminEditTaskMasterDialogProps {
   taskMaster: TaskMaster | null;
@@ -29,13 +30,20 @@ interface AdminEditTaskMasterDialogProps {
   onSuccess?: () => void;
 }
 
-export default function AdminEditTaskMasterDialog({ 
-  taskMaster, 
-  open, 
+export default function AdminEditTaskMasterDialog({
+  taskMaster,
+  open,
   onOpenChange,
-  onSuccess 
+  onSuccess
 }: AdminEditTaskMasterDialogProps) {
   const { updateTaskMaster, isUpdating } = useAdminStore();
+  const {
+    adminTaskMasterEditComplete,
+    adminTaskMasterEditFailed,
+    adminTaskMasterEditCancelled,
+    adminTaskMasterSuperAdminGranted,
+    adminTaskMasterSuperAdminRevoked,
+  } = useAmplitudeEvents();
   
   const [name, setName] = useState("");
   const [emailAddress, setEmailAddress] = useState("");
@@ -56,12 +64,13 @@ export default function AdminEditTaskMasterDialog({
     if (!taskMaster?.id) return;
 
     const updateData: AdminUpdateTaskMasterData = {};
-    
+    const wasSuperAdmin = (taskMaster as TaskMaster & { isSuperAdmin?: boolean }).isSuperAdmin || false;
+
     // Only include changed fields
     if (name !== (taskMaster.name || "")) updateData.name = name;
     if (emailAddress !== (taskMaster.emailAddress || "")) updateData.emailAddress = emailAddress;
     if (organizationId !== (taskMaster.organizationId || "")) updateData.organizationId = organizationId;
-    if (isSuperAdmin !== ((taskMaster as TaskMaster & { isSuperAdmin?: boolean }).isSuperAdmin || false)) 
+    if (isSuperAdmin !== wasSuperAdmin)
       updateData.isSuperAdmin = isSuperAdmin;
 
     if (Object.keys(updateData).length === 0) {
@@ -71,16 +80,37 @@ export default function AdminEditTaskMasterDialog({
     }
 
     const success = await updateTaskMaster(taskMaster.id, updateData);
-    
+
     if (success) {
+      adminTaskMasterEditComplete({
+        task_master_id: taskMaster.id,
+        changed_fields: Object.keys(updateData),
+      });
+
+      // Track super admin status changes
+      if (updateData.isSuperAdmin !== undefined) {
+        if (updateData.isSuperAdmin && !wasSuperAdmin) {
+          adminTaskMasterSuperAdminGranted({ task_master_id: taskMaster.id });
+        } else if (!updateData.isSuperAdmin && wasSuperAdmin) {
+          adminTaskMasterSuperAdminRevoked({ task_master_id: taskMaster.id });
+        }
+      }
+
       onOpenChange(false);
       onSuccess?.();
     } else {
+      adminTaskMasterEditFailed({
+        task_master_id: taskMaster.id,
+        error_message: "Failed to update task master",
+      });
       toast.error("Failed to update task master");
     }
   };
 
   const handleCancel = () => {
+    if (taskMaster?.id) {
+      adminTaskMasterEditCancelled({ task_master_id: taskMaster.id });
+    }
     onOpenChange(false);
   };
 

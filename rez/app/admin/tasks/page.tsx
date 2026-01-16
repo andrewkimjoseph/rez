@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { useAdminStore } from "@/stores/admin-store";
@@ -49,6 +49,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 export default function AdminTasksPage() {
   const router = useRouter();
@@ -64,6 +65,23 @@ export default function AdminTasksPage() {
     error
   } = useAdminStore();
   const { setTask } = useSelectedTaskStore();
+  const {
+    adminTasksPageViewed,
+    adminTaskViewDetailsClicked,
+    adminTaskEditClicked,
+    adminTaskActivateClicked,
+    adminTaskActivateComplete,
+    adminTaskActivateFailed,
+    adminTaskDeactivateClicked,
+    adminTaskDeactivateComplete,
+    adminTaskDeactivateFailed,
+    adminTaskDeleteClicked,
+    adminTaskDeleteComplete,
+    adminTaskDeleteFailed,
+    adminTaskDeleteCancelled,
+    adminTasksRefreshClicked,
+    adminTasksSearchPerformed,
+  } = useAmplitudeEvents();
   
   const [isHydrated, setIsHydrated] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
@@ -93,7 +111,17 @@ export default function AdminTasksPage() {
     }
   }, [isHydrated, user, router, fetchAllTasks]);
 
+  // Track page view when authorized
+  const hasTrackedPageView = useRef(false);
+  useEffect(() => {
+    if (isAuthorized && !isLoadingTasks && !hasTrackedPageView.current) {
+      adminTasksPageViewed({ total_tasks: tasks.length });
+      hasTrackedPageView.current = true;
+    }
+  }, [isAuthorized, isLoadingTasks, tasks.length, adminTasksPageViewed]);
+
   const handleRefresh = async () => {
+    adminTasksRefreshClicked();
     try {
       await fetchAllTasks(true);
       toast.success("Tasks refreshed!");
@@ -103,29 +131,42 @@ export default function AdminTasksPage() {
   };
 
   const handleDeleteClick = (task: Task) => {
+    adminTaskDeleteClicked({ task_id: task.id, task_title: task.title });
     setTaskToDelete(task);
     setDeleteDialogOpen(true);
   };
 
   const handleConfirmDelete = async () => {
     if (!taskToDelete?.id) return;
-    
+
     const success = await deleteTask(taskToDelete.id);
     if (success) {
+      adminTaskDeleteComplete({ task_id: taskToDelete.id, task_title: taskToDelete.title });
       setDeleteDialogOpen(false);
       setTaskToDelete(null);
       toast.success("Task deleted successfully");
     } else {
+      adminTaskDeleteFailed({ task_id: taskToDelete.id, error_message: "Failed to delete task" });
       toast.error("Failed to delete task");
     }
   };
 
+  const handleCancelDelete = () => {
+    if (taskToDelete?.id) {
+      adminTaskDeleteCancelled({ task_id: taskToDelete.id });
+    }
+    setDeleteDialogOpen(false);
+    setTaskToDelete(null);
+  };
+
   const handleViewDetails = (task: Task) => {
+    adminTaskViewDetailsClicked({ task_id: task.id, task_title: task.title });
     setTask(task);
     router.push(`/admin/tasks/${task.id}`);
   };
 
   const handleEditClick = (task: Task) => {
+    adminTaskEditClicked({ task_id: task.id, task_title: task.title });
     setTaskToEdit(task);
     setEditDialogOpen(true);
   };
@@ -135,20 +176,35 @@ export default function AdminTasksPage() {
   };
 
   const handleStatusToggleClick = (task: Task) => {
+    if (task.isAvailable) {
+      adminTaskDeactivateClicked({ task_id: task.id, task_title: task.title });
+    } else {
+      adminTaskActivateClicked({ task_id: task.id, task_title: task.title });
+    }
     setTaskToToggle(task);
     setStatusDialogOpen(true);
   };
 
   const handleConfirmStatusToggle = async () => {
     if (!taskToToggle?.id) return;
-    
+
     const newStatus = !taskToToggle.isAvailable;
     const success = await updateTask(taskToToggle.id, { isAvailable: newStatus });
     if (success) {
+      if (newStatus) {
+        adminTaskActivateComplete({ task_id: taskToToggle.id });
+      } else {
+        adminTaskDeactivateComplete({ task_id: taskToToggle.id });
+      }
       setStatusDialogOpen(false);
       setTaskToToggle(null);
       toast.success(`Task ${newStatus ? 'activated' : 'deactivated'} successfully`);
     } else {
+      if (newStatus) {
+        adminTaskActivateFailed({ task_id: taskToToggle.id, error_message: "Failed to activate task" });
+      } else {
+        adminTaskDeactivateFailed({ task_id: taskToToggle.id, error_message: "Failed to deactivate task" });
+      }
       toast.error('Failed to update task status');
     }
   };
@@ -184,6 +240,16 @@ export default function AdminTasksPage() {
       return 'N/A';
     }
   };
+
+  // Track search with debouncing
+  useEffect(() => {
+    if (searchQuery.length > 0) {
+      const timeoutId = setTimeout(() => {
+        adminTasksSearchPerformed({ search_query: searchQuery });
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [searchQuery, adminTasksSearchPerformed]);
 
   // Filter tasks based on search query
   const filteredTasks = tasks.filter(task => {
@@ -448,7 +514,7 @@ export default function AdminTasksPage() {
             <DialogFooter>
               <Button
                 variant="outline"
-                onClick={() => setDeleteDialogOpen(false)}
+                onClick={handleCancelDelete}
                 disabled={isDeleting}
               >
                 Cancel

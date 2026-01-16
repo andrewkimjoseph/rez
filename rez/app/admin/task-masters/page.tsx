@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { useAdminStore } from "@/stores/admin-store";
@@ -47,18 +47,31 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 export default function AdminTaskMastersPage() {
   const router = useRouter();
   const { user } = useTaskMasterStore();
-  const { 
-    taskMasters, 
+  const {
+    taskMasters,
     isLoadingTaskMasters,
     isTogglingStatus,
     fetchAllTaskMasters,
     toggleTaskMasterStatus,
-    error 
+    error
   } = useAdminStore();
+  const {
+    adminTaskMastersPageViewed,
+    adminTaskMasterEditClicked,
+    adminTaskMasterDisableClicked,
+    adminTaskMasterDisableComplete,
+    adminTaskMasterDisableFailed,
+    adminTaskMasterEnableClicked,
+    adminTaskMasterEnableComplete,
+    adminTaskMasterEnableFailed,
+    adminTaskMastersRefreshClicked,
+    adminTaskMastersSearchPerformed,
+  } = useAmplitudeEvents();
   
   const [isHydrated, setIsHydrated] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
@@ -86,7 +99,27 @@ export default function AdminTaskMastersPage() {
     }
   }, [isHydrated, user, router, fetchAllTaskMasters]);
 
+  // Track page view when authorized
+  const hasTrackedPageView = useRef(false);
+  useEffect(() => {
+    if (isAuthorized && !isLoadingTaskMasters && !hasTrackedPageView.current) {
+      adminTaskMastersPageViewed({ total_task_masters: taskMasters.length });
+      hasTrackedPageView.current = true;
+    }
+  }, [isAuthorized, isLoadingTaskMasters, taskMasters.length, adminTaskMastersPageViewed]);
+
+  // Track search with debouncing
+  useEffect(() => {
+    if (searchQuery.length > 0) {
+      const timeoutId = setTimeout(() => {
+        adminTaskMastersSearchPerformed({ search_query: searchQuery });
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [searchQuery, adminTaskMastersSearchPerformed]);
+
   const handleRefresh = async () => {
+    adminTaskMastersRefreshClicked();
     try {
       await fetchAllTaskMasters(true);
       toast.success("Task masters refreshed!");
@@ -96,6 +129,10 @@ export default function AdminTaskMastersPage() {
   };
 
   const handleEditClick = (taskMaster: TaskMaster) => {
+    adminTaskMasterEditClicked({
+      task_master_id: taskMaster.id,
+      task_master_email: taskMaster.emailAddress,
+    });
     setTaskMasterToEdit(taskMaster);
     setEditDialogOpen(true);
   };
@@ -110,23 +147,50 @@ export default function AdminTaskMastersPage() {
       toast.error("Cannot disable a super admin");
       return;
     }
+    if (taskMaster.disabled) {
+      adminTaskMasterEnableClicked({
+        task_master_id: taskMaster.id,
+        task_master_name: taskMaster.name,
+      });
+    } else {
+      adminTaskMasterDisableClicked({
+        task_master_id: taskMaster.id,
+        task_master_name: taskMaster.name,
+      });
+    }
     setTaskMasterToToggle(taskMaster);
     setDisableDialogOpen(true);
   };
 
   const handleConfirmToggleStatus = async () => {
     if (!taskMasterToToggle?.id) return;
-    
+
     const newDisabledStatus = !taskMasterToToggle.disabled;
     const success = await toggleTaskMasterStatus(taskMasterToToggle.id, newDisabledStatus);
-    
+
     if (success) {
+      if (newDisabledStatus) {
+        adminTaskMasterDisableComplete({ task_master_id: taskMasterToToggle.id });
+      } else {
+        adminTaskMasterEnableComplete({ task_master_id: taskMasterToToggle.id });
+      }
       setDisableDialogOpen(false);
       setTaskMasterToToggle(null);
       toast.success(`Task master ${newDisabledStatus ? 'disabled' : 'enabled'} successfully`);
       // Force refresh to get updated status
       await fetchAllTaskMasters(true);
     } else {
+      if (newDisabledStatus) {
+        adminTaskMasterDisableFailed({
+          task_master_id: taskMasterToToggle.id,
+          error_message: "Failed to disable task master",
+        });
+      } else {
+        adminTaskMasterEnableFailed({
+          task_master_id: taskMasterToToggle.id,
+          error_message: "Failed to enable task master",
+        });
+      }
       toast.error('Failed to update task master status');
     }
   };

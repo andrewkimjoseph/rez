@@ -31,6 +31,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supportedTokens } from "@/utils/currencies";
 import Image from "next/image";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
+import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 interface AdminEditTaskDialogProps {
   task: Task | null;
@@ -47,13 +48,18 @@ const taskTypes = [
 const categories = ["Finance", "Climate", "Education", "Health", "Technology", "Social", "Other"];
 const difficulties = ["Easy", "Medium", "Hard"];
 
-export default function AdminEditTaskDialog({ 
-  task, 
-  open, 
+export default function AdminEditTaskDialog({
+  task,
+  open,
   onOpenChange,
-  onSuccess 
+  onSuccess
 }: AdminEditTaskDialogProps) {
   const { updateTask, isUpdating } = useAdminStore();
+  const {
+    adminTaskEditComplete,
+    adminTaskEditFailed,
+    adminTaskEditCancelled,
+  } = useAmplitudeEvents();
   
   // Basic Info
   const [type, setType] = useState<string>("");
@@ -170,16 +176,27 @@ export default function AdminEditTaskDialog({
     }
 
     const success = await updateTask(task.id, updateData);
-    
+
     if (success) {
+      adminTaskEditComplete({
+        task_id: task.id,
+        changed_fields: Object.keys(updateData),
+      });
       onOpenChange(false);
       onSuccess?.();
     } else {
+      adminTaskEditFailed({
+        task_id: task.id,
+        error_message: "Failed to update task",
+      });
       toast.error("Failed to update task");
     }
   };
 
   const handleCancel = () => {
+    if (task?.id) {
+      adminTaskEditCancelled({ task_id: task.id });
+    }
     onOpenChange(false);
   };
 
