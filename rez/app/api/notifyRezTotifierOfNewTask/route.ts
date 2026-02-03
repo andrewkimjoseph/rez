@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendTelegramMessage } from '@/utils/helpers/sendTelegramMessage';
 import { escapeMarkdown } from '@/utils/helpers/escapeMarkdown';
+import { requireAuth } from '@/lib/api-auth';
 
 interface TelegramMessage {
   chat_id: string;
@@ -27,6 +28,12 @@ const processedTasks = new Set<string>();
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify authentication
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
     const taskData: TaskNotificationData = await request.json();
 
     if (!taskData) {

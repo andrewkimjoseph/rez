@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendTelegramMessage } from '@/utils/helpers/sendTelegramMessage';
 import { escapeMarkdown } from '@/utils/helpers/escapeMarkdown';
+import { requireSuperAdmin } from '@/lib/api-auth';
 
 interface TelegramMessage {
   chat_id: string;
@@ -15,7 +16,7 @@ interface TaskNotificationData {
   category: string;
   difficulty: string;
   rezTaskMasterEmailAddress: string;
-  action: 'updated' | 'deleted' | 'activated' | 'deactivated';
+  action: 'updated' | 'deleted' | 'activated' | 'deactivated' | 'approved' | 'rejected' | 'published' | 'archived';
   updatedByEmail?: string;
   tallyFormUrl?: string;
   estimatedTimeOfCompletionInMinutes?: number;
@@ -28,6 +29,12 @@ const processedTasks = new Set<string>();
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify super admin authentication (only admins can update/delete tasks)
+    const authResult = await requireSuperAdmin(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
     const taskData: TaskNotificationData = await request.json();
 
     if (!taskData) {
@@ -46,10 +53,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const validActions = ['updated', 'deleted', 'activated', 'deactivated'];
+    const validActions = ['updated', 'deleted', 'activated', 'deactivated', 'approved', 'rejected', 'published', 'archived'];
     if (!action || !validActions.includes(action)) {
       return NextResponse.json(
-        { error: 'Action must be one of: "updated", "deleted", "activated", or "deactivated"' },
+        { error: 'Action must be one of: "updated", "deleted", "activated", "deactivated", "approved", "rejected", "published", or "archived"' },
         { status: 400 }
       );
     }
@@ -92,6 +99,10 @@ export async function POST(request: NextRequest) {
         case 'deleted': return '🗑️';
         case 'activated': return '✅';
         case 'deactivated': return '⏸️';
+        case 'approved': return '👍';
+        case 'rejected': return '👎';
+        case 'published': return '📢';
+        case 'archived': return '📦';
         default: return '📋';
       }
     };
@@ -102,6 +113,10 @@ export async function POST(request: NextRequest) {
         case 'deleted': return 'Deleted';
         case 'activated': return 'Activated';
         case 'deactivated': return 'Deactivated';
+        case 'approved': return 'Approved';
+        case 'rejected': return 'Rejected';
+        case 'published': return 'Published';
+        case 'archived': return 'Archived';
         default: return 'Modified';
       }
     };
@@ -140,6 +155,14 @@ export async function POST(request: NextRequest) {
       byField = `*Updated By:* ${escapeMarkdown(byEmail)}\n`;
     } else if (action === 'deleted') {
       byField = `*Deleted By:* ${escapeMarkdown(byEmail)}\n`;
+    } else if (action === 'approved') {
+      byField = `*Approved By:* ${escapeMarkdown(byEmail)}\n`;
+    } else if (action === 'rejected') {
+      byField = `*Rejected By:* ${escapeMarkdown(byEmail)}\n`;
+    } else if (action === 'published') {
+      byField = `*Published By:* ${escapeMarkdown(byEmail)}\n`;
+    } else if (action === 'archived') {
+      byField = `*Archived By:* ${escapeMarkdown(byEmail)}\n`;
     } else {
       byField = `*Modified By:* ${escapeMarkdown(byEmail)}\n`;
     }

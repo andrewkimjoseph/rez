@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendTelegramMessage } from '@/utils/helpers/sendTelegramMessage';
 import { escapeMarkdown } from '@/utils/helpers/escapeMarkdown';
+import { requireAuth } from '@/lib/api-auth';
 
 interface TelegramMessage {
   chat_id: string;
@@ -17,6 +18,12 @@ interface NewAccountNotificationData {
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify authentication
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
     const data: NewAccountNotificationData = await request.json();
 
     if (!data || !data.id) {
