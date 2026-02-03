@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useNewTaskStore, TaskStep } from "@/stores/new-task-store";
 import Step1TaskType from "@/components/new-task/Step1TaskType";
 import Step2TaskDetails from "@/components/new-task/Step2TaskDetails";
+import Step3Cost from "@/components/new-task/Step3Cost";
 import Step4QuestionsTasks from "@/components/new-task/Step3QuestionsTasks";
 import Step5Review from "@/components/new-task/Step4Review";
 import { toast } from "sonner";
@@ -19,6 +20,7 @@ import {
   DocumentTextIcon,
   LinkIcon,
   ClipboardDocumentCheckIcon,
+  CurrencyDollarIcon,
 } from "@heroicons/react/24/outline";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 import Link from "next/link";
@@ -26,13 +28,14 @@ import Link from "next/link";
 const stepConfig = [
   { title: "Type", description: "Choose task type", icon: Squares2X2Icon },
   { title: "Details", description: "Add information", icon: DocumentTextIcon },
+  { title: "Cost", description: "Set pricing", icon: CurrencyDollarIcon },
   { title: "Links", description: "Add resources", icon: LinkIcon },
   { title: "Review", description: "Confirm & create", icon: ClipboardDocumentCheckIcon },
 ];
 
 function Stepper({ step }: { step: TaskStep }) {
-  const totalSteps = 4;
-  // Calculate progress: 0 segments at step 1, 3 segments at step 4
+  const totalSteps = 5;
+  // Calculate progress: 0 segments at step 1, 4 segments at step 5
   const completedSegments = step - 1;
 
   return (
@@ -40,8 +43,8 @@ function Stepper({ step }: { step: TaskStep }) {
       {/* Steps with connecting lines */}
       <div className="relative mb-4">
         {/* Connecting lines between steps - positioned to align with circle centers */}
-        <div className="absolute top-5 inset-x-0 flex px-[calc(12.5%+4px)]">
-          {[0, 1, 2].map((segmentIndex) => (
+        <div className="absolute top-5 inset-x-0 flex px-[calc(10%+4px)]">
+          {[0, 1, 2, 3].map((segmentIndex) => (
             <div
               key={segmentIndex}
               className={`h-0.5 flex-1 transition-colors duration-300 ${
@@ -125,11 +128,11 @@ function TaskStepContent({ step }: { step: TaskStep }) {
       return <Step1TaskType />;
     case 2:
       return <Step2TaskDetails />;
-    // case 3:
-    //   return <Step3Targeting />;
     case 3:
-      return <Step4QuestionsTasks />;
+      return <Step3Cost />;
     case 4:
+      return <Step4QuestionsTasks />;
+    case 5:
       return <Step5Review />;
     default:
       return null;
@@ -137,7 +140,7 @@ function TaskStepContent({ step }: { step: TaskStep }) {
 }
 
 export default function NewTask() {
-  const { step, nextStep, prevStep, data, reset } = useNewTaskStore();
+  const { step, nextStep, prevStep, data, reset, editMode, editingTaskId } = useNewTaskStore();
   const { user } = useTaskMasterStore();
   const { tasks, fetchTasksAndCompletions } = useTasksStore();
   const [isCreating, setIsCreating] = useState(false);
@@ -171,7 +174,7 @@ export default function NewTask() {
       return { canCreate: true, lastTaskDate: null, daysLeft: 0 };
     }
 
-    // Sort by creation time and get the most recent
+    // Sort by most recent activity (creation or update) and get the most recent
     const sortedTasks = userTasks.sort((a, b) => {
       const getTimestamp = (timestamp: any) => {
         if (timestamp?._seconds) return timestamp._seconds * 1000;
@@ -179,25 +182,32 @@ export default function NewTask() {
         if (timestamp?.toDate) return timestamp.toDate().getTime();
         return 0;
       };
-      return getTimestamp(b.timeCreated) - getTimestamp(a.timeCreated);
+      
+      // Get the most recent timestamp for each task (created or updated)
+      const getMostRecentTime = (task: typeof a) => {
+        const created = getTimestamp(task.timeCreated);
+        const updated = getTimestamp(task.timeUpdated);
+        return Math.max(created, updated);
+      };
+      
+      return getMostRecentTime(b) - getMostRecentTime(a);
     });
 
     const latestTask = sortedTasks[0];
 
-    if (!latestTask.timeCreated) {
-      return { canCreate: true, lastTaskDate: null, daysLeft: 0 };
-    }
+    // Calculate time since last task activity (creation or update)
+    const getTimestamp = (timestamp: any) => {
+      if (timestamp?._seconds) return timestamp._seconds * 1000;
+      if (timestamp?.seconds) return timestamp.seconds * 1000;
+      if (timestamp?.toDate) return timestamp.toDate().getTime();
+      return 0;
+    };
+    
+    const createdTime = getTimestamp(latestTask.timeCreated);
+    const updatedTime = getTimestamp(latestTask.timeUpdated);
+    const lastTaskTime = Math.max(createdTime, updatedTime);
 
-    // Calculate time since last task
-    let lastTaskTime: number;
-    const timestamp = latestTask.timeCreated as any;
-    if (timestamp._seconds) {
-      lastTaskTime = timestamp._seconds * 1000;
-    } else if (timestamp.seconds) {
-      lastTaskTime = timestamp.seconds * 1000;
-    } else if (timestamp.toDate) {
-      lastTaskTime = timestamp.toDate().getTime();
-    } else {
+    if (lastTaskTime === 0) {
       return { canCreate: true, lastTaskDate: null, daysLeft: 0 };
     }
 
@@ -228,90 +238,163 @@ export default function NewTask() {
         // Step 2: Task Details - requires title, category, and difficulty
         return !!(data.title && data.category && data.difficulty);
       case 3:
-        // Step 3: Links - requires link, and for checkOutApp also requires instructions and feedback
+        // Step 3: Cost - requires questions/feedback questions and participants/testers
+        if (data.type === 'fillAForm') {
+          return !!(data.numberOfQuestions && data.numberOfQuestions > 0 && 
+                   data.targetNumberOfParticipants && data.targetNumberOfParticipants > 0);
+        } else if (data.type === 'checkOutApp') {
+          return !!(data.numberOfFeedbackQuestions && data.numberOfFeedbackQuestions > 0 && 
+                   data.targetNumberOfParticipants && data.targetNumberOfParticipants > 0);
+        }
+        return false;
+      case 4:
+        // Step 4: Links - requires link, and for checkOutApp also requires instructions and feedback
         if (data.type === 'checkOutApp') {
           return !!(data.link && data.instructions && data.feedback);
         }
         return !!data.link;
-      case 4:
-        // Step 4: Review - all required fields should be filled
+      case 5:
+        // Step 5: Review - all required fields should be filled
         const baseFieldsValid = !!(
           data.type &&
           data.title &&
           data.category &&
           data.difficulty &&
+          data.targetNumberOfParticipants &&
           data.link
         );
+        const costFieldsValid = data.type === 'fillAForm' 
+          ? !!(data.numberOfQuestions && data.numberOfQuestions > 0)
+          : !!(data.numberOfFeedbackQuestions && data.numberOfFeedbackQuestions > 0);
         if (data.type === 'checkOutApp') {
-          return baseFieldsValid && !!(data.instructions && data.feedback);
+          return baseFieldsValid && costFieldsValid && !!(data.instructions && data.feedback);
         }
-        return baseFieldsValid;
+        return baseFieldsValid && costFieldsValid;
       default:
         return false;
     }
   };
 
   const handleContinue = async () => {
-    if (step === 4) {
+    if (step === 5) {
       setIsCreating(true);
-      createNewTaskClicked();
+      
+      if (editMode) {
+        createNewTaskClicked(); // Track as edit
+      } else {
+        createNewTaskClicked();
+      }
+      
       try {
-        // Get the last task creation timestamp to send to API (avoids DB reads)
-        let lastTaskCreatedAt: number | null = null;
-        if (taskCreationStatus.lastTaskDate) {
-          lastTaskCreatedAt = taskCreationStatus.lastTaskDate.getTime();
+        if (editMode && editingTaskId) {
+          // Update existing task
+          const response = await fetch("/api/updateTask", {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              taskId: editingTaskId,
+              data: {
+                type: data.type!,
+                title: data.title!,
+                category: data.category || "Other",
+                difficulty: data.difficulty || "Medium",
+                link: data.link,
+                instructions: data.instructions,
+                feedback: data.feedback,
+                targetNumberOfParticipants: data.targetNumberOfParticipants,
+                numberOfQuestions: data.numberOfQuestions,
+                numberOfFeedbackQuestions: data.numberOfFeedbackQuestions,
+                reviewStatus: 'pending', // Move back to pending review
+                reasonsForRejection: [], // Clear rejection reasons
+              },
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to update task");
+          }
+
+          toast("Task updated!", {
+            description: "Your task has been updated and submitted for review.",
+          });
+          createNewTaskComplete({
+            task_id: editingTaskId,
+            task_title: data.title,
+            task_type: data.type,
+            task_category: data.category,
+            task_difficulty: data.difficulty,
+            task_link: data.link,
+          });
+          // Refresh the tasks list
+          await fetchTasksAndCompletions();
+          // Reset the form after successful update
+          reset();
+        } else {
+          // Create new task
+          // Get the last task creation timestamp to send to API (avoids DB reads)
+          let lastTaskCreatedAt: number | null = null;
+          if (taskCreationStatus.lastTaskDate) {
+            lastTaskCreatedAt = taskCreationStatus.lastTaskDate.getTime();
+          }
+
+          // Create the task via API route
+          const response = await fetch("/api/createTask", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              type: data.type!,
+              title: data.title!,
+              category: data.category || "Other",
+              difficulty: data.difficulty || "Medium",
+              gender: data.gender,
+              link: data.link,
+              instructions: data.instructions,
+              feedback: data.feedback,
+              targetNumberOfParticipants: data.targetNumberOfParticipants,
+              numberOfQuestions: data.numberOfQuestions,
+              numberOfFeedbackQuestions: data.numberOfFeedbackQuestions,
+              lastTaskCreatedAt, // Send timestamp to avoid server DB reads
+              isSuperAdmin: user?.isSuperAdmin === true, // Send super admin status to avoid server DB reads
+              // Super admin can assign to different task master
+              assignedTaskMasterEmailAddress: user?.isSuperAdmin && data.assignToTaskMaster
+                ? data.assignedTaskMasterEmailAddress
+                : undefined,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to create task");
+          }
+
+          const result = await response.json();
+
+          toast("Task created!", {
+            description: `Your new task has been created successfully with ID: ${result.taskId}`,
+          });
+          createNewTaskComplete({
+            task_id: result.taskId,
+            task_title: data.title,
+            task_type: data.type,
+            task_category: data.category,
+            task_difficulty: data.difficulty,
+            task_link: data.link,
+          });
+          // Refresh the tasks list to include the newly created task
+          await fetchTasksAndCompletions();
+
+          // Reset the form after successful creation
+          reset();
         }
-
-        // Create the task via API route
-        const response = await fetch("/api/createTask", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            type: data.type!,
-            title: data.title!,
-            category: data.category || "Other",
-            difficulty: data.difficulty || "Medium",
-            gender: data.gender,
-            link: data.link,
-            instructions: data.instructions,
-            feedback: data.feedback,
-            lastTaskCreatedAt, // Send timestamp to avoid server DB reads
-            isSuperAdmin: user?.isSuperAdmin === true, // Send super admin status to avoid server DB reads
-            // Super admin can assign to different task master
-            assignedTaskMasterEmailAddress: user?.isSuperAdmin && data.assignToTaskMaster
-              ? data.assignedTaskMasterEmailAddress
-              : undefined,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to create task");
-        }
-
-        const result = await response.json();
-
-        toast("Task created!", {
-          description: `Your new task has been created successfully with ID: ${result.taskId}`,
-        });
-        createNewTaskComplete({
-          task_id: result.taskId,
-          task_title: data.title,
-          task_type: data.type,
-          task_category: data.category,
-          task_difficulty: data.difficulty,
-          task_link: data.link,
-        });
-        // Refresh the tasks list to include the newly created task
-        await fetchTasksAndCompletions();
-
-        // Reset the form after successful creation
-        reset();
       } catch (error) {
-        toast("Error creating task", {
+        toast(editMode ? "Error updating task" : "Error creating task", {
           description:
-            "There was an error creating your task. Please try again.",
+            editMode
+              ? "There was an error updating your task. Please try again."
+              : "There was an error creating your task. Please try again.",
         });
         createNewTaskFailed({
           error_message: error?.toString(),
@@ -329,7 +412,7 @@ export default function NewTask() {
           task_category: data.category,
           task_difficulty: data.difficulty,
         });
-      } else if (step === 3) {
+      } else if (step === 4) {
         taskCreationStep3Completed({
           has_instructions: !!data.instructions,
           has_feedback: !!data.feedback,
@@ -387,8 +470,8 @@ export default function NewTask() {
     </Card>
   );
 
-  // Show rate limit banner if user cannot create a task
-  if (!taskCreationStatus.canCreate) {
+  // Show rate limit banner if user cannot create a task (skip for edit mode)
+  if (!editMode && !taskCreationStatus.canCreate) {
     return <RateLimitBanner />;
   }
 
@@ -418,14 +501,14 @@ export default function NewTask() {
             Back
           </Button>
           <Button onClick={handleContinue} disabled={isCreating || !canProceed()}>
-            {step === 4 ? (
+            {step === 5 ? (
               isCreating ? (
                 <>
                   <ArrowPathIcon className="animate-spin" />
-                  Creating Task...
+                  {editMode ? "Updating Task..." : "Creating Task..."}
                 </>
               ) : (
-                "Finish"
+                editMode ? "Update Task" : "Finish"
               )
             ) : (
               "Continue"

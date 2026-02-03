@@ -2,17 +2,18 @@ import { useNewTaskStore } from '@/stores/new-task-store';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card } from '@/components/ui/card';
 import {
-  LinkIcon,
-  DocumentTextIcon,
-  ChatBubbleLeftRightIcon,
-  CheckCircleIcon,
-  ExclamationCircleIcon,
-  GlobeAltIcon,
-} from '@heroicons/react/24/outline';
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from '@/components/ui/tooltip';
+import { GlobeAltIcon, DocumentTextIcon, ChatBubbleLeftRightIcon, ExclamationCircleIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
 import { useMemo } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { isFieldRejected, getRejectionReasonsForField } from '@/utils/rejection-highlighting';
+import { getRejectionReasonLabel } from '@/utils/rejection-reasons';
 
 const isValidUrl = (url: string): boolean => {
   if (!url) return false;
@@ -25,7 +26,7 @@ const isValidUrl = (url: string): boolean => {
 };
 
 export default function Step4QuestionsTasks() {
-  const { data, updateData } = useNewTaskStore();
+  const { data, updateData, editMode, editingTaskReasons, hasFieldChanged } = useNewTaskStore();
 
   const getLinkLabel = () => {
     if (data.type === 'fillAForm') return 'Form URL';
@@ -35,197 +36,217 @@ export default function Step4QuestionsTasks() {
 
   const getLinkPlaceholder = () => {
     if (data.type === 'fillAForm') return 'https://forms.google.com/...';
-    if (data.type === 'checkOutApp') return 'https://play.google.com/... or https://apps.apple.com/...';
+    if (data.type === 'checkOutApp') return 'https://play.google.com/... or App Store link';
     return 'https://...';
-  };
-
-  const getLinkDescription = () => {
-    if (data.type === 'fillAForm') return 'The URL where users will access and fill out your form or survey';
-    if (data.type === 'checkOutApp') return 'Link to the app store listing or web app that users will test';
-    return 'The main URL for this task';
   };
 
   const linkValidation = useMemo(() => {
     if (!data.link) return { valid: false, message: '' };
-    if (isValidUrl(data.link)) return { valid: true, message: 'Valid URL' };
-    return { valid: false, message: 'Please enter a valid URL (starting with https://)' };
+    if (isValidUrl(data.link)) return { valid: true, message: '' };
+    return { valid: false, message: 'Enter a valid URL (https://)' };
   }, [data.link]);
 
   const feedbackValidation = useMemo(() => {
     if (!data.feedback) return { valid: false, message: '' };
-    if (isValidUrl(data.feedback)) return { valid: true, message: 'Valid URL' };
-    return { valid: false, message: 'Please enter a valid URL' };
+    if (isValidUrl(data.feedback)) return { valid: true, message: '' };
+    return { valid: false, message: 'Enter a valid URL' };
   }, [data.feedback]);
 
   const isCheckOutApp = data.type === 'checkOutApp';
 
-  const getCompletionStatus = () => {
-    if (isCheckOutApp) {
-      const completed = [data.link, data.instructions, data.feedback].filter(Boolean).length;
-      return { completed, total: 3 };
-    }
-    return { completed: data.link ? 1 : 0, total: 1 };
-  };
+  const linkWasRejected = editMode && isFieldRejected('link', editingTaskReasons, data.type || null);
+  const linkHasChanged = hasFieldChanged('link');
+  const isLinkRejected = linkWasRejected && !linkHasChanged;
+  const linkRejectionReasons = editMode && editingTaskReasons 
+    ? getRejectionReasonsForField('link', editingTaskReasons, data.type || null)
+    : [];
 
-  const completionStatus = getCompletionStatus();
+  const instructionsWasRejected = editMode && isFieldRejected('instructions', editingTaskReasons, data.type || null);
+  const instructionsHasChanged = hasFieldChanged('instructions');
+  const isInstructionsRejected = instructionsWasRejected && !instructionsHasChanged;
+  const instructionsRejectionReasons = editMode && editingTaskReasons 
+    ? getRejectionReasonsForField('instructions', editingTaskReasons, data.type || null)
+    : [];
+
+  const feedbackWasRejected = editMode && isFieldRejected('feedback', editingTaskReasons, data.type || null);
+  const feedbackHasChanged = hasFieldChanged('feedback');
+  const isFeedbackRejected = feedbackWasRejected && !feedbackHasChanged;
+  const feedbackRejectionReasons = editMode && editingTaskReasons 
+    ? getRejectionReasonsForField('feedback', editingTaskReasons, data.type || null)
+    : [];
 
   return (
     <div>
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Add your resources</h2>
+      <div className="mb-3">
+        <h2 className="text-lg font-semibold text-gray-900">Resources</h2>
         <p className="text-sm text-gray-500 mt-0.5">
-          {isCheckOutApp
-            ? 'Provide the links and instructions users need to complete this task'
-            : 'Provide the link where users will complete this task'
-          }
+          {isCheckOutApp ? 'Links and instructions for users' : 'Where users complete the task'}
         </p>
       </div>
 
-      <div className="space-y-4">
-        {/* Main Link Field */}
-        <Card className="p-4 border-2 border-gray-100">
-          <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#5C29A3]/10 flex items-center justify-center flex-shrink-0">
-              <GlobeAltIcon className="w-4 h-4 text-[#5C29A3]" />
-            </div>
-            <div className="flex-1 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="link" className="text-sm font-semibold">{getLinkLabel()}</Label>
-                  {linkValidation.valid && (
-                    <CheckCircleSolidIcon className="w-4 h-4 text-green-500" />
-                  )}
+      <div className="space-y-3">
+        <div>
+          <div className="flex items-center gap-1.5 mb-1">
+            <Label htmlFor="link" className="text-xs font-medium text-gray-500 flex items-center gap-1.5">
+              <GlobeAltIcon className="w-3.5 h-3.5" />
+              {getLinkLabel()}
+              {linkValidation.valid && <CheckCircleSolidIcon className="w-3.5 h-3.5 text-green-500" />}
+            </Label>
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex text-gray-400 hover:text-gray-600 cursor-help" aria-label={isCheckOutApp ? 'Where is your product located?' : 'Where is your form located?'}>
+                    <InformationCircleIcon className="w-3.5 h-3.5" />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[220px]">
+                  {isCheckOutApp 
+                    ? 'The URL where users can access your product or app (e.g., App Store, Play Store, or web app link).'
+                    : 'The URL where users will access and complete your form or survey (e.g., Google Forms, Typeform, etc.).'}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <div className="relative">
+            <Input
+              id="link"
+              value={data.link || ''}
+              onChange={e => updateData({ link: e.target.value })}
+              placeholder={getLinkPlaceholder()}
+              className={`h-9 text-sm ${
+                isLinkRejected 
+                  ? 'border-red-500 focus-visible:ring-red-500' 
+                  : data.link && !linkValidation.valid 
+                    ? 'border-red-200 focus-visible:ring-red-200' 
+                    : ''
+              }`}
+            />
+            {isLinkRejected && (
+              <div className="mt-1.5 flex items-start gap-1.5">
+                <ExclamationCircleIcon className="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 mb-1">
+                    Rejected
+                  </Badge>
+                  <p className="text-[11px] text-red-600">
+                    {linkRejectionReasons.map(getRejectionReasonLabel).join(', ')}
+                  </p>
                 </div>
               </div>
-              <Input
-                id="link"
-                value={data.link || ''}
-                onChange={e => updateData({ link: e.target.value })}
-                placeholder={getLinkPlaceholder()}
-                className={`transition-all duration-200 ${
-                  data.link
-                    ? linkValidation.valid
-                      ? 'border-green-200 focus:border-green-400'
-                      : 'border-red-200 focus:border-red-400'
-                    : ''
-                }`}
-              />
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-400">{getLinkDescription()}</p>
-                {data.link && !linkValidation.valid && (
-                  <div className="flex items-center gap-1 text-xs text-red-500">
-                    <ExclamationCircleIcon className="w-3.5 h-3.5" />
-                    <span>{linkValidation.message}</span>
+            )}
+            {!isLinkRejected && data.link && !linkValidation.valid && (
+              <p className="flex items-center gap-1 mt-1 text-[11px] text-red-500">
+                <ExclamationCircleIcon className="w-3 h-3 flex-shrink-0" />
+                {linkValidation.message}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {isCheckOutApp && (
+          <>
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <Label htmlFor="instructions" className="text-xs font-medium text-gray-500 flex items-center gap-1.5">
+                  <DocumentTextIcon className="w-3.5 h-3.5" />
+                  Instructions
+                  {data.instructions && <CheckCircleSolidIcon className="w-3.5 h-3.5 text-green-500" />}
+                </Label>
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex text-gray-400 hover:text-gray-600 cursor-help" aria-label="What should users do?">
+                        <InformationCircleIcon className="w-3.5 h-3.5" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-[220px]">
+                      Provide clear step-by-step instructions on what users should do, look for, or test in your product. Be specific about what you want them to explore or evaluate.
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <div className="relative">
+                <Textarea
+                  id="instructions"
+                  value={data.instructions || ''}
+                  onChange={e => updateData({ instructions: e.target.value })}
+                  placeholder="Step-by-step instructions for users..."
+                  rows={3}
+                  className={`text-sm resize-none min-h-[72px] ${isInstructionsRejected ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                />
+                {isInstructionsRejected && (
+                  <div className="mt-1.5 flex items-start gap-1.5">
+                    <ExclamationCircleIcon className="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 mb-1">
+                        Rejected
+                      </Badge>
+                      <p className="text-[11px] text-red-600">
+                        {instructionsRejectionReasons.map(getRejectionReasonLabel).join(', ')}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
-          </div>
-        </Card>
 
-        {/* Additional fields for Check Out App */}
-        {isCheckOutApp && (
-          <>
-            {/* Instructions Field */}
-            <Card className="p-4 border-2 border-gray-100">
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-                  <DocumentTextIcon className="w-4 h-4 text-blue-600" />
-                </div>
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="instructions" className="text-sm font-semibold">Instructions</Label>
-                    {data.instructions && (
-                      <CheckCircleSolidIcon className="w-4 h-4 text-green-500" />
-                    )}
-                  </div>
-                  <Textarea
-                    id="instructions"
-                    value={data.instructions || ''}
-                    onChange={e => updateData({ instructions: e.target.value })}
-                    placeholder="Enter step-by-step instructions for users on how to complete this task..."
-                    rows={4}
-                    className={`transition-all duration-200 resize-none ${
-                      data.instructions
-                        ? 'border-green-200 focus:border-green-400'
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <Label htmlFor="feedback" className="text-xs font-medium text-gray-500 flex items-center gap-1.5">
+                  <ChatBubbleLeftRightIcon className="w-3.5 h-3.5" />
+                  Feedback form URL
+                  {feedbackValidation.valid && <CheckCircleSolidIcon className="w-3.5 h-3.5 text-green-500" />}
+                </Label>
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex text-gray-400 hover:text-gray-600 cursor-help" aria-label="Where do users submit feedback?">
+                        <InformationCircleIcon className="w-3.5 h-3.5" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-[220px]">
+                      The URL of the form where testers will submit their feedback, findings, and answers to your feedback questions after testing your product.
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <div className="relative">
+                <Input
+                  id="feedback"
+                  value={data.feedback || ''}
+                  onChange={e => updateData({ feedback: e.target.value })}
+                  placeholder="https://forms.google.com/..."
+                  className={`h-9 text-sm ${
+                    isFeedbackRejected 
+                      ? 'border-red-500 focus-visible:ring-red-500' 
+                      : data.feedback && !feedbackValidation.valid 
+                        ? 'border-red-200 focus-visible:ring-red-200' 
                         : ''
-                    }`}
-                  />
-                  <p className="text-xs text-gray-400">
-                    Be specific about what users should do, look for, or test in the app
+                  }`}
+                />
+                {isFeedbackRejected && (
+                  <div className="mt-1.5 flex items-start gap-1.5">
+                    <ExclamationCircleIcon className="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 mb-1">
+                        Rejected
+                      </Badge>
+                      <p className="text-[11px] text-red-600">
+                        {feedbackRejectionReasons.map(getRejectionReasonLabel).join(', ')}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {!isFeedbackRejected && data.feedback && !feedbackValidation.valid && (
+                  <p className="flex items-center gap-1 mt-1 text-[11px] text-red-500">
+                    <ExclamationCircleIcon className="w-3 h-3 flex-shrink-0" />
+                    {feedbackValidation.message}
                   </p>
-                </div>
+                )}
               </div>
-            </Card>
-
-            {/* Feedback Form Field */}
-            <Card className="p-4 border-2 border-gray-100">
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-full bg-amber-50 flex items-center justify-center flex-shrink-0">
-                  <ChatBubbleLeftRightIcon className="w-4 h-4 text-amber-600" />
-                </div>
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="feedback" className="text-sm font-semibold">Feedback Form URL</Label>
-                    {feedbackValidation.valid && (
-                      <CheckCircleSolidIcon className="w-4 h-4 text-green-500" />
-                    )}
-                  </div>
-                  <Input
-                    id="feedback"
-                    value={data.feedback || ''}
-                    onChange={e => updateData({ feedback: e.target.value })}
-                    placeholder="https://forms.google.com/..."
-                    className={`transition-all duration-200 ${
-                      data.feedback
-                        ? feedbackValidation.valid
-                          ? 'border-green-200 focus:border-green-400'
-                          : 'border-red-200 focus:border-red-400'
-                        : ''
-                    }`}
-                  />
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-gray-400">
-                      Users will submit their feedback and findings through this form
-                    </p>
-                    {data.feedback && !feedbackValidation.valid && (
-                      <div className="flex items-center gap-1 text-xs text-red-500">
-                        <ExclamationCircleIcon className="w-3.5 h-3.5" />
-                        <span>{feedbackValidation.message}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Card>
+            </div>
           </>
         )}
-
-        {/* Completion status */}
-        <div className="pt-3 border-t border-gray-100">
-          <div className="flex items-center gap-2">
-            {completionStatus.completed === completionStatus.total ? (
-              <>
-                <CheckCircleIcon className="w-5 h-5 text-green-500" />
-                <span className="text-sm text-green-600 font-medium">All resources added</span>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: completionStatus.total }).map((_, idx) => (
-                    <div
-                      key={idx}
-                      className={`w-2 h-2 rounded-full ${idx < completionStatus.completed ? 'bg-green-500' : 'bg-gray-200'}`}
-                    />
-                  ))}
-                </div>
-                <span className="text-sm text-gray-500">
-                  {completionStatus.completed} of {completionStatus.total} {isCheckOutApp ? 'resources' : 'resource'} added
-                </span>
-              </>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   );
