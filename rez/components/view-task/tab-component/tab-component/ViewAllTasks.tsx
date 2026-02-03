@@ -10,11 +10,21 @@ import {
 } from "@/components/ui/table";
 import { useTasksData } from "@/hooks/use-tasks-data";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Task } from "@/firebase/firestore/models/Task";
 import {
   XCircleIcon,
   ArrowPathIcon,
+  PencilIcon,
 } from "@heroicons/react/24/outline";
+import { formatRejectionReasons } from "@/utils/rejection-reasons";
+import Link from "next/link";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
 
 export default function ViewTasks() {
   const { tasks, taskCompletions, isLoading, error } = useTasksData({ autoFetch: false });
@@ -128,12 +138,12 @@ export default function ViewTasks() {
             <TableRow className="bg-muted/30 hover:bg-muted/30">
               <TableHead className="w-[50px] font-semibold">#</TableHead>
               <TableHead className="font-semibold min-w-[150px]">Title</TableHead>
-              <TableHead className="font-semibold">Category</TableHead>
               <TableHead className="font-semibold">Type</TableHead>
               <TableHead className="font-semibold">Status</TableHead>
               <TableHead className="text-right font-semibold">Target</TableHead>
               <TableHead className="text-right font-semibold">Completions</TableHead>
               <TableHead className="font-semibold">Created</TableHead>
+              <TableHead className="font-semibold w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -154,21 +164,33 @@ export default function ViewTasks() {
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className="font-normal">
-                    {task.category || 'N/A'}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className="font-normal">
                     {getTaskTypeLabel(task.type)}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge 
-                    variant={task.isAvailable ? "default" : "secondary"}
-                    className={task.isAvailable ? "bg-[#EFECFD] text-[#5C29A3] hover:bg-[#EFECFD]/80 border-0" : ""}
-                  >
-                    {task.isAvailable ? 'Active' : 'Inactive'}
-                  </Badge>
+                  <div className="flex flex-col gap-1">
+                    <Badge 
+                      variant={task.isAvailable ? "default" : "secondary"}
+                      className={task.isAvailable ? "bg-[#EFECFD] text-[#5C29A3] hover:bg-[#EFECFD]/80 border-0" : ""}
+                    >
+                      {task.isAvailable ? 'Active' : 'Inactive'}
+                    </Badge>
+                    {task.reviewStatus === 'rejected' && task.reasonsForRejection && task.reasonsForRejection.length > 0 && (
+                      <TooltipProvider delayDuration={200}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 cursor-help">
+                              Rejected
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-[300px]">
+                            <p className="font-medium mb-1">Rejection Reasons:</p>
+                            <p className="text-xs">{formatRejectionReasons(task.reasonsForRejection)}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="text-right tabular-nums">
                   {task.targetNumberOfParticipants || 0}
@@ -178,6 +200,16 @@ export default function ViewTasks() {
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {formatTaskTimestamp(task.timeCreated)}
+                </TableCell>
+                <TableCell>
+                  {task.reviewStatus === 'rejected' && (
+                    <Link href={`/tasks/edit/${task.id}`}>
+                      <Button variant="outline" size="sm" className="h-8 text-xs">
+                        <PencilIcon className="h-3.5 w-3.5 mr-1.5" />
+                        Edit
+                      </Button>
+                    </Link>
+                  )}
                 </TableCell>
               </TableRow>
             ))}

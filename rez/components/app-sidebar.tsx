@@ -34,6 +34,8 @@ import { Separator } from "@/components/ui/separator";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { useEffect } from "react";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
+import { useRejectedTasksCount } from "@/hooks/use-rejected-tasks-count";
+import { Badge } from "@/components/ui/badge";
 
 // Main navigation items
 const mainNavItems = [
@@ -113,6 +115,7 @@ export function AppSidebar() {
   const isSuperAdmin = user?.isSuperAdmin === true;
   const { isMobile, setOpenMobile } = useSidebar();
   const { sidebarCreateTaskClicked, adminDashboardClicked } = useAmplitudeEvents();
+  const { count: rejectedTasksCount } = useRejectedTasksCount();
 
   const isActive = (url: string) => {
     return pathname === url || pathname.startsWith(url + "/");
@@ -171,20 +174,28 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainNavItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild
-                    isActive={isActive(item.url)}
-                    className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent data-[active=true]:rez-gradient data-[active=true]:text-white data-[active=true]:shadow-sm"
-                  >
-                    <Link href={item.url}>
-                      <item.icon className="w-[18px] h-[18px] shrink-0" />
-                      <span className="font-medium">{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {mainNavItems.map((item) => {
+                const showBadge = item.title === "Tasks" && rejectedTasksCount > 0;
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton 
+                      asChild
+                      isActive={isActive(item.url)}
+                      className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent data-[active=true]:rez-gradient data-[active=true]:text-white data-[active=true]:shadow-sm"
+                    >
+                      <Link href={item.url}>
+                        <item.icon className="w-[18px] h-[18px] shrink-0" />
+                        <span className="font-medium">{item.title}</span>
+                        {showBadge && (
+                          <Badge className="ml-2 h-5 min-w-5 px-1.5 flex items-center justify-center bg-red-500 text-white text-[10px] font-semibold rounded-full group-data-[collapsible=icon]:hidden">
+                            {rejectedTasksCount > 9 ? '9+' : rejectedTasksCount}
+                          </Badge>
+                        )}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
