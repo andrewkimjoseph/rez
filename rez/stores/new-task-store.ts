@@ -16,6 +16,11 @@ export interface NewTaskData {
   targetNumberOfParticipants?: number; // Number of participants (for fillAForm) or testers (for checkOutApp)
   numberOfQuestions?: number; // Number of questions (for fillAForm tasks)
   numberOfFeedbackQuestions?: number; // Number of feedback questions (for checkOutApp tasks)
+  // Step 3: Targeting
+  countries?: string[]; // Selected countries for targeting
+  gender?: 'Male' | 'Female' | 'All'; // Gender targeting
+  minAge?: number; // Minimum age for targeting
+  maxAge?: number; // Maximum age for targeting
   // Step 4: Questions & Tasks (Links)
   link?: string; // Link to form or product
   instructions?: string; // Instructions for completing the task
