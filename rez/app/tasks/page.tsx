@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import NewTask from "@/components/new-task/tab-component/NewTask";
@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-export default function Tasks() {
+function TasksContent() {
   const searchParams = useSearchParams();
   const tabParam = searchParams?.get('tab') || 'create';
   const [selectedTab, setSelectedTab] = React.useState(tabParam);
@@ -232,5 +232,23 @@ export default function Tasks() {
         </Tabs>
       </div>
     </div>
+  );
+}
+
+export default function Tasks() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen p-6 md:p-8">
+        <div className="max-w-3xl">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-64 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-96 mb-6"></div>
+            <div className="h-96 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    }>
+      <TasksContent />
+    </Suspense>
   );
 }
