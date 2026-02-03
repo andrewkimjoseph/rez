@@ -100,6 +100,9 @@ export async function POST(request: NextRequest) {
       instructions: body.instructions,
       feedback: body.feedback,
       rezTaskMasterEmailAddress: taskMasterEmail,
+      targetNumberOfParticipants: body.targetNumberOfParticipants,
+      numberOfQuestions: body.numberOfQuestions,
+      numberOfFeedbackQuestions: body.numberOfFeedbackQuestions,
     });
 
     // Trigger notification about the new task (fire and forget)
@@ -114,7 +117,7 @@ export async function POST(request: NextRequest) {
         rezTaskMasterEmailAddress: taskMasterEmail, // Person assigned to the task (assignee)
         link: body.link,
         estimatedTimeOfCompletionInMinutes: 5, // Default from service
-        targetNumberOfParticipants: 100, // Default from service
+        targetNumberOfParticipants: body.targetNumberOfParticipants || 100,
         rewardAmountPerParticipant: 0.15, // Default from service
       };
 

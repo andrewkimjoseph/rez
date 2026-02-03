@@ -14,6 +14,9 @@ export interface CreateTaskData {
   instructions?: string | null;
   feedback?: string | null;
   rezTaskMasterEmailAddress?: string | null;
+  targetNumberOfParticipants?: number;
+  numberOfQuestions?: number;
+  numberOfFeedbackQuestions?: number;
 }
 
 export async function createTaskInPaxApp(taskData: CreateTaskData): Promise<string> {
@@ -39,14 +42,17 @@ export async function createTaskInPaxApp(taskData: CreateTaskData): Promise<stri
     type: taskData.type,
     category: taskData.category,
     estimatedTimeOfCompletionInMinutes: 5,
-    targetNumberOfParticipants: 100,
+    targetNumberOfParticipants: taskData.targetNumberOfParticipants || 100,
+    numberOfQuestions: taskData.numberOfQuestions || null,
+    numberOfFeedbackQuestions: taskData.numberOfFeedbackQuestions || null,
     link: taskData.link || null,
     levelOfDifficulty: taskData.difficulty || "Easy",
     deadline: Timestamp.fromDate(new Date(Date.now() + 12 * 60 * 60 * 1000)), // 12 hours from now
     managerContractAddress: TASK_MANAGER_CONTRACT_ADDRESS,
     rewardAmountPerParticipant: 0.15, // Not collected in form
     rewardCurrencyId: 2,
-    isAvailable: true, // Default to available
+    isAvailable: false, // Default to not available until approved
+    reviewStatus: 'pending', // Tasks require superadmin approval
     timeCreated: FieldValue.serverTimestamp(),
     timeUpdated: FieldValue.serverTimestamp(),
     isTest: false, // Default to not test

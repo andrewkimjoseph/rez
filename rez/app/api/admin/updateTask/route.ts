@@ -17,11 +17,15 @@ export interface AdminUpdateTaskData {
   isTest?: boolean;
   estimatedTimeOfCompletionInMinutes?: number;
   targetNumberOfParticipants?: number;
+  numberOfQuestions?: number;
+  numberOfFeedbackQuestions?: number;
   rewardAmountPerParticipant?: number;
   rewardCurrencyId?: number;
   numberOfCooldownHours?: number;
   paymentTerms?: string;
   managerContractAddress?: string;
+  reviewStatus?: 'pending' | 'approved' | 'rejected' | 'published' | 'archived';
+  reasonsForRejection?: number[]; // Array of rejection reason IDs (1-8)
 }
 
 export async function PATCH(request: NextRequest) {
@@ -73,6 +77,7 @@ export async function PATCH(request: NextRequest) {
 
     const oldTaskData = taskDoc.data();
     const oldIsAvailable = oldTaskData?.isAvailable;
+    const oldReviewStatus = oldTaskData?.reviewStatus;
 
     // Filter out undefined values
     const updateData: Record<string, unknown> = {};
@@ -81,6 +86,27 @@ export async function PATCH(request: NextRequest) {
         updateData[key] = value;
       }
     });
+
+    // isAvailable is true only when reviewStatus is 'published' (after approval + payment)
+    if (updateData.reviewStatus === 'published' && oldReviewStatus !== 'published') {
+      updateData.isAvailable = true;
+    }
+    if (updateData.reviewStatus === 'rejected' || updateData.reviewStatus === 'archived') {
+      updateData.isAvailable = false;
+    }
+    if (updateData.reviewStatus === 'approved' && (oldReviewStatus === 'published' || oldReviewStatus === 'archived')) {
+      updateData.isAvailable = false;
+    }
+
+    // Clear reasonsForRejection when status changes from rejected to pending or approved
+    if (updateData.reviewStatus && updateData.reviewStatus !== 'rejected' && oldReviewStatus === 'rejected') {
+      updateData.reasonsForRejection = [];
+    }
+    
+    // Clear reasonsForRejection if explicitly set to empty array (when approving)
+    if (updateData.reasonsForRejection && Array.isArray(updateData.reasonsForRejection) && updateData.reasonsForRejection.length === 0) {
+      updateData.reasonsForRejection = [];
+    }
 
     // If super admin is reassigning task to different task master, validate the email
     if (updateData.rezTaskMasterEmailAddress) {
@@ -105,13 +131,28 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Determine action type: if only isAvailable changed, use activated/deactivated
-    const isStatusChange = 'isAvailable' in updateData && Object.keys(updateData).length === 1;
+    // Determine action type based on what changed
+    const newReviewStatus = updateData.reviewStatus as string | undefined;
     const newIsAvailable = updateData.isAvailable as boolean | undefined;
-    let action: 'updated' | 'activated' | 'deactivated' = 'updated';
+    let action: 'updated' | 'activated' | 'deactivated' | 'approved' | 'rejected' | 'published' | 'archived' = 'updated';
     
-    if (isStatusChange && typeof newIsAvailable === 'boolean' && typeof oldIsAvailable === 'boolean') {
-      action = newIsAvailable ? 'activated' : 'deactivated';
+    // Check for review status changes first
+    if (newReviewStatus && newReviewStatus !== oldReviewStatus) {
+      if (newReviewStatus === 'approved') {
+        action = 'approved';
+      } else if (newReviewStatus === 'rejected') {
+        action = 'rejected';
+      } else if (newReviewStatus === 'published') {
+        action = 'published';
+      } else if (newReviewStatus === 'archived') {
+        action = 'archived';
+      }
+    } else {
+      // Check for availability toggle (only if not a review action)
+      const isStatusChange = 'isAvailable' in updateData && Object.keys(updateData).length === 1;
+      if (isStatusChange && typeof newIsAvailable === 'boolean' && typeof oldIsAvailable === 'boolean') {
+        action = newIsAvailable ? 'activated' : 'deactivated';
+      }
     }
 
     // Update the task
