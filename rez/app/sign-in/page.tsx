@@ -11,8 +11,34 @@ import { usePathname } from "next/navigation";
 import { createTaskMasterInFirestore } from "@/firebase/firestore/services/createTaskMasterInFirestore";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { getTaskMasterFromFirestore } from "@/firebase/firestore/services/getTaskMasterFromFirestore";
+import { linkTaskMasterToLead } from "@/firebase/firestore/services/linkTaskMasterToLead";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 import { useTasksStore } from "@/stores/tasks-store";
+
+// Helper to get leadEmail from URL params or cookie (for cross-domain lead linking)
+function getLeadEmail(): string | null {
+  if (typeof window === 'undefined') return null;
+  
+  // 1. Check URL params first (higher priority - direct from Brevo email link)
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramEmail = urlParams.get('leadEmail');
+  if (paramEmail) return decodeURIComponent(paramEmail);
+  
+  // 2. Check cookie (fallback - set when user submitted form on thecanvassing.xyz)
+  const cookies = document.cookie.split(';');
+  const leadCookie = cookies.find(c => c.trim().startsWith('leadEmail='));
+  if (leadCookie) {
+    return decodeURIComponent(leadCookie.split('=')[1].trim());
+  }
+  
+  return null;
+}
+
+// Clear the lead cookie after linking attempt
+function clearLeadCookie(): void {
+  if (typeof window === 'undefined') return;
+  document.cookie = 'leadEmail=; domain=.thecanvassing.xyz; path=/; max-age=0';
+}
 
 export default function SignInPage() {
   const router = useRouter();
@@ -59,6 +85,25 @@ export default function SignInPage() {
             ...(existingTaskMaster.organizationId && { rez_task_master_org_id: existingTaskMaster.organizationId }),
           });
           signInWithGoogleComplete();
+          
+          // Fire-and-forget: link TaskMasterLead if returning user came from thecanvassing.xyz
+          const leadEmail = getLeadEmail();
+          if (leadEmail) {
+            linkTaskMasterToLead(leadEmail, user.uid).catch(() => {});
+            clearLeadCookie();
+            
+            // Fire-and-forget: update Premium CTA leads in Brevo with CUSTOMER_LEVEL = "Trial"
+            fetch('/api/fireTriggerForAutomationP2', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+            }).catch(() => {});
+            
+            // Fire-and-forget: update Playbook leads in Brevo with PLAYBOOK_STAGE = "Account Created"
+            fetch('/api/fireTriggerForAutomationB2', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+            }).catch(() => {});
+          }
           return;
         } else {
           const taskMaster = {
@@ -93,6 +138,25 @@ export default function SignInPage() {
             }).catch(() => {});
           } catch (_) {
             // Silently ignore notification errors in client
+          }
+          
+          // Fire-and-forget: link TaskMasterLead from thecanvassing.xyz to this new account
+          const leadEmail = getLeadEmail();
+          if (leadEmail) {
+            linkTaskMasterToLead(leadEmail, user.uid).catch(() => {});
+            clearLeadCookie();
+            
+            // Fire-and-forget: update Premium CTA leads in Brevo with CUSTOMER_LEVEL = "Trial"
+            fetch('/api/fireTriggerForAutomationP2', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+            }).catch(() => {});
+            
+            // Fire-and-forget: update Playbook leads in Brevo with PLAYBOOK_STAGE = "Account Created"
+            fetch('/api/fireTriggerForAutomationB2', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+            }).catch(() => {});
           }
         }
       }
