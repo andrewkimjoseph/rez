@@ -35,12 +35,15 @@ import {
   EllipsisVerticalIcon,
   PowerIcon,
   EyeIcon,
+  CheckCircleIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
 import AdminEditTaskDialog from "@/components/admin/AdminEditTaskDialog";
+import AdminRejectTaskDialog from "@/components/admin/AdminRejectTaskDialog";
 import { getTokenInfo } from "@/utils/currencies";
 import {
   DropdownMenu,
@@ -92,6 +95,10 @@ export default function AdminTasksPage() {
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [taskToToggle, setTaskToToggle] = useState<Task | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [reviewFilter, setReviewFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'published' | 'archived'>('all');
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [taskToReview, setTaskToReview] = useState<Task | null>(null);
+  const [reviewAction, setReviewAction] = useState<'approve' | 'reject' | null>(null);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -188,22 +195,26 @@ export default function AdminTasksPage() {
   const handleConfirmStatusToggle = async () => {
     if (!taskToToggle?.id) return;
 
-    const newStatus = !taskToToggle.isAvailable;
-    const success = await updateTask(taskToToggle.id, { isAvailable: newStatus });
+    const isCurrentlyActive = taskToToggle.isAvailable;
+    // Activate = set to Published (only for approved tasks). Deactivate = set to Approved and isAvailable false.
+    const payload = isCurrentlyActive
+      ? { reviewStatus: 'approved' as const, isAvailable: false }
+      : { reviewStatus: 'published' as const };
+    const success = await updateTask(taskToToggle.id, payload);
     if (success) {
-      if (newStatus) {
+      if (!isCurrentlyActive) {
         adminTaskActivateComplete({ task_id: taskToToggle.id });
       } else {
         adminTaskDeactivateComplete({ task_id: taskToToggle.id });
       }
       setStatusDialogOpen(false);
       setTaskToToggle(null);
-      toast.success(`Task ${newStatus ? 'activated' : 'deactivated'} successfully`);
+      toast.success(isCurrentlyActive ? 'Task unpublished' : 'Task published');
     } else {
-      if (newStatus) {
-        adminTaskActivateFailed({ task_id: taskToToggle.id, error_message: "Failed to activate task" });
+      if (!isCurrentlyActive) {
+        adminTaskActivateFailed({ task_id: taskToToggle.id, error_message: "Failed to publish task" });
       } else {
-        adminTaskDeactivateFailed({ task_id: taskToToggle.id, error_message: "Failed to deactivate task" });
+        adminTaskDeactivateFailed({ task_id: taskToToggle.id, error_message: "Failed to unpublish task" });
       }
       toast.error('Failed to update task status');
     }
@@ -212,6 +223,61 @@ export default function AdminTasksPage() {
   const handleCancelStatusToggle = () => {
     setStatusDialogOpen(false);
     setTaskToToggle(null);
+  };
+
+  const handleReviewClick = (task: Task, action: 'approve' | 'reject') => {
+    setTaskToReview(task);
+    setReviewAction(action);
+    setReviewDialogOpen(true);
+  };
+
+  const handleConfirmReview = async (rejectionReasons?: number[]) => {
+    if (!taskToReview?.id || !reviewAction) return;
+
+    const updateData: any = { reviewStatus: reviewAction === 'approve' ? 'approved' : 'rejected' };
+    
+    // Include rejection reasons if rejecting
+    if (reviewAction === 'reject' && rejectionReasons && rejectionReasons.length > 0) {
+      updateData.reasonsForRejection = rejectionReasons;
+    }
+    
+    // Clear rejection reasons if approving
+    if (reviewAction === 'approve') {
+      updateData.reasonsForRejection = [];
+    }
+
+    const success = await updateTask(taskToReview.id, updateData);
+    if (success) {
+      setReviewDialogOpen(false);
+      setTaskToReview(null);
+      setReviewAction(null);
+      toast.success(`Task ${reviewAction === 'approve' ? 'approved' : 'rejected'} successfully`);
+    } else {
+      toast.error(`Failed to ${reviewAction} task`);
+    }
+  };
+
+  const handleCancelReview = () => {
+    setReviewDialogOpen(false);
+    setTaskToReview(null);
+    setReviewAction(null);
+  };
+
+  const getReviewStatusBadge = (reviewStatus: string | null | undefined) => {
+    switch (reviewStatus) {
+      case 'pending':
+        return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100/80 border-0">Pending Review</Badge>;
+      case 'approved':
+        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">Approved</Badge>;
+      case 'published':
+        return <Badge className="bg-[#5C29A3]/10 text-[#5C29A3] hover:bg-[#5C29A3]/20 border-0">Published</Badge>;
+      case 'archived':
+        return <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100/80 border-0">Archived</Badge>;
+      case 'rejected':
+        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">Rejected</Badge>;
+      default:
+        return <Badge variant="outline">N/A</Badge>;
+    }
   };
 
   const getTaskTypeLabel = (type: string | null | undefined) => {
@@ -251,15 +317,17 @@ export default function AdminTasksPage() {
     }
   }, [searchQuery, adminTasksSearchPerformed]);
 
-  // Filter tasks based on search query
+  // Filter tasks based on search query and review status
   const filteredTasks = tasks.filter(task => {
     const query = searchQuery.toLowerCase();
-    return (
+    const matchesSearch = (
       (task.title?.toLowerCase().includes(query)) ||
       (task.id?.toLowerCase().includes(query)) ||
       (task.category?.toLowerCase().includes(query)) ||
       (task.rezTaskMasterEmailAddress?.toLowerCase().includes(query))
     );
+    const matchesReviewFilter = reviewFilter === 'all' || task.reviewStatus === reviewFilter;
+    return matchesSearch && matchesReviewFilter;
   });
 
   // Sort by creation date (newest first)
@@ -317,15 +385,66 @@ export default function AdminTasksPage() {
           </div>
         </div>
 
-        {/* Search */}
-        <div className="relative max-w-md">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by title, ID, category, or creator email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+        {/* Search and Filters */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative max-w-md flex-1">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by title, ID, or creator email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant={reviewFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setReviewFilter('all')}
+            >
+              All
+            </Button>
+            <Button
+              variant={reviewFilter === 'pending' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setReviewFilter('pending')}
+              className={reviewFilter === 'pending' ? '' : 'text-yellow-700 border-yellow-300 hover:bg-yellow-50'}
+            >
+              Pending
+            </Button>
+            <Button
+              variant={reviewFilter === 'approved' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setReviewFilter('approved')}
+              className={reviewFilter === 'approved' ? '' : 'text-green-700 border-green-300 hover:bg-green-50'}
+            >
+              Approved
+            </Button>
+            <Button
+              variant={reviewFilter === 'published' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setReviewFilter('published')}
+              className={reviewFilter === 'published' ? '' : 'text-[#5C29A3] border-[#5C29A3]/40 hover:bg-[#5C29A3]/5'}
+            >
+              Published
+            </Button>
+            <Button
+              variant={reviewFilter === 'archived' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setReviewFilter('archived')}
+              className={reviewFilter === 'archived' ? '' : 'text-slate-600 border-slate-300 hover:bg-slate-50'}
+            >
+              Archived
+            </Button>
+            <Button
+              variant={reviewFilter === 'rejected' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setReviewFilter('rejected')}
+              className={reviewFilter === 'rejected' ? '' : 'text-red-700 border-red-300 hover:bg-red-50'}
+            >
+              Rejected
+            </Button>
+          </div>
         </div>
 
         {/* Error State */}
@@ -365,7 +484,7 @@ export default function AdminTasksPage() {
                   <TableHead className="font-semibold min-w-[250px]">Title</TableHead>
                   <TableHead className="font-semibold">Creator</TableHead>
                   <TableHead className="font-semibold">Type</TableHead>
-                  <TableHead className="font-semibold">Category</TableHead>
+                  <TableHead className="font-semibold">Review</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
                   <TableHead className="text-right font-semibold">Target</TableHead>
                   <TableHead className="text-right font-semibold">Reward</TableHead>
@@ -403,9 +522,7 @@ export default function AdminTasksPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="font-normal">
-                        {task.category || 'N/A'}
-                      </Badge>
+                      {getReviewStatusBadge(task.reviewStatus)}
                     </TableCell>
                     <TableCell>
                       <Badge 
@@ -470,13 +587,33 @@ export default function AdminTasksPage() {
                             <PencilIcon className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
+                          {task.reviewStatus === 'pending' && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => handleReviewClick(task, 'approve')}
+                                className="cursor-pointer text-green-700"
+                              >
+                                <CheckCircleIcon className="h-4 w-4 mr-2" />
+                                Approve
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleReviewClick(task, 'reject')}
+                                className="cursor-pointer text-red-700"
+                              >
+                                <XMarkIcon className="h-4 w-4 mr-2" />
+                                Reject
+                              </DropdownMenuItem>
+                            </>
+                          )}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => handleStatusToggleClick(task)}
                             className="cursor-pointer"
+                            disabled={task.reviewStatus === 'archived' || (task.reviewStatus !== 'approved' && task.reviewStatus !== 'published')}
                           >
                             <PowerIcon className={`h-4 w-4 mr-2 ${task.isAvailable ? '' : 'opacity-50'}`} />
-                            {task.isAvailable ? 'Deactivate' : 'Activate'}
+                            {task.isAvailable ? 'Unpublish' : 'Publish'}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
@@ -540,13 +677,13 @@ export default function AdminTasksPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                {taskToToggle?.isAvailable ? 'Deactivate Task' : 'Activate Task'}
+                {taskToToggle?.isAvailable ? 'Unpublish Task' : 'Publish Task'}
               </DialogTitle>
               <DialogDescription>
-                Are you sure you want to {taskToToggle?.isAvailable ? 'deactivate' : 'activate'} &quot;{taskToToggle?.title || 'this task'}&quot;?
-                {taskToToggle?.isAvailable 
-                  ? ' Users will no longer be able to complete this task.'
-                  : ' This task will become available for users to complete.'
+                Are you sure you want to {taskToToggle?.isAvailable ? 'unpublish' : 'publish'} &quot;{taskToToggle?.title || 'this task'}&quot;?
+                {taskToToggle?.isAvailable
+                  ? ' The task will move back to Approved and no longer be active for participants.'
+                  : ' The task will become active and available for participants to complete.'
                 }
               </DialogDescription>
             </DialogHeader>
@@ -568,7 +705,7 @@ export default function AdminTasksPage() {
                     <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
                     Updating...
                   </>
-                ) : taskToToggle?.isAvailable ? 'Deactivate' : 'Activate'}
+                ) : taskToToggle?.isAvailable ? 'Unpublish' : 'Publish'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -581,6 +718,50 @@ export default function AdminTasksPage() {
           onOpenChange={setEditDialogOpen}
           onSuccess={handleEditSuccess}
         />
+
+        {/* Review Confirmation Dialog */}
+        {reviewAction === 'approve' ? (
+          <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Approve Task</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to approve &quot;{taskToReview?.title || 'this task'}&quot;?
+                  This will make the task active and available for users to complete.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={handleCancelReview}
+                  disabled={isUpdating}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="default"
+                  onClick={() => handleConfirmReview()}
+                  disabled={isUpdating}
+                >
+                  {isUpdating ? (
+                    <>
+                      <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
+                      Approving...
+                    </>
+                  ) : 'Approve'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        ) : (
+          <AdminRejectTaskDialog
+            task={taskToReview}
+            open={reviewDialogOpen}
+            onOpenChange={setReviewDialogOpen}
+            onConfirm={(reasons) => handleConfirmReview(reasons)}
+            isUpdating={isUpdating}
+          />
+        )}
       </div>
     </div>
   );

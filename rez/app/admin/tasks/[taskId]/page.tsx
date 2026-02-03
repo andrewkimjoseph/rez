@@ -46,6 +46,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import AdminEditTaskDialog from "@/components/admin/AdminEditTaskDialog";
+import AdminRejectTaskDialog from "@/components/admin/AdminRejectTaskDialog";
 
 export default function AdminTaskDetailsPage() {
   const router = useRouter();
@@ -57,8 +58,10 @@ export default function AdminTaskDetailsPage() {
     tasks,
     isLoadingTasks,
     isDeleting,
+    isUpdating,
     fetchAllTasks,
     deleteTask,
+    updateTask,
   } = useAdminStore();
   const { task, formattedData, setTask } = useSelectedTaskStore();
 
@@ -66,6 +69,8 @@ export default function AdminTaskDetailsPage() {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [reviewAction, setReviewAction] = useState<'approve' | 'reject' | null>(null);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -111,6 +116,59 @@ export default function AdminTaskDetailsPage() {
   const handleEditSuccess = () => {
     toast.success("Task updated successfully");
     fetchAllTasks(true);
+  };
+
+  const handleReviewClick = (action: 'approve' | 'reject') => {
+    setReviewAction(action);
+    setReviewDialogOpen(true);
+  };
+
+  const handleConfirmReview = async (rejectionReasons?: number[]) => {
+    if (!task?.id || !reviewAction) return;
+
+    const updateData: any = { reviewStatus: reviewAction === 'approve' ? 'approved' : 'rejected' };
+    
+    // Include rejection reasons if rejecting
+    if (reviewAction === 'reject' && rejectionReasons && rejectionReasons.length > 0) {
+      updateData.reasonsForRejection = rejectionReasons;
+    }
+    
+    // Clear rejection reasons if approving
+    if (reviewAction === 'approve') {
+      updateData.reasonsForRejection = [];
+    }
+
+    const success = await updateTask(task.id, updateData);
+    if (success) {
+      setReviewDialogOpen(false);
+      setReviewAction(null);
+      toast.success(`Task ${reviewAction === 'approve' ? 'approved' : 'rejected'} successfully`);
+      fetchAllTasks(true);
+    } else {
+      toast.error(`Failed to ${reviewAction} task`);
+    }
+  };
+
+  const handleCancelReview = () => {
+    setReviewDialogOpen(false);
+    setReviewAction(null);
+  };
+
+  const getReviewStatusBadge = (reviewStatus: string | null | undefined) => {
+    switch (reviewStatus) {
+      case 'pending':
+        return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100/80 border-0">Pending Review</Badge>;
+      case 'approved':
+        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">Approved</Badge>;
+      case 'published':
+        return <Badge className="bg-[#5C29A3]/10 text-[#5C29A3] hover:bg-[#5C29A3]/20 border-0">Published</Badge>;
+      case 'archived':
+        return <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100/80 border-0">Archived</Badge>;
+      case 'rejected':
+        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">Rejected</Badge>;
+      default:
+        return <Badge variant="outline">N/A</Badge>;
+    }
   };
 
   if (!isHydrated || isAuthorized === null) {
@@ -182,7 +240,7 @@ export default function AdminTaskDetailsPage() {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline">{formattedData.typeLabel}</Badge>
-                <Badge variant="outline">{formattedData.category}</Badge>
+                {getReviewStatusBadge(task.reviewStatus)}
                 <Badge
                   variant={formattedData.isAvailable ? "default" : "secondary"}
                   className={
@@ -204,6 +262,27 @@ export default function AdminTaskDetailsPage() {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              {task.reviewStatus === 'pending' && (
+                <>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleReviewClick('approve')}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <CheckCircleIcon className="h-4 w-4 mr-2" />
+                    Approve
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleReviewClick('reject')}
+                  >
+                    <XCircleIcon className="h-4 w-4 mr-2" />
+                    Reject
+                  </Button>
+                </>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -239,10 +318,6 @@ export default function AdminTaskDetailsPage() {
                 <div>
                   <p className="text-sm text-muted-foreground">Type</p>
                   <p className="font-medium">{formattedData.typeLabel}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Category</p>
-                  <p className="font-medium">{formattedData.category}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Difficulty</p>
@@ -512,6 +587,53 @@ export default function AdminTaskDetailsPage() {
           onOpenChange={setEditDialogOpen}
           onSuccess={handleEditSuccess}
         />
+
+        {/* Review Confirmation Dialog */}
+        {reviewAction === 'reject' ? (
+          <AdminRejectTaskDialog
+            task={task}
+            open={reviewDialogOpen}
+            onOpenChange={setReviewDialogOpen}
+            onConfirm={(reasons) => handleConfirmReview(reasons)}
+            isUpdating={isUpdating}
+          />
+        ) : (
+          <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Approve Task</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to approve &quot;{formattedData.title}&quot;?
+                  This will make the task active and available for users to complete.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={handleCancelReview}
+                  disabled={isUpdating}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="default"
+                  onClick={() => handleConfirmReview()}
+                  disabled={isUpdating}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {isUpdating ? (
+                    <>
+                      <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
+                      Approving...
+                    </>
+                  ) : (
+                    'Approve'
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </div>
   );
