@@ -47,6 +47,7 @@ import {
 import { toast } from "sonner";
 import AdminEditTaskDialog from "@/components/admin/AdminEditTaskDialog";
 import AdminRejectTaskDialog from "@/components/admin/AdminRejectTaskDialog";
+import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 export default function AdminTaskDetailsPage() {
   const router = useRouter();
@@ -118,7 +119,21 @@ export default function AdminTaskDetailsPage() {
     fetchAllTasks(true);
   };
 
+  const {
+    adminTaskApproveClicked,
+    adminTaskApproveComplete,
+    adminTaskApproveFailed,
+    adminTaskRejectClicked,
+    adminTaskRejectComplete,
+    adminTaskRejectFailed,
+  } = useAmplitudeEvents();
+
   const handleReviewClick = (action: 'approve' | 'reject') => {
+    if (action === 'approve') {
+      adminTaskApproveClicked({ task_id: task?.id, task_title: task?.title });
+    } else {
+      adminTaskRejectClicked({ task_id: task?.id, task_title: task?.title });
+    }
     setReviewAction(action);
     setReviewDialogOpen(true);
   };
@@ -140,11 +155,36 @@ export default function AdminTaskDetailsPage() {
 
     const success = await updateTask(task.id, updateData);
     if (success) {
+      if (reviewAction === 'approve') {
+        adminTaskApproveComplete({ 
+          task_id: task.id, 
+          task_title: task.title,
+        });
+      } else {
+        adminTaskRejectComplete({ 
+          task_id: task.id, 
+          task_title: task.title,
+          rejection_reasons_count: rejectionReasons?.length || 0,
+        });
+      }
       setReviewDialogOpen(false);
       setReviewAction(null);
       toast.success(`Task ${reviewAction === 'approve' ? 'approved' : 'rejected'} successfully`);
       fetchAllTasks(true);
     } else {
+      if (reviewAction === 'approve') {
+        adminTaskApproveFailed({ 
+          task_id: task.id, 
+          task_title: task.title,
+          error_message: "Failed to approve task",
+        });
+      } else {
+        adminTaskRejectFailed({ 
+          task_id: task.id, 
+          task_title: task.title,
+          error_message: "Failed to reject task",
+        });
+      }
       toast.error(`Failed to ${reviewAction} task`);
     }
   };

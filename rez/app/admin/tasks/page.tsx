@@ -84,6 +84,15 @@ export default function AdminTasksPage() {
     adminTaskDeleteCancelled,
     adminTasksRefreshClicked,
     adminTasksSearchPerformed,
+    adminTaskApproveClicked,
+    adminTaskApproveComplete,
+    adminTaskApproveFailed,
+    adminTaskRejectClicked,
+    adminTaskRejectComplete,
+    adminTaskRejectFailed,
+    adminTaskPublishClicked,
+    adminTaskPublishComplete,
+    adminTaskPublishFailed,
   } = useAmplitudeEvents();
   
   const [isHydrated, setIsHydrated] = useState(false);
@@ -200,9 +209,18 @@ export default function AdminTasksPage() {
     const payload = isCurrentlyActive
       ? { reviewStatus: 'approved' as const, isAvailable: false }
       : { reviewStatus: 'published' as const };
+    
+    if (!isCurrentlyActive) {
+      adminTaskPublishClicked({ task_id: taskToToggle.id, task_title: taskToToggle.title });
+    }
+    
     const success = await updateTask(taskToToggle.id, payload);
     if (success) {
       if (!isCurrentlyActive) {
+        adminTaskPublishComplete({ 
+          task_id: taskToToggle.id,
+          task_title: taskToToggle.title,
+        });
         adminTaskActivateComplete({ task_id: taskToToggle.id });
       } else {
         adminTaskDeactivateComplete({ task_id: taskToToggle.id });
@@ -212,6 +230,11 @@ export default function AdminTasksPage() {
       toast.success(isCurrentlyActive ? 'Task unpublished' : 'Task published');
     } else {
       if (!isCurrentlyActive) {
+        adminTaskPublishFailed({ 
+          task_id: taskToToggle.id,
+          task_title: taskToToggle.title,
+          error_message: "Failed to publish task",
+        });
         adminTaskActivateFailed({ task_id: taskToToggle.id, error_message: "Failed to publish task" });
       } else {
         adminTaskDeactivateFailed({ task_id: taskToToggle.id, error_message: "Failed to unpublish task" });
@@ -226,6 +249,11 @@ export default function AdminTasksPage() {
   };
 
   const handleReviewClick = (task: Task, action: 'approve' | 'reject') => {
+    if (action === 'approve') {
+      adminTaskApproveClicked({ task_id: task.id, task_title: task.title });
+    } else {
+      adminTaskRejectClicked({ task_id: task.id, task_title: task.title });
+    }
     setTaskToReview(task);
     setReviewAction(action);
     setReviewDialogOpen(true);
@@ -248,11 +276,36 @@ export default function AdminTasksPage() {
 
     const success = await updateTask(taskToReview.id, updateData);
     if (success) {
+      if (reviewAction === 'approve') {
+        adminTaskApproveComplete({ 
+          task_id: taskToReview.id, 
+          task_title: taskToReview.title,
+        });
+      } else {
+        adminTaskRejectComplete({ 
+          task_id: taskToReview.id, 
+          task_title: taskToReview.title,
+          rejection_reasons_count: rejectionReasons?.length || 0,
+        });
+      }
       setReviewDialogOpen(false);
       setTaskToReview(null);
       setReviewAction(null);
       toast.success(`Task ${reviewAction === 'approve' ? 'approved' : 'rejected'} successfully`);
     } else {
+      if (reviewAction === 'approve') {
+        adminTaskApproveFailed({ 
+          task_id: taskToReview.id, 
+          task_title: taskToReview.title,
+          error_message: "Failed to approve task",
+        });
+      } else {
+        adminTaskRejectFailed({ 
+          task_id: taskToReview.id, 
+          task_title: taskToReview.title,
+          error_message: "Failed to reject task",
+        });
+      }
       toast.error(`Failed to ${reviewAction} task`);
     }
   };

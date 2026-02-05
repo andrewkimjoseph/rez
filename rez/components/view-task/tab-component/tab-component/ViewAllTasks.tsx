@@ -25,9 +25,11 @@ import {
   TooltipTrigger,
   TooltipProvider,
 } from "@/components/ui/tooltip";
+import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 export default function ViewTasks() {
   const { tasks, taskCompletions, isLoading, error } = useTasksData({ autoFetch: false });
+  const { rejectedTaskEditClicked, rejectionReasonsTooltipViewed } = useAmplitudeEvents();
 
   const getTaskTypeLabel = (type: string | null | undefined) => {
     switch (type) {
@@ -179,7 +181,14 @@ export default function ViewTasks() {
                       <TooltipProvider delayDuration={200}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 cursor-help">
+                            <Badge 
+                              variant="destructive" 
+                              className="text-[10px] px-1.5 py-0.5 cursor-help"
+                              onMouseEnter={() => rejectionReasonsTooltipViewed({ 
+                                task_id: task.id,
+                                rejection_reasons_count: task.reasonsForRejection?.length || 0,
+                              })}
+                            >
                               Rejected
                             </Badge>
                           </TooltipTrigger>
@@ -203,7 +212,14 @@ export default function ViewTasks() {
                 </TableCell>
                 <TableCell>
                   {task.reviewStatus === 'rejected' && (
-                    <Link href={`/tasks/edit/${task.id}`}>
+                    <Link 
+                      href={`/tasks/edit/${task.id}`}
+                      onClick={() => rejectedTaskEditClicked({ 
+                        task_id: task.id,
+                        task_title: task.title,
+                        rejection_reasons_count: task.reasonsForRejection?.length || 0,
+                      })}
+                    >
                       <Button variant="outline" size="sm" className="h-8 text-xs">
                         <PencilIcon className="h-3.5 w-3.5 mr-1.5" />
                         Edit

@@ -67,6 +67,14 @@ export default function AdminEditTaskDialog({
     adminTaskEditComplete,
     adminTaskEditFailed,
     adminTaskEditCancelled,
+    adminTaskApproveComplete,
+    adminTaskApproveFailed,
+    adminTaskRejectComplete,
+    adminTaskRejectFailed,
+    adminTaskPublishComplete,
+    adminTaskPublishFailed,
+    adminTaskArchiveComplete,
+    adminTaskArchiveFailed,
   } = useAmplitudeEvents();
   const { user } = useTaskMasterStore();
   const isSuperAdmin = user?.isSuperAdmin === true;
@@ -186,12 +194,73 @@ export default function AdminEditTaskDialog({
       onOpenChange(false);
       return;
     }
+    
+    // Track review status changes
+    const oldReviewStatus = task.reviewStatus || 'pending';
+    const newReviewStatus = updateData.reviewStatus as string | undefined;
+    const isReviewStatusChange = newReviewStatus && newReviewStatus !== oldReviewStatus;
+    
     const success = await updateTask(task.id, updateData);
     if (success) {
+      // Track specific review status change events
+      if (isReviewStatusChange) {
+        if (newReviewStatus === 'approved') {
+          adminTaskApproveComplete({ 
+            task_id: task.id, 
+            task_title: task.title,
+          });
+        } else if (newReviewStatus === 'rejected') {
+          adminTaskRejectComplete({ 
+            task_id: task.id, 
+            task_title: task.title,
+            rejection_reasons_count: reasonsForRejection.length,
+          });
+        } else if (newReviewStatus === 'published') {
+          adminTaskPublishComplete({ 
+            task_id: task.id, 
+            task_title: task.title,
+          });
+        } else if (newReviewStatus === 'archived') {
+          adminTaskArchiveComplete({ 
+            task_id: task.id, 
+            task_title: task.title,
+          });
+        }
+      }
+      
       adminTaskEditComplete({ task_id: task.id, changed_fields: Object.keys(updateData) });
       onOpenChange(false);
       onSuccess?.();
     } else {
+      // Track failed review status changes
+      if (isReviewStatusChange) {
+        if (newReviewStatus === 'approved') {
+          adminTaskApproveFailed({ 
+            task_id: task.id, 
+            task_title: task.title,
+            error_message: "Failed to approve task",
+          });
+        } else if (newReviewStatus === 'rejected') {
+          adminTaskRejectFailed({ 
+            task_id: task.id, 
+            task_title: task.title,
+            error_message: "Failed to reject task",
+          });
+        } else if (newReviewStatus === 'published') {
+          adminTaskPublishFailed({ 
+            task_id: task.id, 
+            task_title: task.title,
+            error_message: "Failed to publish task",
+          });
+        } else if (newReviewStatus === 'archived') {
+          adminTaskArchiveFailed({ 
+            task_id: task.id, 
+            task_title: task.title,
+            error_message: "Failed to archive task",
+          });
+        }
+      }
+      
       adminTaskEditFailed({ task_id: task.id, error_message: "Failed to update task" });
       toast.error("Failed to update task");
     }
