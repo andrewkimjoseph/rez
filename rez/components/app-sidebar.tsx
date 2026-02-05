@@ -35,6 +35,7 @@ import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { useEffect } from "react";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 import { useRejectedTasksCount } from "@/hooks/use-rejected-tasks-count";
+import { usePendingTasksCount } from "@/hooks/use-pending-tasks-count";
 import { Badge } from "@/components/ui/badge";
 
 // Main navigation items
@@ -116,6 +117,7 @@ export function AppSidebar() {
   const { isMobile, setOpenMobile } = useSidebar();
   const { sidebarCreateTaskClicked, adminDashboardClicked } = useAmplitudeEvents();
   const { count: rejectedTasksCount } = useRejectedTasksCount();
+  const { count: pendingTasksCount } = usePendingTasksCount();
 
   const isActive = (url: string) => {
     return pathname === url || pathname.startsWith(url + "/");
@@ -237,20 +239,28 @@ export function AppSidebar() {
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {adminItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive(item.url)}
-                        className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-amber-500/10 data-[active=true]:bg-amber-500/20 data-[active=true]:text-amber-700"
-                      >
-                        <Link href={item.url} onClick={() => adminDashboardClicked()}>
-                          <item.icon className="w-[18px] h-[18px] shrink-0 text-amber-600" />
-                          <span className="font-medium">{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
+                  {adminItems.map((item) => {
+                    const showBadge = item.title === "Dashboard" && pendingTasksCount > 0;
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive(item.url)}
+                          className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-amber-500/10 data-[active=true]:bg-amber-500/20 data-[active=true]:text-amber-700"
+                        >
+                          <Link href={item.url} onClick={() => adminDashboardClicked()}>
+                            <item.icon className="w-[18px] h-[18px] shrink-0 text-amber-600" />
+                            <span className="font-medium">{item.title}</span>
+                            {showBadge && (
+                              <Badge className="ml-2 h-5 min-w-5 px-1.5 flex items-center justify-center bg-amber-500 text-white text-[10px] font-semibold rounded-full group-data-[collapsible=icon]:hidden">
+                                {pendingTasksCount > 9 ? '9+' : pendingTasksCount}
+                              </Badge>
+                            )}
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
