@@ -21,6 +21,9 @@ interface SendResendEmailRequest {
   };
 }
 
+// Cloudflare Pages requires edge; enable nodejs_compat in CF dashboard for Firebase Admin
+export const runtime = 'edge';
+
 export async function POST(request: NextRequest) {
   try {
     // Check if this is an internal server-side call (has secret token)

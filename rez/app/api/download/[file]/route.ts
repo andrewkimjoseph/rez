@@ -3,8 +3,8 @@ import { requireAuth } from '@/lib/api-auth';
 import { getApp } from 'firebase-admin/app';
 import { getStorage } from 'firebase-admin/storage';
 
-// Note: Using Node.js runtime because Firebase Admin Storage requires it
-// export const runtime = 'edge';
+// Cloudflare Pages requires edge; enable nodejs_compat in CF dashboard for Firebase Admin Storage
+export const runtime = 'edge';
 
 export async function GET(
   request: NextRequest,

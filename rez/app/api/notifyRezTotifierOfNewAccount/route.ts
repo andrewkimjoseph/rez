@@ -16,6 +16,9 @@ interface NewAccountNotificationData {
   profilePictureURI: string | null;
 }
 
+// Cloudflare Pages requires edge; enable nodejs_compat in CF dashboard for Firebase Admin
+export const runtime = 'edge';
+
 export async function POST(request: NextRequest) {
   try {
     // Verify authentication

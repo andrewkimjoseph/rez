@@ -26,6 +26,9 @@ interface TaskNotificationData {
 // Use a simple in-memory cache to track processed tasks within this API instance
 const processedTasks = new Set<string>();
 
+// Cloudflare Pages requires edge; enable nodejs_compat in CF dashboard for Firebase Admin
+export const runtime = 'edge';
+
 export async function POST(request: NextRequest) {
   try {
     // Verify authentication

@@ -3,8 +3,8 @@ import { paxDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { requireSuperAdmin } from '@/lib/api-auth';
 
-// Note: Using Node.js runtime because Firebase Admin SDK requires it
-// export const runtime = 'edge';
+// Cloudflare Pages requires edge; enable nodejs_compat in CF dashboard for Firebase Admin
+export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   try {
