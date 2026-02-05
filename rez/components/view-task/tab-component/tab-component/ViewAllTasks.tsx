@@ -139,7 +139,7 @@ export default function ViewTasks() {
           <TableHeader>
             <TableRow className="bg-muted/30 hover:bg-muted/30">
               <TableHead className="w-[50px] font-semibold">#</TableHead>
-              <TableHead className="font-semibold min-w-[150px]">Title</TableHead>
+              <TableHead className="font-semibold min-w-[380px]">Title</TableHead>
               <TableHead className="font-semibold">Type</TableHead>
               <TableHead className="font-semibold">Status</TableHead>
               <TableHead className="text-right font-semibold">Target</TableHead>
@@ -154,14 +154,12 @@ export default function ViewTasks() {
                 <TableCell className="text-muted-foreground text-center">
                   {index + 1}
                 </TableCell>
-                <TableCell>
-                  <div className="max-w-[180px]">
-                    <div className="font-medium truncate" title={task.title || ''}>
-                      {task.title || 'Untitled Task'}
-                    </div>
-                    <div className="text-xs text-muted-foreground truncate mt-0.5" title={task.id || ''}>
-                      {task.id || 'N/A'}
-                    </div>
+                <TableCell className="min-w-[380px] max-w-[480px]">
+                  <div className="font-medium break-words min-w-0">
+                    {task.title || 'Untitled Task'}
+                  </div>
+                  <div className="text-xs text-muted-foreground truncate mt-0.5 min-w-0" title={task.id || ''}>
+                    {task.id || 'N/A'}
                   </div>
                 </TableCell>
                 <TableCell>
@@ -169,11 +167,11 @@ export default function ViewTasks() {
                     {getTaskTypeLabel(task.type)}
                   </Badge>
                 </TableCell>
-                <TableCell>
-                  <div className="flex flex-col gap-1">
+                <TableCell className="min-w-[200px] whitespace-nowrap">
+                  <div className="flex flex-nowrap items-center gap-2">
                     <Badge 
                       variant={task.isAvailable ? "default" : "secondary"}
-                      className={task.isAvailable ? "bg-[#EFECFD] text-[#5C29A3] hover:bg-[#EFECFD]/80 border-0" : ""}
+                      className={task.isAvailable ? "bg-[#EFECFD] text-[#5C29A3] hover:bg-[#EFECFD]/80 border-0 shrink-0" : "shrink-0"}
                     >
                       {task.isAvailable ? 'Active' : 'Inactive'}
                     </Badge>
@@ -183,7 +181,7 @@ export default function ViewTasks() {
                           <TooltipTrigger asChild>
                             <Badge 
                               variant="destructive" 
-                              className="text-[10px] px-1.5 py-0.5 cursor-help"
+                              className="text-[10px] px-1.5 py-0.5 cursor-help shrink-0"
                               onMouseEnter={() => rejectionReasonsTooltipViewed({ 
                                 task_id: task.id,
                                 rejection_reasons_count: task.reasonsForRejection?.length || 0,
