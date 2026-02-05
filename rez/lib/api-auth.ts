@@ -73,7 +73,7 @@ export async function requireSuperAdmin(request: NextRequest): Promise<
   const { uid } = authResult;
   
   // Check if user is a super admin
-  const adminDocRef = rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(uid);
+  const adminDocRef = rezDB().collection(COLLECTIONS.TASK_MASTERS).doc(uid);
   const adminDoc = await adminDocRef.get();
   
   if (!adminDoc.exists) {
