@@ -103,6 +103,12 @@ export default function SignInPage() {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
             }).catch(() => {});
+            
+            // Fire-and-forget: update Calculator leads in Brevo with CALCULATOR_STAGE = "Account Created"
+            fetch('/api/fireTriggerForAutomationC2', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+            }).catch(() => {});
           }
           return;
         } else {
@@ -154,6 +160,12 @@ export default function SignInPage() {
             
             // Fire-and-forget: update Playbook leads in Brevo with PLAYBOOK_STAGE = "Account Created"
             fetch('/api/fireTriggerForAutomationB2', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+            }).catch(() => {});
+            
+            // Fire-and-forget: update Calculator leads in Brevo with CALCULATOR_STAGE = "Account Created"
+            fetch('/api/fireTriggerForAutomationC2', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
             }).catch(() => {});
