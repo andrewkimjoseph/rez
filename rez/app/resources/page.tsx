@@ -1,15 +1,17 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, LayoutGrid } from "lucide-react";
+import { FileText, LayoutGrid, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { ForumArticleCard } from "@/components/forum-article-card";
 import { forumArticles } from "@/data/forumArticles";
 import { useState } from "react";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
+import { toast } from "sonner";
 
 export default function Resources() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [resourceLoading, setResourceLoading] = useState<'playbook' | 'guide' | null>(null);
   const { playbookDownloadClicked, guideDownloadClicked } = useAmplitudeEvents();
 
   return (
@@ -89,17 +91,30 @@ export default function Resources() {
             <div
               onClick={async (e) => {
                 e.preventDefault();
+                if (resourceLoading) return;
                 playbookDownloadClicked({ file_name: "rez-playbook.pdf", file_size_mb: 77, source: "resources_page" });
+                setResourceLoading('playbook');
+                const toastId = 'open-playbook-resources';
+                toast.loading('Opening playbook…', { id: toastId });
                 try {
                   const { downloadFileFromStorage } = await import('@/lib/client-storage');
                   await downloadFileFromStorage('website_assets/playbook.pdf', 'rez-playbook.pdf');
+                  toast.success('Opened in new tab', { id: toastId, duration: 2500 });
                 } catch (error) {
                   console.error('Failed to download playbook:', error);
+                  toast.error(error instanceof Error ? error.message : 'Failed to open playbook', { id: toastId });
+                } finally {
+                  setResourceLoading(null);
                 }
               }}
-              className="text-left group cursor-pointer"
+              className={`text-left group cursor-pointer relative ${resourceLoading === 'playbook' ? 'pointer-events-none opacity-70' : ''}`}
             >
-              <div className="enterprise-card p-5 h-full flex items-start gap-4 border-0 transition-all duration-200 hover:shadow-md hover:border-primary/20">
+              <div className="enterprise-card p-5 h-full flex items-start gap-4 border-0 transition-all duration-200 hover:shadow-md hover:border-primary/20 relative">
+                {resourceLoading === 'playbook' && (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/80 z-10">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                )}
                 <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-primary/10 group-hover:bg-primary/15 transition-colors">
                   <Image
                     src="/covers/playbook.png"
@@ -122,17 +137,30 @@ export default function Resources() {
             <div
               onClick={async (e) => {
                 e.preventDefault();
+                if (resourceLoading) return;
                 guideDownloadClicked({ file_name: "rez-user-guide.pdf", file_size_mb: 9, source: "resources_page" });
+                setResourceLoading('guide');
+                const toastId = 'open-guide-resources';
+                toast.loading('Opening guide…', { id: toastId });
                 try {
                   const { downloadFileFromStorage } = await import('@/lib/client-storage');
                   await downloadFileFromStorage('website_assets/guide.pdf', 'rez-user-guide.pdf');
+                  toast.success('Opened in new tab', { id: toastId, duration: 2500 });
                 } catch (error) {
                   console.error('Failed to download guide:', error);
+                  toast.error(error instanceof Error ? error.message : 'Failed to open guide', { id: toastId });
+                } finally {
+                  setResourceLoading(null);
                 }
               }}
-              className="text-left group cursor-pointer"
+              className={`text-left group cursor-pointer relative ${resourceLoading === 'guide' ? 'pointer-events-none opacity-70' : ''}`}
             >
-              <div className="enterprise-card p-5 h-full flex items-start gap-4 border-0 transition-all duration-200 hover:shadow-md hover:border-primary/20">
+              <div className="enterprise-card p-5 h-full flex items-start gap-4 border-0 transition-all duration-200 hover:shadow-md hover:border-primary/20 relative">
+                {resourceLoading === 'guide' && (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/80 z-10">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                )}
                 <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-primary/10 group-hover:bg-primary/15 transition-colors">
                   <Image
                     src="/covers/guide.png"

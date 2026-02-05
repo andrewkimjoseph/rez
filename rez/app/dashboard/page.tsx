@@ -31,6 +31,7 @@ export default function Dashboard() {
   const { checkCanRefresh, updateRefreshTime } = useRefreshStore();
   const [, forceUpdate] = useState({});
   const [isHydrated, setIsHydrated] = useState(false);
+  const [resourceLoading, setResourceLoading] = useState<'playbook' | 'guide' | null>(null);
   const { refreshClicked, playbookDownloadClicked, guideDownloadClicked } = useAmplitudeEvents();
 
   // Calculate counts
@@ -184,18 +185,31 @@ export default function Dashboard() {
             <div
               onClick={async (e) => {
                 e.preventDefault();
+                if (resourceLoading) return;
                 playbookDownloadClicked({ file_name: "rez-playbook.pdf", file_size_mb: 77 });
+                setResourceLoading('playbook');
+                const toastId = 'open-playbook';
+                toast.loading('Opening playbook…', { id: toastId });
                 try {
                   const { downloadFileFromStorage } = await import('@/lib/client-storage');
                   await downloadFileFromStorage('website_assets/playbook.pdf', 'rez-playbook.pdf');
+                  toast.success('Opened in new tab', { id: toastId, duration: 2500 });
                 } catch (error) {
                   console.error('Failed to download playbook:', error);
+                  toast.error(error instanceof Error ? error.message : 'Failed to open playbook', { id: toastId });
+                } finally {
+                  setResourceLoading(null);
                 }
               }}
-              className="text-left group cursor-pointer"
+              className={`text-left group cursor-pointer ${resourceLoading === 'playbook' ? 'pointer-events-none opacity-70' : ''}`}
             >
-              <Card className="enterprise-card border-0 h-full transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer">
+              <Card className="enterprise-card border-0 h-full transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer relative">
                 <CardContent className="p-5 flex items-start gap-4">
+                  {resourceLoading === 'playbook' && (
+                    <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/80 z-10">
+                      <ArrowPathIcon className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  )}
                   <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-primary/10 group-hover:bg-primary/15 transition-colors">
                     <Image
                       src="/covers/playbook.png"
@@ -218,18 +232,31 @@ export default function Dashboard() {
             <div
               onClick={async (e) => {
                 e.preventDefault();
+                if (resourceLoading) return;
                 guideDownloadClicked({ file_name: "rez-user-guide.pdf", file_size_mb: 9 });
+                setResourceLoading('guide');
+                const toastId = 'open-guide';
+                toast.loading('Opening guide…', { id: toastId });
                 try {
                   const { downloadFileFromStorage } = await import('@/lib/client-storage');
                   await downloadFileFromStorage('website_assets/guide.pdf', 'rez-user-guide.pdf');
+                  toast.success('Opened in new tab', { id: toastId, duration: 2500 });
                 } catch (error) {
                   console.error('Failed to download guide:', error);
+                  toast.error(error instanceof Error ? error.message : 'Failed to open guide', { id: toastId });
+                } finally {
+                  setResourceLoading(null);
                 }
               }}
-              className="text-left group cursor-pointer"
+              className={`text-left group cursor-pointer ${resourceLoading === 'guide' ? 'pointer-events-none opacity-70' : ''}`}
             >
-              <Card className="enterprise-card border-0 h-full transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer">
+              <Card className="enterprise-card border-0 h-full transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer relative">
                 <CardContent className="p-5 flex items-start gap-4">
+                  {resourceLoading === 'guide' && (
+                    <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/80 z-10">
+                      <ArrowPathIcon className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  )}
                   <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-primary/10 group-hover:bg-primary/15 transition-colors">
                     <Image
                       src="/covers/guide.png"
