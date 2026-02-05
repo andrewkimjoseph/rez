@@ -1,5 +1,8 @@
 "use client";
 
+// Disable prerendering - this page requires authentication and Firebase initialization
+export const dynamic = 'force-dynamic';
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
