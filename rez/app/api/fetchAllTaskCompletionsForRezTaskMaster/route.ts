@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     }
 
     // First, get all tasks for the authenticated user's email
-    const tasksRef = paxDB.collection('tasks');
+    const tasksRef = paxDB().collection('tasks');
     const tasksSnapshot = await tasksRef.where('rezTaskMasterEmailAddress', '==', authResult.email).get();
     
     const taskIds: string[] = [];
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
     // Then, get all task completions where taskId matches any of the task IDs
     // Firestore 'in' operator supports up to 30 values, so we need to batch the queries
-    const taskCompletionsRef = paxDB.collection('task_completions');
+    const taskCompletionsRef = paxDB().collection('task_completions');
     const taskCompletions: any[] = [];
     
     // Split taskIds into chunks of 30

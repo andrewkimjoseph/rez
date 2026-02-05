@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch all tasks for the authenticated user's email
-    const tasksRef = paxDB.collection('tasks');
+    const tasksRef = paxDB().collection('tasks');
     const snapshot = await tasksRef.where('rezTaskMasterEmailAddress', '==', authResult.email).get();
 
     const tasks: any[] = [];

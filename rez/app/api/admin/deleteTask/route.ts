@@ -25,7 +25,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Get admin data for notification
-    const adminDocRef = rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(authResult.uid);
+    const adminDocRef = rezDB().collection(COLLECTIONS.TASK_MASTERS).doc(authResult.uid);
     const adminDoc = await adminDocRef.get();
     const adminData = adminDoc.data();
     
@@ -33,7 +33,7 @@ export async function DELETE(request: NextRequest) {
     const adminEmail = authResult.email || adminData?.emailAddress || 'Unknown';
 
     // Fetch task data before deletion for notification
-    const taskRef = paxDB.collection(COLLECTIONS.TASKS).doc(taskId);
+    const taskRef = paxDB().collection(COLLECTIONS.TASKS).doc(taskId);
     const taskDoc = await taskRef.get();
 
     if (!taskDoc.exists) {
