@@ -14,20 +14,17 @@ const firebaseConfig = {
 };
 
 export function initFirebase() {
+  if (typeof window === 'undefined') return null;
+
   if (!getApps().length) {
     return initializeApp(firebaseConfig);
   } else {
     return getApp();
   }
-} 
+}
 
+const app = typeof window !== 'undefined' ? initFirebase() : null;
 
-initFirebase();
-
-export const auth = getAuth();
-
-export const firestore = getFirestore();
-
-export const storage = getStorage();
-
-
+export const auth = app ? getAuth(app) : null;
+export const firestore = app ? getFirestore(app) : null;
+export const storage = app ? getStorage(app) : null;
