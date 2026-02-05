@@ -58,11 +58,6 @@ export default function OrganizationOnboardingPage() {
   const handleGoBack = async () => {
     setGoingBack(true);
     try {
-      if (!auth) {
-        setGoingBack(false);
-        router.push("/sign-in");
-        return;
-      }
       const user = auth.currentUser;
       if (user) {
         // Delete from Firestore first
@@ -95,7 +90,6 @@ export default function OrganizationOnboardingPage() {
     }
   };
   useEffect(() => {
-    if (!auth) return;
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUserName(user?.displayName || null);
     });
@@ -113,12 +107,7 @@ export default function OrganizationOnboardingPage() {
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setLoading(true);
     organizationOnboardingClicked();
-    if (!auth) {
-      toast("Unable to verify user. Please refresh and sign in again.");
-      setLoading(false);
-      organizationOnboardingFailed();
-      return;
-    }
+    // Get current user
     const user = auth.currentUser;
     if (!user) {
       toast("User not found. Please sign in again.");
