@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse(webStream, {
       headers: {
         'Content-Type': contentType,
-        'Content-Disposition': 'inline; filename="rez-user-guide.pdf"',
+        'Content-Disposition': 'attachment; filename="how-to-design-surveys-for-quality-responses-2026.pdf"',
       },
     });
   } catch (error) {

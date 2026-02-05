@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse(webStream, {
       headers: {
         'Content-Type': contentType,
-        'Content-Disposition': 'inline; filename="rez-playbook.pdf"',
+        'Content-Disposition': 'attachment; filename="african-digital-finance-insights-2025.pdf"',
       },
     });
   } catch (error) {

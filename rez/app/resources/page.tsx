@@ -92,17 +92,17 @@ export default function Resources() {
               onClick={async (e) => {
                 e.preventDefault();
                 if (resourceLoading) return;
-                playbookDownloadClicked({ file_name: "rez-playbook.pdf", file_size_mb: 77, source: "resources_page" });
+                playbookDownloadClicked({ file_name: "african-digital-finance-insights-2025.pdf", file_size_mb: 77, source: "resources_page" });
                 setResourceLoading('playbook');
                 const toastId = 'open-playbook-resources';
-                toast.loading('Opening playbook…', { id: toastId });
+                toast.loading('Downloading playbook…', { id: toastId });
                 try {
                   const { downloadFileFromStorage } = await import('@/lib/client-storage');
-                  await downloadFileFromStorage('website_assets/playbook.pdf', 'rez-playbook.pdf');
-                  toast.success('Opened in new tab', { id: toastId, duration: 2500 });
+                  await downloadFileFromStorage('website_assets/playbook.pdf', 'african-digital-finance-insights-2025.pdf');
+                  toast.success('Download started', { id: toastId, duration: 2500 });
                 } catch (error) {
                   console.error('Failed to download playbook:', error);
-                  toast.error(error instanceof Error ? error.message : 'Failed to open playbook', { id: toastId });
+                  toast.error(error instanceof Error ? error.message : 'Failed to download playbook', { id: toastId });
                 } finally {
                   setResourceLoading(null);
                 }
@@ -138,17 +138,17 @@ export default function Resources() {
               onClick={async (e) => {
                 e.preventDefault();
                 if (resourceLoading) return;
-                guideDownloadClicked({ file_name: "rez-user-guide.pdf", file_size_mb: 9, source: "resources_page" });
+                guideDownloadClicked({ file_name: "how-to-design-surveys-for-quality-responses-2026.pdf", file_size_mb: 9, source: "resources_page" });
                 setResourceLoading('guide');
                 const toastId = 'open-guide-resources';
-                toast.loading('Opening guide…', { id: toastId });
+                toast.loading('Downloading guide…', { id: toastId });
                 try {
                   const { downloadFileFromStorage } = await import('@/lib/client-storage');
-                  await downloadFileFromStorage('website_assets/guide.pdf', 'rez-user-guide.pdf');
-                  toast.success('Opened in new tab', { id: toastId, duration: 2500 });
+                  await downloadFileFromStorage('website_assets/guide.pdf', 'how-to-design-surveys-for-quality-responses-2026.pdf');
+                  toast.success('Download started', { id: toastId, duration: 2500 });
                 } catch (error) {
                   console.error('Failed to download guide:', error);
-                  toast.error(error instanceof Error ? error.message : 'Failed to open guide', { id: toastId });
+                  toast.error(error instanceof Error ? error.message : 'Failed to download guide', { id: toastId });
                 } finally {
                   setResourceLoading(null);
                 }
