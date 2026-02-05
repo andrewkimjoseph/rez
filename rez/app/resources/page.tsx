@@ -86,10 +86,18 @@ export default function Resources() {
               </div>
             </button>
             
-            <a
-              href="/api/download/playbook"
-              onClick={() => playbookDownloadClicked({ file_name: "rez-playbook.pdf", file_size_mb: 77, source: "resources_page" })}
-              className="text-left group"
+            <div
+              onClick={async (e) => {
+                e.preventDefault();
+                playbookDownloadClicked({ file_name: "rez-playbook.pdf", file_size_mb: 77, source: "resources_page" });
+                try {
+                  const { downloadFileFromStorage } = await import('@/lib/client-storage');
+                  await downloadFileFromStorage('website_assets/playbook.pdf', 'rez-playbook.pdf');
+                } catch (error) {
+                  console.error('Failed to download playbook:', error);
+                }
+              }}
+              className="text-left group cursor-pointer"
             >
               <div className="enterprise-card p-5 h-full flex items-start gap-4 border-0 transition-all duration-200 hover:shadow-md hover:border-primary/20">
                 <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-primary/10 group-hover:bg-primary/15 transition-colors">
@@ -109,12 +117,20 @@ export default function Resources() {
                   </p>
                 </div>
               </div>
-            </a>
+            </div>
             
-            <a
-              href="/api/download/guide"
-              onClick={() => guideDownloadClicked({ file_name: "rez-user-guide.pdf", file_size_mb: 9, source: "resources_page" })}
-              className="text-left group"
+            <div
+              onClick={async (e) => {
+                e.preventDefault();
+                guideDownloadClicked({ file_name: "rez-user-guide.pdf", file_size_mb: 9, source: "resources_page" });
+                try {
+                  const { downloadFileFromStorage } = await import('@/lib/client-storage');
+                  await downloadFileFromStorage('website_assets/guide.pdf', 'rez-user-guide.pdf');
+                } catch (error) {
+                  console.error('Failed to download guide:', error);
+                }
+              }}
+              className="text-left group cursor-pointer"
             >
               <div className="enterprise-card p-5 h-full flex items-start gap-4 border-0 transition-all duration-200 hover:shadow-md hover:border-primary/20">
                 <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-primary/10 group-hover:bg-primary/15 transition-colors">
@@ -134,7 +150,7 @@ export default function Resources() {
                   </p>
                 </div>
               </div>
-            </a>
+            </div>
           </div>
         </TabsContent>
 

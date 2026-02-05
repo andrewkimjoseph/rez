@@ -181,10 +181,18 @@ export default function Dashboard() {
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-foreground">Resources</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <a
-              href="/api/download/playbook"
-              onClick={() => playbookDownloadClicked({ file_name: "rez-playbook.pdf", file_size_mb: 77 })}
-              className="text-left group"
+            <div
+              onClick={async (e) => {
+                e.preventDefault();
+                playbookDownloadClicked({ file_name: "rez-playbook.pdf", file_size_mb: 77 });
+                try {
+                  const { downloadFileFromStorage } = await import('@/lib/client-storage');
+                  await downloadFileFromStorage('website_assets/playbook.pdf', 'rez-playbook.pdf');
+                } catch (error) {
+                  console.error('Failed to download playbook:', error);
+                }
+              }}
+              className="text-left group cursor-pointer"
             >
               <Card className="enterprise-card border-0 h-full transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer">
                 <CardContent className="p-5 flex items-start gap-4">
@@ -206,11 +214,19 @@ export default function Dashboard() {
                   </div>
                 </CardContent>
               </Card>
-            </a>
-            <a
-              href="/api/download/guide"
-              onClick={() => guideDownloadClicked({ file_name: "rez-user-guide.pdf", file_size_mb: 9 })}
-              className="text-left group"
+            </div>
+            <div
+              onClick={async (e) => {
+                e.preventDefault();
+                guideDownloadClicked({ file_name: "rez-user-guide.pdf", file_size_mb: 9 });
+                try {
+                  const { downloadFileFromStorage } = await import('@/lib/client-storage');
+                  await downloadFileFromStorage('website_assets/guide.pdf', 'rez-user-guide.pdf');
+                } catch (error) {
+                  console.error('Failed to download guide:', error);
+                }
+              }}
+              className="text-left group cursor-pointer"
             >
               <Card className="enterprise-card border-0 h-full transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer">
                 <CardContent className="p-5 flex items-start gap-4">
@@ -232,7 +248,7 @@ export default function Dashboard() {
                   </div>
                 </CardContent>
               </Card>
-            </a>
+            </div>
           </div>
         </div>
       </div>
