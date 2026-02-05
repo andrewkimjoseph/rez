@@ -4,8 +4,8 @@ import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { FieldValue } from 'firebase-admin/firestore';
 import { requireAuth } from '@/lib/api-auth';
 
-// Cloudflare Pages requires edge; enable nodejs_compat in CF dashboard for Firebase Admin
-export const runtime = 'edge';
+// Note: Using Node.js runtime because Firebase Admin SDK requires it
+// export const runtime = 'edge';
 
 export interface TaskMasterUpdateTaskData {
   type?: 'fillAForm' | 'checkOutApp' | 'doVideoInterview';
@@ -52,7 +52,7 @@ export async function PATCH(request: NextRequest) {
 
     // Get user document to retrieve email address
     // Note: All authenticated users are task masters in this system
-    const userDocRef = rezDB().collection(COLLECTIONS.TASK_MASTERS).doc(authResult.uid);
+    const userDocRef = rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(authResult.uid);
     const userDoc = await userDocRef.get();
 
     if (!userDoc.exists) {
@@ -75,7 +75,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Verify task exists
-    const taskRef = paxDB().collection(COLLECTIONS.TASKS).doc(taskId);
+    const taskRef = paxDB.collection(COLLECTIONS.TASKS).doc(taskId);
     const taskDoc = await taskRef.get();
 
     if (!taskDoc.exists) {

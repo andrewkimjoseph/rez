@@ -20,7 +20,7 @@ export interface CreateTaskData {
 }
 
 export async function createTaskInPaxApp(taskData: CreateTaskData): Promise<string> {
-  const taskRef = paxDB().collection(COLLECTIONS.TASKS).doc();
+  const taskRef = paxDB.collection(COLLECTIONS.TASKS).doc();
   
   // Default instructions for fillAForm tasks
   const defaultFillAFormInstructions = "Hi there! Thanks for taking the time to complete this form. We really appreciate thoughtful, genuine responses - they help us understand how to better support you. Please answer each question as clearly as you can. Your authentic input matters to us and helps maintain the quality of our service for everyone.";

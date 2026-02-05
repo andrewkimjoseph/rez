@@ -3,6 +3,8 @@ import { sendTelegramMessage } from '@/utils/helpers/sendTelegramMessage';
 import { escapeMarkdown } from '@/utils/helpers/escapeMarkdown';
 import { requireAuth } from '@/lib/api-auth';
 
+export const runtime = 'edge';
+
 interface TelegramMessage {
   chat_id: string;
   text: string;
@@ -25,9 +27,6 @@ interface TaskNotificationData {
 
 // Use a simple in-memory cache to track processed tasks within this API instance
 const processedTasks = new Set<string>();
-
-// Cloudflare Pages requires edge; enable nodejs_compat in CF dashboard for Firebase Admin
-export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
   try {

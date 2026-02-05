@@ -3,8 +3,8 @@ import { paxDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { requireSuperAdmin } from '@/lib/api-auth';
 
-// Cloudflare Pages requires edge; enable nodejs_compat in CF dashboard for Firebase Admin
-export const runtime = 'edge';
+// Note: Using Node.js runtime because Firebase Admin SDK requires it
+// export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch all tasks
-    const tasksRef = paxDB().collection(COLLECTIONS.TASKS);
+    const tasksRef = paxDB.collection(COLLECTIONS.TASKS);
     const tasksSnapshot = await tasksRef.orderBy('timeCreated', 'desc').get();
 
     const tasks = tasksSnapshot.docs.map(doc => ({

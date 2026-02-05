@@ -13,11 +13,9 @@ export async function linkTaskMasterToLead(
   leadEmail: string,
   taskMasterId: string
 ): Promise<boolean> {
-  if (!firestore) return false;
-  const db = firestore;
   try {
     // Query for leads by email address
-    const leadsRef = collection(db, 'taskmaster_leads');
+    const leadsRef = collection(firestore, 'taskmaster_leads');
     const q = query(leadsRef, where('leadEmailAddress', '==', leadEmail));
     const snapshot = await getDocs(q);
     
@@ -26,8 +24,8 @@ export async function linkTaskMasterToLead(
     }
     
     // Update all matching leads (in case of multiple submissions with same email)
-    const updatePromises = snapshot.docs.map(leadDoc =>
-      updateDoc(doc(db, 'taskmaster_leads', leadDoc.id), {
+    const updatePromises = snapshot.docs.map(leadDoc => 
+      updateDoc(doc(firestore, 'taskmaster_leads', leadDoc.id), {
         taskMasterId: taskMasterId,
         lastActivityDate: serverTimestamp()
       })

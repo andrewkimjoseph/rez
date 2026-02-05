@@ -16,8 +16,6 @@ export async function verifyAuthToken(request: NextRequest): Promise<{ uid: stri
       return null;
     }
 
-    // Ensure Firebase Admin rezApp is initialized (lazy init in serverConfig)
-    rezDB();
     const auth = getAuth(getApp('rezApp'));
     const decodedToken = await auth.verifyIdToken(token, true); // Check if token is revoked
     
@@ -75,7 +73,7 @@ export async function requireSuperAdmin(request: NextRequest): Promise<
   const { uid } = authResult;
   
   // Check if user is a super admin
-  const adminDocRef = rezDB().collection(COLLECTIONS.TASK_MASTERS).doc(uid);
+  const adminDocRef = rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(uid);
   const adminDoc = await adminDocRef.get();
   
   if (!adminDoc.exists) {

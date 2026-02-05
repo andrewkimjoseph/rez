@@ -3,8 +3,8 @@ import { requireAuth } from '@/lib/api-auth';
 import { paxDB } from '@/firebase/serverConfig';
 import { FieldValue } from 'firebase-admin/firestore';
 
-// Cloudflare Pages requires edge; enable nodejs_compat in CF dashboard for Firebase Admin
-export const runtime = 'edge';
+// Note: Using Node.js runtime because Firebase Admin SDK requires it
+// export const runtime = 'edge';
 
 /**
  * Automation P2 - PREMIUM ENTRY CONVERSION
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Query taskmaster_leads by email
-    const leadsRef = paxDB().collection('taskmaster_leads');
+    const leadsRef = paxDB.collection('taskmaster_leads');
     const snapshot = await leadsRef
       .where('leadEmailAddress', '==', userEmail)
       .get();

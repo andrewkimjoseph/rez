@@ -4,8 +4,8 @@ import { requireAuth } from '@/lib/api-auth';
 import { rezDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 
-// Cloudflare Pages requires edge; enable nodejs_compat in CF dashboard for Firebase Admin
-export const runtime = 'edge';
+// Note: Using Node.js runtime because Firebase Admin SDK requires it
+// export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
   try {
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     let taskMasterEmail = authResult.email;
     if (isSuperAdmin && body.assignedTaskMasterEmailAddress) {
       // Validate that the assigned email is a valid task master
-      const assignedTaskMasterSnapshot = await rezDB().collection(COLLECTIONS.TASK_MASTERS)
+      const assignedTaskMasterSnapshot = await rezDB.collection(COLLECTIONS.TASK_MASTERS)
         .where('emailAddress', '==', body.assignedTaskMasterEmailAddress)
         .limit(1)
         .get();
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
     // Send for all task creations using internal token if configured
     try {
       // Get task master ID from email
-      const taskMasterSnapshot = await rezDB().collection(COLLECTIONS.TASK_MASTERS)
+      const taskMasterSnapshot = await rezDB.collection(COLLECTIONS.TASK_MASTERS)
         .where('emailAddress', '==', taskMasterEmail)
         .limit(1)
         .get();

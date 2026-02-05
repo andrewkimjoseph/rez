@@ -4,8 +4,8 @@ import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { FieldValue } from 'firebase-admin/firestore';
 import { requireSuperAdmin } from '@/lib/api-auth';
 
-// Cloudflare Pages requires edge; enable nodejs_compat in CF dashboard for Firebase Admin
-export const runtime = 'edge';
+// Note: Using Node.js runtime because Firebase Admin SDK requires it
+// export const runtime = 'edge';
 
 export interface AdminUpdateTaskMasterData {
   name?: string;
@@ -43,7 +43,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Verify task master exists (in Rez Firestore)
-    const taskMasterRef = rezDB().collection(COLLECTIONS.TASK_MASTERS).doc(taskMasterId);
+    const taskMasterRef = rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(taskMasterId);
     const taskMasterDoc = await taskMasterRef.get();
 
     if (!taskMasterDoc.exists) {

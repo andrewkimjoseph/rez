@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { paxDB } from '@/firebase/serverConfig';
 import { requireAuth } from '@/lib/api-auth';
 
-// Cloudflare Pages requires edge; enable nodejs_compat in CF dashboard for Firebase Admin
-export const runtime = 'edge';
+// Note: Using Node.js runtime because Firebase Admin SDK requires it
+// export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch all tasks for the authenticated user's email
-    const tasksRef = paxDB().collection('tasks');
+    const tasksRef = paxDB.collection('tasks');
     const snapshot = await tasksRef.where('rezTaskMasterEmailAddress', '==', authResult.email).get();
 
     const tasks: any[] = [];

@@ -24,7 +24,7 @@ export async function updateTaskInPaxApp({
   data,
   rezTaskMasterEmailAddress,
 }: UpdateTaskParams): Promise<void> {
-  const taskRef = paxDB().collection(COLLECTIONS.TASKS).doc(taskId);
+  const taskRef = paxDB.collection(COLLECTIONS.TASKS).doc(taskId);
   
   const taskDoc = await taskRef.get();
   

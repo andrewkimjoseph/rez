@@ -3,8 +3,8 @@ import { paxDB, rezDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { requireSuperAdmin } from '@/lib/api-auth';
 
-// Cloudflare Pages requires edge; enable nodejs_compat in CF dashboard for Firebase Admin
-export const runtime = 'edge';
+// Note: Using Node.js runtime because Firebase Admin SDK requires it
+// export const runtime = 'edge';
 
 export async function DELETE(request: NextRequest) {
   try {
@@ -25,7 +25,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Get admin data for notification
-    const adminDocRef = rezDB().collection(COLLECTIONS.TASK_MASTERS).doc(authResult.uid);
+    const adminDocRef = rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(authResult.uid);
     const adminDoc = await adminDocRef.get();
     const adminData = adminDoc.data();
     
@@ -33,7 +33,7 @@ export async function DELETE(request: NextRequest) {
     const adminEmail = authResult.email || adminData?.emailAddress || 'Unknown';
 
     // Fetch task data before deletion for notification
-    const taskRef = paxDB().collection(COLLECTIONS.TASKS).doc(taskId);
+    const taskRef = paxDB.collection(COLLECTIONS.TASKS).doc(taskId);
     const taskDoc = await taskRef.get();
 
     if (!taskDoc.exists) {

@@ -5,8 +5,8 @@ import { getAuth } from 'firebase-admin/auth';
 import { getApp } from 'firebase-admin/app';
 import { requireSuperAdmin } from '@/lib/api-auth';
 
-// Cloudflare Pages requires edge; enable nodejs_compat in CF dashboard for Firebase Admin
-export const runtime = 'edge';
+// Note: Using Node.js runtime because Firebase Admin SDK requires it
+// export const runtime = 'edge';
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -37,7 +37,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Get the task master to check if they're a super admin
-    const taskMasterRef = rezDB().collection(COLLECTIONS.TASK_MASTERS).doc(taskMasterId);
+    const taskMasterRef = rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(taskMasterId);
     const taskMasterDoc = await taskMasterRef.get();
 
     if (!taskMasterDoc.exists) {

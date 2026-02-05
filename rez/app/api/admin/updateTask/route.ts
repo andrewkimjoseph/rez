@@ -4,8 +4,8 @@ import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { FieldValue } from 'firebase-admin/firestore';
 import { requireSuperAdmin } from '@/lib/api-auth';
 
-// Cloudflare Pages requires edge; enable nodejs_compat in CF dashboard for Firebase Admin
-export const runtime = 'edge';
+// Note: Using Node.js runtime because Firebase Admin SDK requires it
+// export const runtime = 'edge';
 
 export interface AdminUpdateTaskData {
   title?: string;
@@ -60,7 +60,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Get admin data for notification
-    const adminDocRef = rezDB().collection(COLLECTIONS.TASK_MASTERS).doc(authResult.uid);
+    const adminDocRef = rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(authResult.uid);
     const adminDoc = await adminDocRef.get();
     const adminData = adminDoc.data();
     
@@ -68,7 +68,7 @@ export async function PATCH(request: NextRequest) {
     const adminEmail = authResult.email || adminData?.emailAddress || 'Unknown';
 
     // Verify task exists
-    const taskRef = paxDB().collection(COLLECTIONS.TASKS).doc(taskId);
+    const taskRef = paxDB.collection(COLLECTIONS.TASKS).doc(taskId);
     const taskDoc = await taskRef.get();
 
     if (!taskDoc.exists) {
@@ -114,7 +114,7 @@ export async function PATCH(request: NextRequest) {
     // If super admin is reassigning task to different task master, validate the email
     if (updateData.rezTaskMasterEmailAddress) {
       const newTaskMasterEmail = updateData.rezTaskMasterEmailAddress as string;
-      const taskMasterRef = rezDB().collection(COLLECTIONS.TASK_MASTERS)
+      const taskMasterRef = rezDB.collection(COLLECTIONS.TASK_MASTERS)
         .where('emailAddress', '==', newTaskMasterEmail)
         .limit(1);
       const taskMasterSnapshot = await taskMasterRef.get();
@@ -203,7 +203,7 @@ export async function PATCH(request: NextRequest) {
         
         if (taskMasterEmail) {
           // Get task master ID from email
-          const taskMasterSnapshot = await rezDB().collection(COLLECTIONS.TASK_MASTERS)
+          const taskMasterSnapshot = await rezDB.collection(COLLECTIONS.TASK_MASTERS)
             .where('emailAddress', '==', taskMasterEmail)
             .limit(1)
             .get();

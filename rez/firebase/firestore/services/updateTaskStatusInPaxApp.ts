@@ -13,7 +13,7 @@ export async function updateTaskStatusInPaxApp({
   isAvailable,
   rezTaskMasterEmailAddress,
 }: UpdateTaskStatusParams): Promise<void> {
-  const taskRef = paxDB().collection(COLLECTIONS.TASKS).doc(taskId);
+  const taskRef = paxDB.collection(COLLECTIONS.TASKS).doc(taskId);
   
   // Verify the task exists and belongs to the task master
   const taskDoc = await taskRef.get();
