@@ -16,6 +16,8 @@ export async function verifyAuthToken(request: NextRequest): Promise<{ uid: stri
       return null;
     }
 
+    // Ensure Firebase Admin rezApp is initialized (lazy init in serverConfig)
+    rezDB();
     const auth = getAuth(getApp('rezApp'));
     const decodedToken = await auth.verifyIdToken(token, true); // Check if token is revoked
     
