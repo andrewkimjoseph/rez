@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch all task masters from Rez Firestore
-    const taskMastersRef = rezDB.collection(COLLECTIONS.TASK_MASTERS);
+    const taskMastersRef = rezDB().collection(COLLECTIONS.TASK_MASTERS);
     const taskMastersSnapshot = await taskMastersRef.orderBy('timeCreated', 'desc').get();
 
     // Get Firebase Auth instance
