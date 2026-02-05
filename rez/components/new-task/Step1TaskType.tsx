@@ -55,13 +55,13 @@ export default function Step1TaskType() {
                 <Badge className="absolute top-2 right-2 bg-amber-500 hover:bg-amber-500 text-white text-[10px] px-1.5 py-0">
                   Soon
                 </Badge>
-                <div className="flex items-center gap-3">
+                <div className="flex items-start gap-3">
                   <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
                     <IconComponent className="w-4 h-4 text-gray-400" />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <h3 className="font-medium text-gray-400 text-sm">{taskType.title}</h3>
-                    <p className="text-xs text-gray-400 truncate">{taskType.description}</p>
+                    <p className="text-xs text-gray-400">{taskType.description}</p>
                   </div>
                 </div>
               </div>
@@ -84,17 +84,17 @@ export default function Step1TaskType() {
                   <CheckCircleIcon className="w-4 h-4 text-[#5C29A3]" />
                 </div>
               )}
-              <div className="flex items-center gap-3">
+              <div className="flex items-start gap-3">
                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
                   isSelected ? 'bg-[#5C29A3] text-white' : 'bg-[#5C29A3]/10 text-[#5C29A3]'
                 }`}>
                   <IconComponent className="w-4 h-4" />
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <h3 className={`font-medium text-sm ${isSelected ? 'text-[#5C29A3]' : 'text-gray-900'}`}>
                     {taskType.title}
                   </h3>
-                  <p className="text-xs text-gray-500 truncate">{taskType.description}</p>
+                  <p className="text-xs text-gray-500">{taskType.description}</p>
                 </div>
               </div>
             </button>

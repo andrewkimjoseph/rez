@@ -16,7 +16,7 @@ interface RefreshStore {
   getTimeRemaining: () => number;
 }
 
-const COOLDOWN_MINUTES = 30;
+const COOLDOWN_MINUTES = 3;
 const COOLDOWN_MS = COOLDOWN_MINUTES * 60 * 1000;
 
 export const useRefreshStore = create<RefreshStore>()(

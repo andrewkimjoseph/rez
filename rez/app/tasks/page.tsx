@@ -38,7 +38,13 @@ function TasksContent() {
   const { checkCanRefresh, updateRefreshTime } = useRefreshStore();
   const [, forceUpdate] = useState({});
   const [isHydrated, setIsHydrated] = useState(false);
-  const { viewTasksTabClicked, createNewTaskTabClicked, refreshClicked } = useAmplitudeEvents();
+  const { 
+    viewTasksTabClicked, 
+    createNewTaskTabClicked, 
+    refreshClicked,
+    rejectionBannerDismissed,
+    rejectionBannerViewTasksClicked,
+  } = useAmplitudeEvents();
   const { count: rejectedTasksCount, hasRejectedTasks } = useRejectedTasksCount();
   const [dismissedRejectionBanner, setDismissedRejectionBanner] = useState(false);
 
@@ -52,6 +58,7 @@ function TasksContent() {
 
   const handleDismissRejectionBanner = () => {
     setDismissedRejectionBanner(true);
+    rejectionBannerDismissed({ rejected_tasks_count: rejectedTasksCount });
     if (typeof window !== 'undefined') {
       localStorage.setItem('rejection-banner-dismissed', 'true');
     }
@@ -132,7 +139,7 @@ function TasksContent() {
                   You have {rejectedTasksCount} rejected task{rejectedTasksCount !== 1 ? 's' : ''} that need{rejectedTasksCount === 1 ? 's' : ''} to be updated. 
                   Please review the rejection reasons and make the necessary changes.
                 </p>
-                <Link href="/tasks?tab=view-tasks">
+                <Link href="/tasks?tab=view-tasks" onClick={() => rejectionBannerViewTasksClicked({ rejected_tasks_count: rejectedTasksCount })}>
                   <Button variant="outline" size="sm" className="h-8 text-xs border-red-300 text-red-700 hover:bg-red-100">
                     View Rejected Tasks
                   </Button>
@@ -194,14 +201,14 @@ function TasksContent() {
           <TabsList className="bg-card border border-border/50 p-1 rounded-lg h-auto mb-6">
             <TabsTrigger
               value="create"
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm px-4 py-2.5 rounded-md transition-all duration-200 text-sm font-medium"
+              className="data-[state=active]:bg-[#5C29A3] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 py-2.5 rounded-md transition-all duration-200 text-sm font-medium"
             >
               <PlusIcon className="h-4 w-4 mr-2" />
               Create New Task
             </TabsTrigger>
             <TabsTrigger
               value="view-tasks"
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm px-4 py-2.5 rounded-md transition-all duration-200 text-sm font-medium relative"
+              className="data-[state=active]:bg-[#5C29A3] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 py-2.5 rounded-md transition-all duration-200 text-sm font-medium relative"
             >
               <ListBulletIcon className="h-4 w-4 mr-2" />
               View Tasks
