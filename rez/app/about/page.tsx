@@ -19,6 +19,7 @@ import {
   LinkIcon,
   ClipboardDocumentCheckIcon,
   CheckIcon,
+  CurrencyDollarIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import Link from "next/link";
@@ -28,12 +29,14 @@ import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 // Demo components (non-functional versions)
 import AboutStep1TaskType from "@/components/about/AboutStep1TaskType";
 import AboutStep2TaskDetails from "@/components/about/AboutStep2TaskDetails";
-import AboutStep3QuestionsTasks from "@/components/about/AboutStep3QuestionsTasks";
-import AboutStep4Review from "@/components/about/AboutStep4Review";
+import AboutStep3Cost from "@/components/about/AboutStep3Cost";
+import AboutStep4QuestionsTasks from "@/components/about/AboutStep3QuestionsTasks";
+import AboutStep5Review from "@/components/about/AboutStep4Review";
 
 const stepConfig = [
   { title: "Type", description: "Choose task type", icon: Squares2X2Icon },
   { title: "Details", description: "Add information", icon: DocumentTextIcon },
+  { title: "Cost", description: "Set pricing", icon: CurrencyDollarIcon },
   { title: "Links", description: "Add resources", icon: LinkIcon },
   { title: "Review", description: "Confirm & create", icon: ClipboardDocumentCheckIcon },
 ];
@@ -45,8 +48,8 @@ function Stepper({ currentStep }: { currentStep: number }) {
     <div className="mb-4">
       <div className="relative mb-4">
         {/* Connecting lines between steps */}
-        <div className="absolute top-4 sm:top-5 inset-x-0 flex px-[calc(12.5%+4px)]">
-          {[0, 1, 2].map((segmentIndex) => (
+        <div className="absolute top-4 sm:top-5 inset-x-0 flex px-[calc(10%+4px)]">
+          {[0, 1, 2, 3].map((segmentIndex) => (
             <div
               key={segmentIndex}
               className={`h-0.5 flex-1 ${
@@ -290,7 +293,7 @@ export default function AboutPage() {
             </h2>
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
               Creating a research task in Rez is simple and straightforward. 
-              Follow these four steps to launch your first task.
+              Follow these five steps to launch your first task.
             </p>
           </div>
 
@@ -346,7 +349,7 @@ export default function AboutPage() {
             </CardContent>
           </Card>
 
-          {/* Step 3: Questions & Tasks */}
+          {/* Step 3: Cost */}
           <Card className="enterprise-card border-0">
             <CardHeader className="p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
@@ -354,7 +357,34 @@ export default function AboutPage() {
                   <span className="text-xl sm:text-2xl font-bold text-primary">3</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-xl sm:text-2xl mb-2">Step 3: Add Links</CardTitle>
+                  <CardTitle className="text-xl sm:text-2xl mb-2">Step 3: Set Cost</CardTitle>
+                  <CardDescription className="text-sm sm:text-base">
+                    Define the scope and pricing for your task:
+                  </CardDescription>
+                  <ul className="list-disc list-inside space-y-1.5 sm:space-y-2 mt-3 sm:mt-4 text-sm sm:text-base text-muted-foreground">
+                    <li><strong>Participants:</strong> Specify how many people you want to complete your survey or test your product</li>
+                    <li><strong>Questions:</strong> Enter the number of questions in your survey (for &quot;Fill a Form&quot;) or feedback questions (for &quot;Check Out App&quot;)</li>
+                    <li><strong>Estimated Cost:</strong> Rez automatically calculates your price based on participants and questions, showing significant savings compared to traditional agencies</li>
+                    <li>Payment is not charged at creation - you&apos;ll be charged before publishing your task</li>
+                  </ul>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6">
+              <Stepper currentStep={3} />
+              <AboutStep3Cost />
+            </CardContent>
+          </Card>
+
+          {/* Step 4: Links */}
+          <Card className="enterprise-card border-0">
+            <CardHeader className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+                <div className="p-2 sm:p-3 rounded-xl bg-primary/10 shrink-0">
+                  <span className="text-xl sm:text-2xl font-bold text-primary">4</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <CardTitle className="text-xl sm:text-2xl mb-2">Step 4: Add Links</CardTitle>
                   <CardDescription className="text-sm sm:text-base">
                     Configure the content participants will interact with:
                   </CardDescription>
@@ -379,26 +409,27 @@ export default function AboutPage() {
               </div>
             </CardHeader>
             <CardContent className="p-4 sm:p-6">
-              <Stepper currentStep={3} />
-              <AboutStep3QuestionsTasks />
+              <Stepper currentStep={4} />
+              <AboutStep4QuestionsTasks />
             </CardContent>
           </Card>
 
-          {/* Step 4: Review */}
+          {/* Step 5: Review */}
           <Card className="enterprise-card border-0">
             <CardHeader className="p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
                 <div className="p-2 sm:p-3 rounded-xl bg-primary/10 shrink-0">
-                  <span className="text-xl sm:text-2xl font-bold text-primary">4</span>
+                  <span className="text-xl sm:text-2xl font-bold text-primary">5</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-xl sm:text-2xl mb-2">Step 4: Review & Submit</CardTitle>
+                  <CardTitle className="text-xl sm:text-2xl mb-2">Step 5: Review & Submit</CardTitle>
                   <CardDescription className="text-sm sm:text-base">
                     Review all the details of your task before submitting:
                   </CardDescription>
                   <ul className="list-disc list-inside space-y-1.5 sm:space-y-2 mt-3 sm:mt-4 text-sm sm:text-base text-muted-foreground">
                     <li>Verify all information is correct</li>
                     <li>Check that links are working properly</li>
+                    <li>Review your cost estimate</li>
                     <li>Ensure instructions are clear and comprehensive</li>
                     <li>Click &quot;Finish&quot; to publish your task to the Pax platform</li>
                   </ul>
@@ -406,8 +437,8 @@ export default function AboutPage() {
               </div>
             </CardHeader>
             <CardContent className="p-4 sm:p-6">
-              <Stepper currentStep={4} />
-              <AboutStep4Review />
+              <Stepper currentStep={5} />
+              <AboutStep5Review />
             </CardContent>
           </Card>
         </section>

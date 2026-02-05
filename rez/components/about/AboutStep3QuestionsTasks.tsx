@@ -1,11 +1,14 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
 import {
-  CheckCircleIcon,
-  GlobeAltIcon,
-} from '@heroicons/react/24/outline';
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from '@/components/ui/tooltip';
+import { GlobeAltIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
+import { InformationCircleIcon } from '@heroicons/react/24/outline';
 
 export default function AboutStep3QuestionsTasks() {
   // Demo data for "Fill a Form" type
@@ -15,50 +18,42 @@ export default function AboutStep3QuestionsTasks() {
 
   return (
     <div>
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Add your resources</h2>
+      <div className="mb-3">
+        <h2 className="text-lg font-semibold text-gray-900">Resources</h2>
         <p className="text-sm text-gray-500 mt-0.5">
-          Provide the link where users will complete this task
+          Where users complete the task
         </p>
       </div>
 
-      <div className="space-y-4">
-        {/* Main Link Field */}
-        <Card className="p-4 border-2 border-gray-100">
-          <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#5C29A3]/10 flex items-center justify-center flex-shrink-0">
-              <GlobeAltIcon className="w-4 h-4 text-[#5C29A3]" />
-            </div>
-            <div className="flex-1 space-y-2">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="link" className="text-sm font-semibold">Form URL</Label>
-                <CheckCircleSolidIcon className="w-4 h-4 text-green-500" />
-              </div>
-              <Input
-                id="link"
-                value={demoData.link}
-                disabled
-                className="bg-muted/50 border-green-200"
-              />
-              <p className="text-xs text-gray-400">
-                The URL where users will access and fill out your form or survey
-              </p>
-            </div>
+      <div className="space-y-3">
+        <div>
+          <div className="flex items-center gap-1.5 mb-1">
+            <Label htmlFor="link" className="text-xs font-medium text-gray-500 flex items-center gap-1.5">
+              <GlobeAltIcon className="w-3.5 h-3.5" />
+              Form URL
+              <CheckCircleSolidIcon className="w-3.5 h-3.5 text-green-500" />
+            </Label>
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex text-gray-400 hover:text-gray-600 cursor-help" aria-label="Where is your form located?">
+                    <InformationCircleIcon className="w-3.5 h-3.5" />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[220px]">
+                  The URL where users will access and complete your form or survey (e.g., Google Forms, Typeform, etc.).
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
-        </Card>
-
-        {/* Completion status */}
-        <div className="pt-3 border-t border-gray-100">
-          <div className="flex items-center gap-2">
-            <CheckCircleIcon className="w-5 h-5 text-green-500" />
-            <span className="text-sm text-green-600 font-medium">All resources added</span>
-          </div>
+          <Input
+            id="link"
+            value={demoData.link}
+            disabled
+            className="h-9 text-sm bg-muted/50 border-green-200"
+          />
         </div>
       </div>
-
-      <p className="text-sm text-muted-foreground mt-4 italic">
-        Paste the URL to your survey or form. Participants will complete it through the Pax app.
-      </p>
     </div>
   );
 }

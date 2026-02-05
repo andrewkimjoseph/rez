@@ -1,14 +1,21 @@
-import { Card } from "@/components/ui/card";
 import {
   Squares2X2Icon,
   DocumentTextIcon,
   LinkIcon,
-  CheckCircleIcon,
   ClipboardDocumentListIcon,
-  TagIcon,
-  ChartBarIcon,
-  GlobeAltIcon,
+  CurrencyDollarIcon,
+  UserGroupIcon,
+  QuestionMarkCircleIcon,
+  PencilIcon,
+  MapPinIcon,
 } from "@heroicons/react/24/outline";
+import { Button } from "@/components/ui/button";
+
+const difficultyColors = {
+  Easy: "text-green-600",
+  Medium: "text-amber-600",
+  Hard: "text-red-600",
+};
 
 export default function AboutStep4Review() {
   // Demo data
@@ -17,124 +24,151 @@ export default function AboutStep4Review() {
     title: 'Recycling Habits & Digital Rewards',
     category: 'Climate',
     difficulty: 'Easy',
+    participants: 100,
+    questions: 10,
+    cost: 2500,
+    agencyCost: 25000,
+    savingsPercent: 90,
     link: 'https://forms.example.com/recycling-survey',
   };
 
+  const TaskTypeIcon = ClipboardDocumentListIcon;
+
   return (
     <div>
-      <div className="mb-3">
+      <div className="mb-4">
         <h2 className="text-lg font-semibold text-gray-900">Review your task</h2>
         <p className="text-sm text-gray-500 mt-0.5">
-          Make sure everything looks correct before creating your task
+          Confirm everything looks correct before creating
         </p>
       </div>
 
-      <div className="space-y-3">
-        {/* Section 1: Task Type */}
-        <Card className="p-3 border-2 border-gray-100">
+      <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
+        {/* Task Type */}
+        <div className="px-4 py-3 bg-white hover:bg-gray-50/50 transition-colors">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[#5C29A3]/10 flex items-center justify-center">
+                <Squares2X2Icon className="w-4 h-4 text-[#5C29A3]" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 mb-0.5">Type</p>
+                <div className="flex items-center gap-1.5">
+                  <TaskTypeIcon className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-900">Online Survey</span>
+                </div>
+              </div>
+            </div>
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-gray-500 hover:text-[#5C29A3]">
+              <PencilIcon className="w-3 h-3 mr-1" />
+              Edit
+            </Button>
+          </div>
+        </div>
+
+        {/* Task Details */}
+        <div className="px-4 py-3 bg-white hover:bg-gray-50/50 transition-colors">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                <DocumentTextIcon className="w-4 h-4 text-blue-600" />
+              </div>
+              <div className="space-y-1.5">
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Title</p>
+                  <p className="text-sm font-medium text-gray-900">{demoData.title}</p>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="text-gray-500">{demoData.category}</span>
+                  <span className="text-gray-300">•</span>
+                  <span className={difficultyColors[demoData.difficulty as keyof typeof difficultyColors]}>
+                    {demoData.difficulty}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-gray-500 hover:text-[#5C29A3]">
+              <PencilIcon className="w-3 h-3 mr-1" />
+              Edit
+            </Button>
+          </div>
+        </div>
+
+        {/* Cost */}
+        <div className="px-4 py-3 bg-white hover:bg-gray-50/50 transition-colors">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
+                <CurrencyDollarIcon className="w-4 h-4 text-green-600" />
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-1.5">
+                    <QuestionMarkCircleIcon className="w-3.5 h-3.5 text-gray-400" />
+                    <span className="text-gray-500">{demoData.questions} questions</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <UserGroupIcon className="w-3.5 h-3.5 text-gray-400" />
+                    <span className="text-gray-500">{demoData.participants} participants</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-semibold text-green-600 tabular-nums">${demoData.cost}</span>
+                  <span className="text-xs text-gray-400 line-through tabular-nums">${demoData.agencyCost}</span>
+                  <span className="text-xs text-green-600 font-medium">({demoData.savingsPercent}% off)</span>
+                </div>
+              </div>
+            </div>
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-gray-500 hover:text-[#5C29A3]">
+              <PencilIcon className="w-3 h-3 mr-1" />
+              Edit
+            </Button>
+          </div>
+        </div>
+
+        {/* Resources */}
+        <div className="px-4 py-3 bg-white hover:bg-gray-50/50 transition-colors">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                <LinkIcon className="w-4 h-4 text-amber-600" />
+              </div>
+              <div className="space-y-1.5 min-w-0 flex-1">
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Form URL</p>
+                  <a
+                    href={demoData.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-[#5C29A3] hover:underline break-all"
+                  >
+                    {demoData.link}
+                  </a>
+                </div>
+              </div>
+            </div>
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-gray-500 hover:text-[#5C29A3] flex-shrink-0">
+              <PencilIcon className="w-3 h-3 mr-1" />
+              Edit
+            </Button>
+          </div>
+        </div>
+
+        {/* Targeting (informational) */}
+        <div className="px-4 py-3 bg-slate-50/80">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#5C29A3]/10 flex items-center justify-center flex-shrink-0">
-              <Squares2X2Icon className="w-4 h-4 text-[#5C29A3]" />
+            <div className="w-8 h-8 rounded-lg bg-slate-200/80 flex items-center justify-center flex-shrink-0">
+              <MapPinIcon className="w-4 h-4 text-slate-600" />
             </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">Task Type</span>
-                <CheckCircleIcon className="w-4 h-4 text-green-500" />
-              </div>
-              <div className="flex items-center gap-2">
-                <ClipboardDocumentListIcon className="w-5 h-5 text-gray-600" />
-                <span className="font-semibold text-gray-900">Fill a Form</span>
-              </div>
+            <div className="space-y-1.5">
+              <p className="text-xs text-slate-500 mb-0.5">Who you&apos;re reaching</p>
+              <p className="text-sm text-slate-700">
+                Right now, our participants tend to be based in <strong>Kenya</strong>, and the pool skews <strong>male</strong> (roughly 5 to 1). We don&apos;t offer custom targeting yet—just so you know what to expect.
+              </p>
             </div>
           </div>
-        </Card>
-
-        {/* Section 2: Task Details */}
-        <Card className="p-3 border-2 border-gray-100">
-          <div className="flex items-start gap-3 mb-2">
-            <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-              <DocumentTextIcon className="w-4 h-4 text-blue-600" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">Task Details</span>
-                <CheckCircleIcon className="w-4 h-4 text-green-500" />
-              </div>
-            </div>
-          </div>
-
-          <div className="ml-11 space-y-2">
-            <div>
-              <div className="flex items-center gap-1 text-xs text-gray-400 mb-0.5">
-                <DocumentTextIcon className="w-3 h-3" />
-                <span>Title</span>
-              </div>
-              <p className="font-medium text-gray-900 text-sm">{demoData.title}</p>
-            </div>
-
-            <div className="flex flex-wrap gap-4">
-              <div>
-                <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1">
-                  <TagIcon className="w-3.5 h-3.5" />
-                  <span>Category</span>
-                </div>
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700">
-                  {demoData.category}
-                </span>
-              </div>
-
-              <div>
-                <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1">
-                  <ChartBarIcon className="w-3.5 h-3.5" />
-                  <span>Difficulty</span>
-                </div>
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
-                  {demoData.difficulty}
-                </span>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Section 3: Resources/Links */}
-        <Card className="p-3 border-2 border-gray-100">
-          <div className="flex items-start gap-3 mb-2">
-            <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center flex-shrink-0">
-              <LinkIcon className="w-4 h-4 text-amber-600" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">Resources</span>
-                <CheckCircleIcon className="w-4 h-4 text-green-500" />
-              </div>
-            </div>
-          </div>
-
-          <div className="ml-11 space-y-2">
-            <div>
-              <div className="flex items-center gap-1 text-xs text-gray-400 mb-0.5">
-                <GlobeAltIcon className="w-3 h-3" />
-                <span>Form URL</span>
-              </div>
-              <span className="text-[#5C29A3] break-all text-xs">
-                {demoData.link}
-              </span>
-            </div>
-          </div>
-        </Card>
-
-        {/* Ready to create indicator */}
-        <div className="flex items-center justify-center gap-2 py-2 bg-green-50 rounded-lg border border-green-100">
-          <CheckCircleIcon className="w-4 h-4 text-green-600" />
-          <span className="text-xs font-medium text-green-700">
-            Your task is ready to be created
-          </span>
         </div>
       </div>
-
-      <p className="text-sm text-muted-foreground mt-4 italic">
-        Review all your task details carefully. Once you click &quot;Finish&quot;, your task will be published to the Pax platform.
-      </p>
     </div>
   );
 }
