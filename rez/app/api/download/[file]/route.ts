@@ -38,7 +38,9 @@ export async function GET(
     // Get file metadata
     const [metadata] = await file.getMetadata();
     const contentType = metadata.contentType || 'application/pdf';
-    const size = parseInt(metadata.size || '0', 10);
+    const size = typeof metadata.size === 'string' 
+      ? parseInt(metadata.size, 10) 
+      : (typeof metadata.size === 'number' ? metadata.size : 0);
 
     // Create a readable stream from the file
     const fileStream = file.createReadStream();

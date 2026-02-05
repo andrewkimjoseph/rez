@@ -3,8 +3,6 @@ import { sendTelegramMessage } from '@/utils/helpers/sendTelegramMessage';
 import { escapeMarkdown } from '@/utils/helpers/escapeMarkdown';
 import { requireSuperAdmin } from '@/lib/api-auth';
 
-export const runtime = 'edge';
-
 interface TelegramMessage {
   chat_id: string;
   text: string;

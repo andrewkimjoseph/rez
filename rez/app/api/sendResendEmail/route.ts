@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSuperAdmin } from '@/lib/api-auth';
 
-export const runtime = 'edge';
-
 // Email template IDs from Resend
 const EMAIL_TEMPLATES = {
   taskCreated: 'd24dcde1-e155-40f3-9ab5-6377cf878e20',
