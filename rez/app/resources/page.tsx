@@ -6,9 +6,11 @@ import Image from "next/image";
 import { ForumArticleCard } from "@/components/forum-article-card";
 import { forumArticles } from "@/data/forumArticles";
 import { useState } from "react";
+import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 export default function Resources() {
   const [activeTab, setActiveTab] = useState("overview");
+  const { playbookDownloadClicked, guideDownloadClicked } = useAmplitudeEvents();
 
   return (
     <div className="min-h-screen p-6 md:p-8">
@@ -26,14 +28,14 @@ export default function Resources() {
         <TabsList className="bg-card border border-border/50 p-1 rounded-lg h-auto mb-6">
           <TabsTrigger
             value="overview"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm px-4 py-2.5 rounded-md transition-all duration-200 text-sm font-medium"
+            className="data-[state=active]:bg-[#5C29A3] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 py-2.5 rounded-md transition-all duration-200 text-sm font-medium"
           >
             <LayoutGrid className="h-4 w-4 mr-2" />
             Overview
           </TabsTrigger>
           <TabsTrigger
             value="articles"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm px-4 py-2.5 rounded-md transition-all duration-200 text-sm font-medium"
+            className="data-[state=active]:bg-[#5C29A3] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 py-2.5 rounded-md transition-all duration-200 text-sm font-medium"
           >
             <FileText className="h-4 w-4 mr-2" />
             Articles
@@ -54,10 +56,10 @@ export default function Resources() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <div className="absolute bottom-6 left-6 right-6">
                 <h2 className="text-xl md:text-2xl font-semibold text-white mb-2">
-                  Research Community
+                  Research Resources
                 </h2>
                 <p className="text-white/80 text-sm md:text-base max-w-lg">
-                  Join thousands of researchers sharing insights and collaborating on research challenges.
+                  Access articles, research insights, and practical guides to help you design better surveys and conduct effective research.
                 </p>
               </div>
             </div>
@@ -83,6 +85,56 @@ export default function Resources() {
                 </div>
               </div>
             </button>
+            
+            <a
+              href="/api/download/playbook"
+              onClick={() => playbookDownloadClicked({ file_name: "rez-playbook.pdf", file_size_mb: 77, source: "resources_page" })}
+              className="text-left group"
+            >
+              <div className="enterprise-card p-5 h-full flex items-start gap-4 border-0 transition-all duration-200 hover:shadow-md hover:border-primary/20">
+                <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-primary/10 group-hover:bg-primary/15 transition-colors">
+                  <Image
+                    src="/covers/playbook.png"
+                    alt="African Digital Finance Insights"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors mb-1">
+                    African Digital Finance Insights
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Perspectives on mobile money, blockchain, and financial inclusion across Kenya and Nigeria
+                  </p>
+                </div>
+              </div>
+            </a>
+            
+            <a
+              href="/api/download/guide"
+              onClick={() => guideDownloadClicked({ file_name: "rez-user-guide.pdf", file_size_mb: 9, source: "resources_page" })}
+              className="text-left group"
+            >
+              <div className="enterprise-card p-5 h-full flex items-start gap-4 border-0 transition-all duration-200 hover:shadow-md hover:border-primary/20">
+                <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-primary/10 group-hover:bg-primary/15 transition-colors">
+                  <Image
+                    src="/covers/guide.png"
+                    alt="How to Design Surveys for Quality Responses"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors mb-1">
+                    How to Design Surveys for Quality Responses
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    A 6-section practical guide for researchers using The Mom Test methodology
+                  </p>
+                </div>
+              </div>
+            </a>
           </div>
         </TabsContent>
 

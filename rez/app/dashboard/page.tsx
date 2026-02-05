@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  PlusIcon,
   ArrowPathIcon,
   ClockIcon,
   ChartBarIcon,
@@ -18,7 +17,8 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useTasksData } from "@/hooks/use-tasks-data";
 import { useRefreshStore } from "@/stores/refresh-store";
 import { toast } from "sonner";
@@ -26,11 +26,12 @@ import { useState, useEffect } from "react";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
 export default function Dashboard() {
+  const router = useRouter();
   const { tasks, taskCompletions, isLoading, error, refetch } = useTasksData({ autoFetch: false });
   const { checkCanRefresh, updateRefreshTime } = useRefreshStore();
   const [, forceUpdate] = useState({});
   const [isHydrated, setIsHydrated] = useState(false);
-  const { refreshClicked } = useAmplitudeEvents();
+  const { refreshClicked, playbookDownloadClicked, guideDownloadClicked } = useAmplitudeEvents();
 
   // Calculate counts
   const totalTasks = tasks.length;
@@ -78,6 +79,7 @@ export default function Dashboard() {
       icon: ClipboardDocumentListIcon,
       iconBg: "bg-primary/10",
       iconColor: "text-primary",
+      href: "/tasks?tab=view-tasks",
     },
     {
       title: "Active Tasks",
@@ -137,55 +139,100 @@ export default function Dashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {stats.map((stat) => (
-            <Card key={stat.title} className="enterprise-card border-0">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <div className="space-y-1">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    {stat.title}
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    {stat.description}
-                  </CardDescription>
-                </div>
-                <div className={`p-2.5 rounded-lg ${stat.iconBg}`}>
-                  <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
-                </div>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <Skeleton className="h-9 w-20" />
-                ) : (
-                  <p className="text-3xl font-semibold text-foreground">
-                    {stat.value.toLocaleString()}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+          {stats.map((stat) => {
+            const handleClick = stat.href ? () => {
+              router.push(stat.href!);
+            } : undefined;
+
+            return (
+              <Card 
+                key={stat.title} 
+                onClick={handleClick}
+                className={`enterprise-card border-0 ${stat.href ? 'transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer' : ''}`}
+              >
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <div className="space-y-1">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      {stat.title}
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      {stat.description}
+                    </CardDescription>
+                  </div>
+                  <div className={`p-2.5 rounded-lg ${stat.iconBg}`}>
+                    <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {isLoading ? (
+                    <Skeleton className="h-9 w-20" />
+                  ) : (
+                    <p className="text-3xl font-semibold text-foreground">
+                      {stat.value.toLocaleString()}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
-        {/* Quick Actions */}
+        {/* Resources Section */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Quick Actions</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Link href="/tasks" className="group">
+          <h2 className="text-lg font-semibold text-foreground">Resources</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <a
+              href="/api/download/playbook"
+              onClick={() => playbookDownloadClicked({ file_name: "rez-playbook.pdf", file_size_mb: 77 })}
+              className="text-left group"
+            >
               <Card className="enterprise-card border-0 h-full transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer">
-                <CardContent className="flex items-start gap-4 p-5">
-                  <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/15 transition-colors">
-                    <PlusIcon className="h-5 w-5 text-primary" />
+                <CardContent className="p-5 flex items-start gap-4">
+                  <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-primary/10 group-hover:bg-primary/15 transition-colors">
+                    <Image
+                      src="/covers/playbook.png"
+                      alt="African Digital Finance Insights"
+                      fill
+                      className="object-cover"
+                    />
                   </div>
-                  <div className="space-y-1">
-                    <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                      Create New Task
+                  <div>
+                    <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors mb-1">
+                      African Digital Finance Insights
                     </h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      Launch a new task with custom questions and targeting
+                      Perspectives on mobile money, blockchain, and financial inclusion across Kenya and Nigeria
                     </p>
                   </div>
                 </CardContent>
               </Card>
-            </Link>
+            </a>
+            <a
+              href="/api/download/guide"
+              onClick={() => guideDownloadClicked({ file_name: "rez-user-guide.pdf", file_size_mb: 9 })}
+              className="text-left group"
+            >
+              <Card className="enterprise-card border-0 h-full transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer">
+                <CardContent className="p-5 flex items-start gap-4">
+                  <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-primary/10 group-hover:bg-primary/15 transition-colors">
+                    <Image
+                      src="/covers/guide.png"
+                      alt="How to Design Surveys for Quality Responses"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors mb-1">
+                      How to Design Surveys for Quality Responses
+                    </h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      A 6-section practical guide for researchers using The Mom Test methodology
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </a>
           </div>
         </div>
       </div>
