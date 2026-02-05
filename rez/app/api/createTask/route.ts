@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     let taskMasterEmail = authResult.email;
     if (isSuperAdmin && body.assignedTaskMasterEmailAddress) {
       // Validate that the assigned email is a valid task master
-      const assignedTaskMasterSnapshot = await rezDB.collection(COLLECTIONS.TASK_MASTERS)
+      const assignedTaskMasterSnapshot = await rezDB().collection(COLLECTIONS.TASK_MASTERS)
         .where('emailAddress', '==', body.assignedTaskMasterEmailAddress)
         .limit(1)
         .get();
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
     // Send for all task creations using internal token if configured
     try {
       // Get task master ID from email
-      const taskMasterSnapshot = await rezDB.collection(COLLECTIONS.TASK_MASTERS)
+      const taskMasterSnapshot = await rezDB().collection(COLLECTIONS.TASK_MASTERS)
         .where('emailAddress', '==', taskMasterEmail)
         .limit(1)
         .get();

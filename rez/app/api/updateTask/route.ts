@@ -52,7 +52,7 @@ export async function PATCH(request: NextRequest) {
 
     // Get user document to retrieve email address
     // Note: All authenticated users are task masters in this system
-    const userDocRef = rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(authResult.uid);
+    const userDocRef = rezDB().collection(COLLECTIONS.TASK_MASTERS).doc(authResult.uid);
     const userDoc = await userDocRef.get();
 
     if (!userDoc.exists) {
@@ -75,7 +75,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Verify task exists
-    const taskRef = paxDB.collection(COLLECTIONS.TASKS).doc(taskId);
+    const taskRef = paxDB().collection(COLLECTIONS.TASKS).doc(taskId);
     const taskDoc = await taskRef.get();
 
     if (!taskDoc.exists) {

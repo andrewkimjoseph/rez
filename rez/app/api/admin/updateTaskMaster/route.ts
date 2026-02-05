@@ -43,7 +43,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Verify task master exists (in Rez Firestore)
-    const taskMasterRef = rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(taskMasterId);
+    const taskMasterRef = rezDB().collection(COLLECTIONS.TASK_MASTERS).doc(taskMasterId);
     const taskMasterDoc = await taskMasterRef.get();
 
     if (!taskMasterDoc.exists) {

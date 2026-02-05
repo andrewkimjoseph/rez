@@ -60,7 +60,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Get admin data for notification
-    const adminDocRef = rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(authResult.uid);
+    const adminDocRef = rezDB().collection(COLLECTIONS.TASK_MASTERS).doc(authResult.uid);
     const adminDoc = await adminDocRef.get();
     const adminData = adminDoc.data();
     
@@ -68,7 +68,7 @@ export async function PATCH(request: NextRequest) {
     const adminEmail = authResult.email || adminData?.emailAddress || 'Unknown';
 
     // Verify task exists
-    const taskRef = paxDB.collection(COLLECTIONS.TASKS).doc(taskId);
+    const taskRef = paxDB().collection(COLLECTIONS.TASKS).doc(taskId);
     const taskDoc = await taskRef.get();
 
     if (!taskDoc.exists) {
@@ -114,7 +114,7 @@ export async function PATCH(request: NextRequest) {
     // If super admin is reassigning task to different task master, validate the email
     if (updateData.rezTaskMasterEmailAddress) {
       const newTaskMasterEmail = updateData.rezTaskMasterEmailAddress as string;
-      const taskMasterRef = rezDB.collection(COLLECTIONS.TASK_MASTERS)
+      const taskMasterRef = rezDB().collection(COLLECTIONS.TASK_MASTERS)
         .where('emailAddress', '==', newTaskMasterEmail)
         .limit(1);
       const taskMasterSnapshot = await taskMasterRef.get();
@@ -203,7 +203,7 @@ export async function PATCH(request: NextRequest) {
         
         if (taskMasterEmail) {
           // Get task master ID from email
-          const taskMasterSnapshot = await rezDB.collection(COLLECTIONS.TASK_MASTERS)
+          const taskMasterSnapshot = await rezDB().collection(COLLECTIONS.TASK_MASTERS)
             .where('emailAddress', '==', taskMasterEmail)
             .limit(1)
             .get();

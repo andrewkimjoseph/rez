@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Query taskmaster_leads by email
-    const leadsRef = paxDB.collection('taskmaster_leads');
+    const leadsRef = paxDB().collection('taskmaster_leads');
     const snapshot = await leadsRef
       .where('leadEmailAddress', '==', userEmail)
       .get();

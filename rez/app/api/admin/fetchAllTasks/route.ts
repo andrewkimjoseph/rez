@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch all tasks
-    const tasksRef = paxDB.collection(COLLECTIONS.TASKS);
+    const tasksRef = paxDB().collection(COLLECTIONS.TASKS);
     const tasksSnapshot = await tasksRef.orderBy('timeCreated', 'desc').get();
 
     const tasks = tasksSnapshot.docs.map(doc => ({

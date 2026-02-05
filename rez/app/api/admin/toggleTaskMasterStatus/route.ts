@@ -37,7 +37,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Get the task master to check if they're a super admin
-    const taskMasterRef = rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(taskMasterId);
+    const taskMasterRef = rezDB().collection(COLLECTIONS.TASK_MASTERS).doc(taskMasterId);
     const taskMasterDoc = await taskMasterRef.get();
 
     if (!taskMasterDoc.exists) {
