@@ -26,7 +26,7 @@ export default function NotFound() {
             Page not found
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            The page you’re looking for doesn’t exist or has been moved.
+            The page you&#39;re looking for doesn&#39;t exist or has been moved.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
