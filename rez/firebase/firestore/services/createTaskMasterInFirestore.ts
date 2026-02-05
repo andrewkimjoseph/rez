@@ -18,6 +18,7 @@ export async function createTaskMasterInFirestore({
   organizationId?: string | null;
   privyDid?: string | null;
 }): Promise<void> {
+  if (!firestore) throw new Error('Firestore not available');
   const taskMasterRef = doc(firestore, COLLECTIONS.TASK_MASTERS, id);
   const data: TaskMaster = {
     id,

@@ -28,6 +28,8 @@ export function AuthHydrator() {
   const setUser = useTaskMasterStore((state) => state.setUser);
 
   useEffect(() => {
+    if (!auth || !firestore) return;
+    const db = firestore;
     // Listen to auth state changes
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -35,7 +37,7 @@ export function AuthHydrator() {
         await updateTokenCookie(user);
         
         // Try to fetch the full TaskMaster from Firestore
-        const ref = doc(firestore, COLLECTIONS.TASK_MASTERS, user.uid);
+        const ref = doc(db, COLLECTIONS.TASK_MASTERS, user.uid);
         const snap = await getDoc(ref);
         if (snap.exists()) {
           const data = snap.data();

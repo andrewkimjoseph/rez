@@ -14,6 +14,7 @@ export async function createOrganizationInFirestore({
   country: string | null;
   teamSize: string | null;
 }): Promise<string> {
+  if (!firestore) throw new Error('Firestore not available');
   const orgsCollection = collection(firestore, COLLECTIONS.ORGANIZATIONS);
   const data: Omit<Organization, 'id'> = {
     taskMasterId,
