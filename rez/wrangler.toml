@@ -1,5 +1,8 @@
-# Cloudflare Pages/Workers configuration
-# For Next.js on Cloudflare Pages
+# Cloudflare Pages configuration for Next.js
+# Using @cloudflare/next-on-pages for full-stack deployment
 
-compatibility_flags = ["nodejs_compat"]
-compatibility_date = "2024-09-23"
+pages_build_output_dir = ".vercel/output/static"
+
+# Note: Compatibility flags for Pages should be configured in the Cloudflare dashboard:
+# Workers & Pages > [Your App] > Settings > Functions > Compatibility flags
+# Add "nodejs_compat" flag there for both production and preview environments
