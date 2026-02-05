@@ -4,6 +4,8 @@ import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { FieldValue } from 'firebase-admin/firestore';
 import { requireSuperAdmin } from '@/lib/api-auth';
 
+export const runtime = 'edge';
+
 export interface AdminUpdateTaskData {
   title?: string;
   type?: 'fillAForm' | 'checkOutApp' | 'doVideoInterview';

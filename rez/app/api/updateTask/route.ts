@@ -4,6 +4,8 @@ import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { FieldValue } from 'firebase-admin/firestore';
 import { requireAuth } from '@/lib/api-auth';
 
+export const runtime = 'edge';
+
 export interface TaskMasterUpdateTaskData {
   type?: 'fillAForm' | 'checkOutApp' | 'doVideoInterview';
   title?: string;

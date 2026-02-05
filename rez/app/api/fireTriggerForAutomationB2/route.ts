@@ -3,6 +3,8 @@ import { requireAuth } from '@/lib/api-auth';
 import { paxDB } from '@/firebase/serverConfig';
 import { FieldValue } from 'firebase-admin/firestore';
 
+export const runtime = 'edge';
+
 /**
  * Automation B2 - PLAYBOOK ENTRY CONVERSION
  * 

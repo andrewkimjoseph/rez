@@ -4,6 +4,8 @@ import { createReadStream } from 'fs';
 import { join } from 'path';
 import { statSync } from 'fs';
 
+export const runtime = 'edge';
+
 export async function GET(request: NextRequest) {
   try {
     // Verify authentication

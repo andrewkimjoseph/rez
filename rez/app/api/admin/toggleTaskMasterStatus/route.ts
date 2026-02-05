@@ -5,6 +5,8 @@ import { getAuth } from 'firebase-admin/auth';
 import { getApp } from 'firebase-admin/app';
 import { requireSuperAdmin } from '@/lib/api-auth';
 
+export const runtime = 'edge';
+
 export async function PATCH(request: NextRequest) {
   try {
     // Verify authentication and super admin status

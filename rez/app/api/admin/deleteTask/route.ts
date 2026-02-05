@@ -3,6 +3,8 @@ import { paxDB, rezDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { requireSuperAdmin } from '@/lib/api-auth';
 
+export const runtime = 'edge';
+
 export async function DELETE(request: NextRequest) {
   try {
     // Verify authentication and super admin status
