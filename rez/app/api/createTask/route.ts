@@ -4,9 +4,6 @@ import { requireAuth } from '@/lib/api-auth';
 import { rezDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 
-// Note: Using Node.js runtime because Firebase Admin SDK requires it
-// export const runtime = 'edge';
-
 export async function POST(request: NextRequest) {
   try {
     // Verify authentication

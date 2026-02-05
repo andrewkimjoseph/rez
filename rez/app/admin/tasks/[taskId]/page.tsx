@@ -49,7 +49,6 @@ import AdminEditTaskDialog from "@/components/admin/AdminEditTaskDialog";
 import AdminRejectTaskDialog from "@/components/admin/AdminRejectTaskDialog";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 
-export const runtime = 'edge';
 
 export default function AdminTaskDetailsPage() {
   const router = useRouter();

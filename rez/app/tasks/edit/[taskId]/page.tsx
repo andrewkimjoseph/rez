@@ -7,8 +7,6 @@ import { useTasksStore } from "@/stores/tasks-store";
 import { useNewTaskStore } from "@/stores/new-task-store";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
 
-export const runtime = 'edge';
-
 export default function EditTaskPage() {
   const params = useParams();
   const router = useRouter();

@@ -3,9 +3,6 @@ import { requireAuth } from '@/lib/api-auth';
 import { paxDB } from '@/firebase/serverConfig';
 import { FieldValue } from 'firebase-admin/firestore';
 
-// Note: Using Node.js runtime because Firebase Admin SDK requires it
-// export const runtime = 'edge';
-
 /**
  * Automation B2 - PLAYBOOK ENTRY CONVERSION
  * 

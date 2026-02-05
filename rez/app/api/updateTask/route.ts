@@ -4,9 +4,6 @@ import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { FieldValue } from 'firebase-admin/firestore';
 import { requireAuth } from '@/lib/api-auth';
 
-// Note: Using Node.js runtime because Firebase Admin SDK requires it
-// export const runtime = 'edge';
-
 export interface TaskMasterUpdateTaskData {
   type?: 'fillAForm' | 'checkOutApp' | 'doVideoInterview';
   title?: string;
