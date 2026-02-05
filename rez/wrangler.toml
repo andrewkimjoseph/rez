@@ -1,9 +1,0 @@
-# Cloudflare Pages configuration for Next.js
-# Using @cloudflare/next-on-pages for full-stack deployment
-
-name = "rez"
-pages_build_output_dir = ".vercel/output/static"
-
-# Note: Compatibility flags for Pages should be configured in the Cloudflare dashboard:
-# Workers & Pages > [Your App] > Settings > Functions > Compatibility flags
-# Add "nodejs_compat" flag there for both production and preview environments
