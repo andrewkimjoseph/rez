@@ -193,6 +193,64 @@ export async function PATCH(request: NextRequest) {
       // Ignore notification errors - don't fail the main request
     }
 
+    // Send email notification via Resend based on review status change (fire and forget)
+    if (newReviewStatus && newReviewStatus !== oldReviewStatus) {
+      try {
+        const taskMasterEmail = taskData?.rezTaskMasterEmailAddress;
+        
+        if (taskMasterEmail) {
+          // Get task master ID from email
+          const taskMasterSnapshot = await rezDB.collection(COLLECTIONS.TASK_MASTERS)
+            .where('emailAddress', '==', taskMasterEmail)
+            .limit(1)
+            .get();
+
+          if (!taskMasterSnapshot.empty) {
+            const taskMasterId = taskMasterSnapshot.docs[0].id;
+            let emailTemplate: 'taskRejected' | 'taskApproved' | 'taskPublished' | 'taskCompleted' | null = null;
+
+            // Map review status to email template
+            if (newReviewStatus === 'rejected') {
+              emailTemplate = 'taskRejected';
+            } else if (newReviewStatus === 'approved') {
+              emailTemplate = 'taskApproved';
+            } else if (newReviewStatus === 'published') {
+              emailTemplate = 'taskPublished';
+            } else if (newReviewStatus === 'archived') {
+              emailTemplate = 'taskCompleted';
+            }
+
+            if (emailTemplate) {
+              // Send email without awaiting (fire and forget)
+              // Use internal token for server-side calls
+              const internalToken = process.env.INTERNAL_API_TOKEN;
+              fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/sendResendEmail`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(internalToken && { 'x-internal-token': internalToken }), // Internal server-side call token
+                },
+                body: JSON.stringify({
+                  to: [taskMasterEmail],
+                  template: emailTemplate,
+                  variables: {
+                    taskMasterId,
+                    taskId,
+                  },
+                }),
+              }).catch(error => {
+                // Silently handle email errors
+                console.error(`Failed to send ${emailTemplate} email:`, error);
+              });
+            }
+          }
+        }
+      } catch (error) {
+        // Don't fail the task update if email fails
+        console.error('Error sending email notification:', error);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Task updated successfully'

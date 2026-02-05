@@ -135,6 +135,47 @@ export async function POST(request: NextRequest) {
       // Don't fail the task creation if notification fails
     }
 
+    // Send email notification via Resend (fire and forget)
+    // Send for all task creations using internal token if configured
+    try {
+      // Get task master ID from email
+      const taskMasterSnapshot = await rezDB.collection(COLLECTIONS.TASK_MASTERS)
+        .where('emailAddress', '==', taskMasterEmail)
+        .limit(1)
+        .get();
+
+      if (!taskMasterSnapshot.empty) {
+        const taskMasterId = taskMasterSnapshot.docs[0].id;
+        const internalToken = process.env.INTERNAL_API_TOKEN;
+
+        // Only send email if internal token is configured (for security)
+        if (internalToken) {
+          // Send email without awaiting (fire and forget)
+          fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/sendResendEmail`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-internal-token': internalToken, // Internal server-side call token
+            },
+            body: JSON.stringify({
+              to: [taskMasterEmail],
+              template: 'taskCreated',
+              variables: {
+                taskMasterId,
+                taskId,
+              },
+            }),
+          }).catch(error => {
+            // Silently handle email errors
+            console.error('Failed to send taskCreated email:', error);
+          });
+        }
+      }
+    } catch (error) {
+      // Don't fail the task creation if email fails
+      console.error('Error sending taskCreated email:', error);
+    }
+
     return NextResponse.json({ 
       success: true, 
       taskId,

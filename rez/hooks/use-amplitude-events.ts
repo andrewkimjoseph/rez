@@ -220,6 +220,22 @@ export const useAmplitudeEvents = () => {
       logEvent("task_edit_cancelled", properties);
     },
 
+    rejectedTaskEditClicked: (properties?: Record<string, unknown>) => {
+      logEvent("rejected_task_edit_clicked", properties);
+    },
+
+    rejectionReasonsTooltipViewed: (properties?: Record<string, unknown>) => {
+      logEvent("rejection_reasons_tooltip_viewed", properties);
+    },
+
+    rejectionBannerDismissed: (properties?: Record<string, unknown>) => {
+      logEvent("rejection_banner_dismissed", properties);
+    },
+
+    rejectionBannerViewTasksClicked: (properties?: Record<string, unknown>) => {
+      logEvent("rejection_banner_view_tasks_clicked", properties);
+    },
+
     // ==========================================
     // REFRESH EVENTS
     // ==========================================
@@ -302,6 +318,54 @@ export const useAmplitudeEvents = () => {
       logEvent("admin_tasks_search_performed", properties);
     },
 
+    adminTaskApproveClicked: (properties?: Record<string, unknown>) => {
+      logEvent("admin_task_approve_clicked", properties);
+    },
+
+    adminTaskApproveComplete: (properties?: Record<string, unknown>) => {
+      logEvent("admin_task_approve_complete", properties);
+    },
+
+    adminTaskApproveFailed: (properties?: Record<string, unknown>) => {
+      logEvent("admin_task_approve_failed", properties);
+    },
+
+    adminTaskRejectClicked: (properties?: Record<string, unknown>) => {
+      logEvent("admin_task_reject_clicked", properties);
+    },
+
+    adminTaskRejectComplete: (properties?: Record<string, unknown>) => {
+      logEvent("admin_task_reject_complete", properties);
+    },
+
+    adminTaskRejectFailed: (properties?: Record<string, unknown>) => {
+      logEvent("admin_task_reject_failed", properties);
+    },
+
+    adminTaskPublishClicked: (properties?: Record<string, unknown>) => {
+      logEvent("admin_task_publish_clicked", properties);
+    },
+
+    adminTaskPublishComplete: (properties?: Record<string, unknown>) => {
+      logEvent("admin_task_publish_complete", properties);
+    },
+
+    adminTaskPublishFailed: (properties?: Record<string, unknown>) => {
+      logEvent("admin_task_publish_failed", properties);
+    },
+
+    adminTaskArchiveClicked: (properties?: Record<string, unknown>) => {
+      logEvent("admin_task_archive_clicked", properties);
+    },
+
+    adminTaskArchiveComplete: (properties?: Record<string, unknown>) => {
+      logEvent("admin_task_archive_complete", properties);
+    },
+
+    adminTaskArchiveFailed: (properties?: Record<string, unknown>) => {
+      logEvent("admin_task_archive_failed", properties);
+    },
+
     // ==========================================
     // ADMIN TASK MASTER MANAGEMENT EVENTS
     // ==========================================
@@ -363,6 +427,60 @@ export const useAmplitudeEvents = () => {
 
     adminTaskMastersSearchPerformed: (properties?: Record<string, unknown>) => {
       logEvent("admin_task_masters_search_performed", properties);
+    },
+
+    // ==========================================
+    // EMAIL EVENTS
+    // ==========================================
+    emailTaskCreatedSent: (properties?: Record<string, unknown>) => {
+      logEvent("email_task_created_sent", properties);
+    },
+
+    emailTaskCreatedFailed: (properties?: Record<string, unknown>) => {
+      logEvent("email_task_created_failed", properties);
+    },
+
+    emailTaskRejectedSent: (properties?: Record<string, unknown>) => {
+      logEvent("email_task_rejected_sent", properties);
+    },
+
+    emailTaskRejectedFailed: (properties?: Record<string, unknown>) => {
+      logEvent("email_task_rejected_failed", properties);
+    },
+
+    emailTaskApprovedSent: (properties?: Record<string, unknown>) => {
+      logEvent("email_task_approved_sent", properties);
+    },
+
+    emailTaskApprovedFailed: (properties?: Record<string, unknown>) => {
+      logEvent("email_task_approved_failed", properties);
+    },
+
+    emailTaskPublishedSent: (properties?: Record<string, unknown>) => {
+      logEvent("email_task_published_sent", properties);
+    },
+
+    emailTaskPublishedFailed: (properties?: Record<string, unknown>) => {
+      logEvent("email_task_published_failed", properties);
+    },
+
+    emailTaskCompletedSent: (properties?: Record<string, unknown>) => {
+      logEvent("email_task_completed_sent", properties);
+    },
+
+    emailTaskCompletedFailed: (properties?: Record<string, unknown>) => {
+      logEvent("email_task_completed_failed", properties);
+    },
+
+    // ==========================================
+    // PDF DOWNLOAD EVENTS
+    // ==========================================
+    playbookDownloadClicked: (properties?: Record<string, unknown>) => {
+      logEvent("playbook_download_clicked", properties);
+    },
+
+    guideDownloadClicked: (properties?: Record<string, unknown>) => {
+      logEvent("guide_download_clicked", properties);
     },
 
     // ==========================================
