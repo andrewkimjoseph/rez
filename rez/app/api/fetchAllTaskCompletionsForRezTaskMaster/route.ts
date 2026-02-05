@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { paxDB } from '@/firebase/serverConfig';
 import { requireAuth } from '@/lib/api-auth';
 
-export const runtime = 'edge';
+// Note: Using Node.js runtime because Firebase Admin SDK requires it
+// export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   try {

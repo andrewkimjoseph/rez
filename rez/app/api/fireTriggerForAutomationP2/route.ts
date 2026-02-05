@@ -3,7 +3,8 @@ import { requireAuth } from '@/lib/api-auth';
 import { paxDB } from '@/firebase/serverConfig';
 import { FieldValue } from 'firebase-admin/firestore';
 
-export const runtime = 'edge';
+// Note: Using Node.js runtime because Firebase Admin SDK requires it
+// export const runtime = 'edge';
 
 /**
  * Automation P2 - PREMIUM ENTRY CONVERSION

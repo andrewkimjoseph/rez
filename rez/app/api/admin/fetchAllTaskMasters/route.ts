@@ -5,7 +5,8 @@ import { getAuth } from 'firebase-admin/auth';
 import { getApp } from 'firebase-admin/app';
 import { requireSuperAdmin } from '@/lib/api-auth';
 
-export const runtime = 'edge';
+// Note: Using Node.js runtime because Firebase Admin SDK requires it
+// export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   try {
