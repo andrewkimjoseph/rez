@@ -15,29 +15,44 @@ import { linkTaskMasterToLead } from "@/firebase/firestore/services/linkTaskMast
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 import { useTasksStore } from "@/stores/tasks-store";
 
+const VALID_LEAD_SOURCES = ["Premium CTA", "Playbook", "Calculator"] as const;
+type LeadSource = (typeof VALID_LEAD_SOURCES)[number];
+
 // Helper to get leadEmail from URL params or cookie (for cross-domain lead linking)
 function getLeadEmail(): string | null {
-  if (typeof window === 'undefined') return null;
-  
+  if (typeof window === "undefined") return null;
+
   // 1. Check URL params first (higher priority - direct from Brevo email link)
   const urlParams = new URLSearchParams(window.location.search);
-  const paramEmail = urlParams.get('leadEmail');
+  const paramEmail = urlParams.get("leadEmail");
   if (paramEmail) return decodeURIComponent(paramEmail);
-  
+
   // 2. Check cookie (fallback - set when user submitted form on thecanvassing.xyz)
-  const cookies = document.cookie.split(';');
-  const leadCookie = cookies.find(c => c.trim().startsWith('leadEmail='));
+  const cookies = document.cookie.split(";");
+  const leadCookie = cookies.find((c) => c.trim().startsWith("leadEmail="));
   if (leadCookie) {
-    return decodeURIComponent(leadCookie.split('=')[1].trim());
+    return decodeURIComponent(leadCookie.split("=")[1].trim());
   }
-  
+
   return null;
+}
+
+// Helper to get leadSource from URL params (e.g. ?leadSource=Premium%20CTA)
+function getLeadSource(): LeadSource | null {
+  if (typeof window === "undefined") return null;
+  const urlParams = new URLSearchParams(window.location.search);
+  const param = urlParams.get("leadSource");
+  if (!param) return null;
+  const decoded = decodeURIComponent(param).trim();
+  return VALID_LEAD_SOURCES.includes(decoded as LeadSource)
+    ? (decoded as LeadSource)
+    : null;
 }
 
 // Clear the lead cookie after linking attempt
 function clearLeadCookie(): void {
-  if (typeof window === 'undefined') return;
-  document.cookie = 'leadEmail=; domain=.thecanvassing.xyz; path=/; max-age=0';
+  if (typeof window === "undefined") return;
+  document.cookie = "leadEmail=; domain=.thecanvassing.xyz; path=/; max-age=0";
 }
 
 export default function SignInPage() {
@@ -80,35 +95,48 @@ export default function SignInPage() {
           setTaskMasterId(user.uid);
           identifyTaskMaster({
             rez_task_master_id: existingTaskMaster.id,
-            ...(existingTaskMaster.emailAddress && { rez_task_master_email_address: existingTaskMaster.emailAddress }),
-            ...(existingTaskMaster.name && { rez_task_master_name: existingTaskMaster.name }),
-            ...(existingTaskMaster.organizationId && { rez_task_master_org_id: existingTaskMaster.organizationId }),
+            ...(existingTaskMaster.emailAddress && {
+              rez_task_master_email_address: existingTaskMaster.emailAddress,
+            }),
+            ...(existingTaskMaster.name && {
+              rez_task_master_name: existingTaskMaster.name,
+            }),
+            ...(existingTaskMaster.organizationId && {
+              rez_task_master_org_id: existingTaskMaster.organizationId,
+            }),
           });
           signInWithGoogleComplete();
-          
+
           // Fire-and-forget: link TaskMasterLead if returning user came from thecanvassing.xyz
           const leadEmail = getLeadEmail();
           if (leadEmail) {
-            linkTaskMasterToLead(leadEmail, user.uid).catch(() => {});
+            linkTaskMasterToLead(leadEmail, user.uid).catch(() => { });
+            fetch("/api/updateBrevoLeadEmail", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({ leadEmail }),
+            }).catch(() => { });
             clearLeadCookie();
-            
-            // Fire-and-forget: update Premium CTA leads in Brevo with CUSTOMER_LEVEL = "Trial"
-            fetch('/api/fireTriggerForAutomationP2', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-            }).catch(() => {});
-            
-            // Fire-and-forget: update Playbook leads in Brevo with PLAYBOOK_STAGE = "Account Created"
-            fetch('/api/fireTriggerForAutomationB2', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-            }).catch(() => {});
-            
-            // Fire-and-forget: update Calculator leads in Brevo with CALCULATOR_STAGE = "Account Created"
-            fetch('/api/fireTriggerForAutomationC2', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-            }).catch(() => {});
+
+            // Fire-and-forget: call only the API matching leadSource
+            const leadSource = getLeadSource();
+            if (leadSource === "Premium CTA") {
+              fetch("/api/fireTriggerForAutomationP2", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+              }).catch(() => { });
+            } else if (leadSource === "Playbook") {
+              fetch("/api/fireTriggerForAutomationB2", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+              }).catch(() => { });
+            } else if (leadSource === "Calculator") {
+              fetch("/api/fireTriggerForAutomationC2", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+              }).catch(() => { });
+            }
           }
           return;
         } else {
@@ -126,7 +154,9 @@ export default function SignInPage() {
           setTaskMasterId(user.uid);
           identifyTaskMaster({
             rez_task_master_id: taskMaster.id,
-            ...(taskMaster.emailAddress && { rez_task_master_email_address: taskMaster.emailAddress }),
+            ...(taskMaster.emailAddress && {
+              rez_task_master_email_address: taskMaster.emailAddress,
+            }),
             ...(taskMaster.name && { rez_task_master_name: taskMaster.name }),
           });
           signInWithGoogleComplete(taskMaster);
@@ -141,34 +171,41 @@ export default function SignInPage() {
                 emailAddress: taskMaster.emailAddress,
                 profilePictureURI: taskMaster.profilePictureURI,
               }),
-            }).catch(() => {});
+            }).catch(() => { });
           } catch (_) {
             // Silently ignore notification errors in client
           }
-          
+
           // Fire-and-forget: link TaskMasterLead from thecanvassing.xyz to this new account
           const leadEmail = getLeadEmail();
           if (leadEmail) {
-            linkTaskMasterToLead(leadEmail, user.uid).catch(() => {});
+            linkTaskMasterToLead(leadEmail, user.uid).catch(() => { });
+            fetch("/api/updateBrevoLeadEmail", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({ leadEmail }),
+            }).catch(() => { });
             clearLeadCookie();
-            
-            // Fire-and-forget: update Premium CTA leads in Brevo with CUSTOMER_LEVEL = "Trial"
-            fetch('/api/fireTriggerForAutomationP2', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-            }).catch(() => {});
-            
-            // Fire-and-forget: update Playbook leads in Brevo with PLAYBOOK_STAGE = "Account Created"
-            fetch('/api/fireTriggerForAutomationB2', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-            }).catch(() => {});
-            
-            // Fire-and-forget: update Calculator leads in Brevo with CALCULATOR_STAGE = "Account Created"
-            fetch('/api/fireTriggerForAutomationC2', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-            }).catch(() => {});
+
+            // Fire-and-forget: call only the API matching leadSource
+            const leadSource = getLeadSource();
+            if (leadSource === "Premium CTA") {
+              fetch("/api/fireTriggerForAutomationP2", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+              }).catch(() => { });
+            } else if (leadSource === "Playbook") {
+              fetch("/api/fireTriggerForAutomationB2", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+              }).catch(() => { });
+            } else if (leadSource === "Calculator") {
+              fetch("/api/fireTriggerForAutomationC2", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+              }).catch(() => { });
+            }
           }
         }
       }
@@ -201,7 +238,12 @@ export default function SignInPage() {
         <div className="absolute inset-0 opacity-[0.02] pointer-events-none">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <pattern id="dots" width="32" height="32" patternUnits="userSpaceOnUse">
+              <pattern
+                id="dots"
+                width="32"
+                height="32"
+                patternUnits="userSpaceOnUse"
+              >
                 <circle cx="16" cy="16" r="1.5" fill="currentColor" />
               </pattern>
             </defs>
@@ -233,7 +275,9 @@ export default function SignInPage() {
           <div className="enterprise-card bg-card rounded-2xl border border-border/50 p-8 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
             <div className="space-y-6">
               <div className="space-y-2 text-center">
-                <h2 className="text-xl font-semibold text-foreground">Sign in to continue</h2>
+                <h2 className="text-xl font-semibold text-foreground">
+                  Sign in to continue
+                </h2>
                 <p className="text-sm text-muted-foreground">
                   Use your Google account to get started
                 </p>
@@ -267,7 +311,9 @@ export default function SignInPage() {
 
               {error && (
                 <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 animate-in slide-in-from-top-2 duration-200">
-                  <p className="text-sm text-destructive text-center font-medium">{error}</p>
+                  <p className="text-sm text-destructive text-center font-medium">
+                    {error}
+                  </p>
                 </div>
               )}
             </div>
@@ -276,9 +322,20 @@ export default function SignInPage() {
           {/* Footer */}
           <p className="text-xs text-center text-muted-foreground leading-relaxed">
             By signing in, you agree to our{" "}
-            <Link href="/terms-of-service" className="underline hover:text-foreground transition-colors">terms of service</Link>{" "}
+            <Link
+              href="/terms-of-service"
+              className="underline hover:text-foreground transition-colors"
+            >
+              terms of service
+            </Link>{" "}
             and{" "}
-            <Link href="/privacy-policy" className="underline hover:text-foreground transition-colors">privacy policy</Link>.
+            <Link
+              href="/privacy-policy"
+              className="underline hover:text-foreground transition-colors"
+            >
+              privacy policy
+            </Link>
+            .
           </p>
         </div>
       </div>
@@ -286,11 +343,11 @@ export default function SignInPage() {
       {/* Right Side - Hero */}
       <div className="hidden lg:flex flex-1 relative bg-gradient-to-br from-primary via-primary/90 to-primary/80 overflow-hidden min-h-screen">
         {/* Decorative grid pattern */}
-        <div 
+        <div
           className="absolute inset-0 opacity-[0.1] pointer-events-none"
           style={{
             backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-            backgroundSize: '32px 32px'
+            backgroundSize: "32px 32px",
           }}
         />
 
@@ -317,8 +374,8 @@ export default function SignInPage() {
                 Reach Real Users
               </h2>
               <p className="text-lg text-white/90 leading-relaxed max-w-md mx-auto">
-                Connect with users who actively use stablecoins in their daily lives. 
-                Get authentic insights for your research.
+                Connect with users who actively use stablecoins in their daily
+                lives. Get authentic insights for your research.
               </p>
             </div>
 
@@ -343,9 +400,9 @@ export default function SignInPage() {
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
             <p className="text-sm text-white/70 font-medium">
               Powered by{" "}
-              <a 
-                href="https://thecanvassing.xyz" 
-                target="_blank" 
+              <a
+                href="https://thecanvassing.xyz"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="underline hover:text-white transition-colors"
               >
