@@ -2,6 +2,7 @@
 
 import {
   ArrowPathIcon,
+  ArrowRightIcon,
   ClockIcon,
   ChartBarIcon,
   CheckCircleIcon,
@@ -17,13 +18,16 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTasksData } from "@/hooks/use-tasks-data";
 import { useRefreshStore } from "@/stores/refresh-store";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
+import { ResourceCard } from "@/components/resource-card";
+import { resources, type Resource } from "@/data/resources";
+import { downloadResourceBySlug } from "@/lib/client-storage";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -31,7 +35,7 @@ export default function Dashboard() {
   const { checkCanRefresh, updateRefreshTime } = useRefreshStore();
   const [, forceUpdate] = useState({});
   const [isHydrated, setIsHydrated] = useState(false);
-  const [resourceLoading, setResourceLoading] = useState<'playbook' | 'guide' | null>(null);
+  const [resourceLoading, setResourceLoading] = useState<string | null>(null);
   const { refreshClicked, playbookDownloadClicked, guideDownloadClicked } = useAmplitudeEvents();
 
   // Calculate counts
@@ -69,6 +73,35 @@ export default function Dashboard() {
       toast.success("Dashboard data refreshed successfully!");
     } catch (error) {
       toast.error("Failed to refresh dashboard data");
+    }
+  };
+
+  const handleResourceDownload = async (resource: Resource) => {
+    if (resourceLoading) return;
+    setResourceLoading(resource.id);
+    const toastId = `download-${resource.id}`;
+    toast.loading("Downloading…", { id: toastId });
+    try {
+      if (resource.downloadSlug === "playbook") {
+        playbookDownloadClicked({
+          file_name: resource.downloadFilename,
+          file_size_mb: 77,
+          source: "dashboard",
+        });
+      } else {
+        guideDownloadClicked({
+          file_name: resource.downloadFilename,
+          file_size_mb: 9,
+          source: "dashboard",
+        });
+      }
+      await downloadResourceBySlug(resource.downloadSlug, resource.downloadFilename);
+      toast.success("Download started", { id: toastId, duration: 2500 });
+    } catch (error) {
+      console.error("Failed to download:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to download", { id: toastId });
+    } finally {
+      setResourceLoading(null);
     }
   };
 
@@ -146,12 +179,12 @@ export default function Dashboard() {
             } : undefined;
 
             return (
-              <Card 
-                key={stat.title} 
+              <Card
+                key={stat.title}
                 onClick={handleClick}
-                className={`enterprise-card border-0 ${stat.href ? 'transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer' : ''}`}
+                className={`enterprise-card border border-border/50 ${stat.href ? "transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer group" : ""}`}
               >
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardHeader className="flex flex-row items-start justify-between pb-2">
                   <div className="space-y-1">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
                       {stat.title}
@@ -160,16 +193,21 @@ export default function Dashboard() {
                       {stat.description}
                     </CardDescription>
                   </div>
-                  <div className={`p-2.5 rounded-lg ${stat.iconBg}`}>
+                  <div className={`p-3 rounded-xl ${stat.iconBg} shrink-0 ${stat.href ? "group-hover:scale-105 transition-transform" : ""}`}>
                     <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
                   </div>
                 </CardHeader>
                 <CardContent>
                   {isLoading ? (
-                    <Skeleton className="h-9 w-20" />
+                    <Skeleton className="h-10 w-24 rounded" />
                   ) : (
-                    <p className="text-3xl font-semibold text-foreground">
+                    <p className="text-3xl font-semibold tracking-tight text-foreground">
                       {stat.value.toLocaleString()}
+                    </p>
+                  )}
+                  {stat.href && (
+                    <p className="text-xs text-primary mt-2 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      View tasks <ArrowRightIcon className="h-3 w-3" />
                     </p>
                   )}
                 </CardContent>
@@ -180,102 +218,24 @@ export default function Dashboard() {
 
         {/* Resources Section */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Resources</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div
-              onClick={async (e) => {
-                e.preventDefault();
-                if (resourceLoading) return;
-                playbookDownloadClicked({ file_name: "african-digital-finance-insights-2025.pdf", file_size_mb: 77 });
-                setResourceLoading('playbook');
-                const toastId = 'open-playbook';
-                toast.loading('Downloading playbook…', { id: toastId });
-                try {
-                  const { downloadFileFromStorage } = await import('@/lib/client-storage');
-                  await downloadFileFromStorage('website_assets/playbook.pdf', 'african-digital-finance-insights-2025.pdf');
-                  toast.success('Download started', { id: toastId, duration: 2500 });
-                } catch (error) {
-                  console.error('Failed to download playbook:', error);
-                  toast.error(error instanceof Error ? error.message : 'Failed to download playbook', { id: toastId });
-                } finally {
-                  setResourceLoading(null);
-                }
-              }}
-              className={`text-left group cursor-pointer ${resourceLoading === 'playbook' ? 'pointer-events-none opacity-70' : ''}`}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h2 className="text-lg font-semibold text-foreground">Resources</h2>
+            <Link
+              href="/resources"
+              className="text-sm font-medium text-primary hover:underline flex items-center gap-1 w-fit"
             >
-              <Card className="enterprise-card border-0 h-full transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer relative">
-                <CardContent className="p-5 flex items-start gap-4">
-                  {resourceLoading === 'playbook' && (
-                    <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/80 z-10">
-                      <ArrowPathIcon className="h-8 w-8 animate-spin text-primary" />
-                    </div>
-                  )}
-                  <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-primary/10 group-hover:bg-primary/15 transition-colors">
-                    <Image
-                      src="/covers/playbook.png"
-                      alt="African Digital Finance Insights"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors mb-1">
-                      African Digital Finance Insights
-                    </h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      Perspectives on mobile money, blockchain, and financial inclusion across Kenya and Nigeria
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-            <div
-              onClick={async (e) => {
-                e.preventDefault();
-                if (resourceLoading) return;
-                guideDownloadClicked({ file_name: "how-to-design-surveys-for-quality-responses-2026.pdf", file_size_mb: 9 });
-                setResourceLoading('guide');
-                const toastId = 'open-guide';
-                toast.loading('Downloading guide…', { id: toastId });
-                try {
-                  const { downloadFileFromStorage } = await import('@/lib/client-storage');
-                  await downloadFileFromStorage('website_assets/guide.pdf', 'how-to-design-surveys-for-quality-responses-2026.pdf');
-                  toast.success('Download started', { id: toastId, duration: 2500 });
-                } catch (error) {
-                  console.error('Failed to download guide:', error);
-                  toast.error(error instanceof Error ? error.message : 'Failed to download guide', { id: toastId });
-                } finally {
-                  setResourceLoading(null);
-                }
-              }}
-              className={`text-left group cursor-pointer ${resourceLoading === 'guide' ? 'pointer-events-none opacity-70' : ''}`}
-            >
-              <Card className="enterprise-card border-0 h-full transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer relative">
-                <CardContent className="p-5 flex items-start gap-4">
-                  {resourceLoading === 'guide' && (
-                    <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/80 z-10">
-                      <ArrowPathIcon className="h-8 w-8 animate-spin text-primary" />
-                    </div>
-                  )}
-                  <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-primary/10 group-hover:bg-primary/15 transition-colors">
-                    <Image
-                      src="/covers/guide.png"
-                      alt="How to Design Surveys for Quality Responses"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors mb-1">
-                      How to Design Surveys for Quality Responses
-                    </h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      A 6-section practical guide for researchers using The Mom Test methodology
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+              View all resources <ArrowRightIcon className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {resources.slice(0, 3).map((resource) => (
+              <ResourceCard
+                key={resource.id}
+                resource={resource}
+                onDownload={handleResourceDownload}
+                isLoading={resourceLoading === resource.id}
+              />
+            ))}
           </div>
         </div>
       </div>

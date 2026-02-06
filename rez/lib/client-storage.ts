@@ -4,6 +4,14 @@
  */
 export async function downloadFileFromStorage(filePath: string, filename: string): Promise<void> {
   const apiPath = filePath.includes('playbook') ? '/api/download/playbook' : '/api/download/guide';
+  return downloadResourceBySlug(filePath.includes('playbook') ? 'playbook' : 'guide', filename);
+}
+
+/**
+ * Download a resource by its API slug (e.g. 'guide', 'playbook').
+ */
+export async function downloadResourceBySlug(slug: string, filename: string): Promise<void> {
+  const apiPath = `/api/download/${slug}`;
   try {
     const res = await fetch(apiPath, { credentials: 'include' });
     if (!res.ok) {
