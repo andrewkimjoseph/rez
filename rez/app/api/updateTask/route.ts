@@ -142,6 +142,41 @@ export async function PATCH(request: NextRequest) {
       timeUpdated: FieldValue.serverTimestamp(),
     });
 
+    // Fetch updated task for notification
+    const updatedTaskDoc = await taskRef.get();
+    const updatedTaskData = updatedTaskDoc.data();
+
+    // Send Telegram notification (fire and forget)
+    try {
+      const notificationData = {
+        taskId,
+        title: updatedTaskData?.title || taskData?.title || '',
+        type: updatedTaskData?.type || taskData?.type || '',
+        category: updatedTaskData?.category || taskData?.category || '',
+        difficulty: updatedTaskData?.levelOfDifficulty || taskData?.levelOfDifficulty || '',
+        rezTaskMasterEmailAddress: taskMasterEmail,
+        action: 'updated' as const,
+        updatedByEmail: userEmail,
+        estimatedTimeOfCompletionInMinutes: updatedTaskData?.estimatedTimeOfCompletionInMinutes,
+        targetNumberOfParticipants: updatedTaskData?.targetNumberOfParticipants,
+        rewardAmountPerParticipant: updatedTaskData?.rewardAmountPerParticipant,
+      };
+
+      const internalToken = process.env.INTERNAL_API_TOKEN;
+      fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/notifyRezTotifierOfUpdatedOrDeletedTask`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(internalToken && { 'x-internal-token': internalToken }),
+        },
+        body: JSON.stringify(notificationData),
+      }).catch(error => {
+        console.error('Failed to send Telegram notification for task update:', error);
+      });
+    } catch {
+      // Ignore notification errors
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Task updated successfully'
