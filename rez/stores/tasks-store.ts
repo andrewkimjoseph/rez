@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { fetchWithAuthRetry } from '@/lib/api-fetch';
 import { Task } from '@/firebase/firestore/models/Task';
 import { TaskCompletion } from '@/firebase/firestore/models/TaskCompletion';
 import { useTaskMasterStore } from './taskmaster-store';
@@ -61,22 +62,12 @@ export const useTasksStore = create<TasksStore>()(
 
         try {
           // Fetch tasks
-          const tasksResponse = await fetch('/api/fetchAllTasksForRezTaskMaster');
-          
-          if (!tasksResponse.ok) {
-            throw new Error('Failed to fetch tasks');
-          }
-          
+          const tasksResponse = await fetchWithAuthRetry('/api/fetchAllTasksForRezTaskMaster');
           const tasksData = await tasksResponse.json();
           const tasks: Task[] = tasksData.tasks || [];
 
           // Fetch task completions
-          const completionsResponse = await fetch('/api/fetchAllTaskCompletionsForRezTaskMaster');
-          
-          if (!completionsResponse.ok) {
-            throw new Error('Failed to fetch task completions');
-          }
-          
+          const completionsResponse = await fetchWithAuthRetry('/api/fetchAllTaskCompletionsForRezTaskMaster');
           const completionsData = await completionsResponse.json();
           const taskCompletions: TaskCompletion[] = completionsData.taskCompletions || [];
 
@@ -106,15 +97,10 @@ export const useTasksStore = create<TasksStore>()(
         set({ isDeleting: true, error: null });
 
         try {
-          const response = await fetch(
+          await fetchWithAuthRetry(
             `/api/deleteTask?taskId=${encodeURIComponent(taskId)}`,
             { method: 'DELETE' }
           );
-
-          if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.error || 'Failed to delete task');
-          }
 
           // Remove the task from local state
           const currentTasks = get().tasks;
@@ -155,21 +141,13 @@ export const useTasksStore = create<TasksStore>()(
         set({ isUpdatingStatus: true, error: null });
 
         try {
-          const response = await fetch('/api/updateTaskStatus', {
+          await fetchWithAuthRetry('/api/updateTaskStatus', {
             method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
             body: JSON.stringify({
               taskId,
               isAvailable,
             }),
           });
-
-          if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.error || 'Failed to update task status');
-          }
 
           // Update the task in local state
           const currentTasks = get().tasks;
@@ -205,21 +183,13 @@ export const useTasksStore = create<TasksStore>()(
         set({ isEditing: true, error: null });
 
         try {
-          const response = await fetch('/api/updateTask', {
+          await fetchWithAuthRetry('/api/updateTask', {
             method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
             body: JSON.stringify({
               taskId,
               data,
             }),
           });
-
-          if (!response.ok) {
-            const responseData = await response.json();
-            throw new Error(responseData.error || 'Failed to update task');
-          }
 
           // Update the task in local state
           const currentTasks = get().tasks;

@@ -48,8 +48,12 @@ export default function AdminDashboard() {
     if (isHydrated && user) {
       if (user.isSuperAdmin) {
         setIsAuthorized(true);
-        fetchAllTasks();
-        fetchAllTaskMasters();
+        // Short delay so AuthHydrator can set cookie before first fetch (avoids race on load)
+        const t = setTimeout(() => {
+          fetchAllTasks();
+          fetchAllTaskMasters();
+        }, 150);
+        return () => clearTimeout(t);
       } else {
         setIsAuthorized(false);
       }

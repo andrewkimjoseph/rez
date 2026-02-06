@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { fetchWithAuthRetry } from '@/lib/api-fetch';
 import { Task } from '@/firebase/firestore/models/Task';
 import { TaskMaster } from '@/firebase/firestore/models/TaskMaster';
 import { useTaskMasterStore } from './taskmaster-store';
@@ -87,13 +88,7 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
     set({ isLoadingTasks: true, error: null });
 
     try {
-      const response = await fetch('/api/admin/fetchAllTasks');
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to fetch tasks');
-      }
-
+      const response = await fetchWithAuthRetry('/api/admin/fetchAllTasks');
       const { tasks } = await response.json();
       set({ tasks, isLoadingTasks: false, lastTasksFetch: Date.now() });
     } catch (error) {
@@ -120,13 +115,7 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
     set({ isLoadingTaskMasters: true, error: null });
 
     try {
-      const response = await fetch('/api/admin/fetchAllTaskMasters');
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to fetch task masters');
-      }
-
+      const response = await fetchWithAuthRetry('/api/admin/fetchAllTaskMasters');
       const { taskMasters } = await response.json();
       set({ taskMasters, isLoadingTaskMasters: false, lastTaskMastersFetch: Date.now() });
     } catch (error) {
@@ -142,16 +131,10 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
     set({ isUpdating: true, error: null });
 
     try {
-      const response = await fetch('/api/admin/updateTask', {
+      const response = await fetchWithAuthRetry('/api/admin/updateTask', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ taskId, data })
       });
-
-      if (!response.ok) {
-        const responseData = await response.json();
-        throw new Error(responseData.error || 'Failed to update task');
-      }
 
       // Force refresh tasks list
       set({ isUpdating: false });
@@ -172,15 +155,10 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
     set({ isDeleting: true, error: null });
 
     try {
-      const response = await fetch(
+      const response = await fetchWithAuthRetry(
         `/api/admin/deleteTask?taskId=${encodeURIComponent(taskId)}`,
         { method: 'DELETE' }
       );
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to delete task');
-      }
 
       // Remove task from local state and update cache timestamp
       const currentTasks = get().tasks;
@@ -205,16 +183,10 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
     set({ isUpdating: true, error: null });
 
     try {
-      const response = await fetch('/api/admin/updateTaskMaster', {
+      const response = await fetchWithAuthRetry('/api/admin/updateTaskMaster', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ taskMasterId, data })
       });
-
-      if (!response.ok) {
-        const responseData = await response.json();
-        throw new Error(responseData.error || 'Failed to update task master');
-      }
 
       // Force refresh task masters list
       set({ isUpdating: false });
@@ -235,16 +207,10 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
     set({ isTogglingStatus: true, error: null });
 
     try {
-      const response = await fetch('/api/admin/toggleTaskMasterStatus', {
+      const response = await fetchWithAuthRetry('/api/admin/toggleTaskMasterStatus', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ taskMasterId, disabled })
       });
-
-      if (!response.ok) {
-        const responseData = await response.json();
-        throw new Error(responseData.error || 'Failed to toggle task master status');
-      }
 
       set({ isTogglingStatus: false });
       return true;
