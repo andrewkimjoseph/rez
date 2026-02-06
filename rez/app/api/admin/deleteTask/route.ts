@@ -58,11 +58,17 @@ export async function DELETE(request: NextRequest) {
         updatedByEmail: adminEmail,
       };
 
+      const internalToken = process.env.INTERNAL_API_TOKEN;
       fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/notifyRezTotifierOfUpdatedOrDeletedTask`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(internalToken && { 'x-internal-token': internalToken }),
+        },
         body: JSON.stringify(notificationData),
-      }).catch(() => {});
+      }).catch(error => {
+        console.error('Failed to send Telegram notification for task delete:', error);
+      });
     } catch {
       // Ignore notification errors
     }

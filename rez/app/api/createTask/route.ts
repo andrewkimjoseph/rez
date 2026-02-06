@@ -122,14 +122,16 @@ export async function POST(request: NextRequest) {
       };
 
       // Send notification without awaiting (fire and forget)
+      const internalToken = process.env.INTERNAL_API_TOKEN;
       fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/notifyRezTotifierOfNewTask`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(internalToken && { 'x-internal-token': internalToken }),
         },
         body: JSON.stringify(notificationData),
       }).catch(error => {
-        // Silently handle notification errors
+        console.error('Failed to send Telegram notification for new task:', error);
       });
     } catch (error) {
       // Don't fail the task creation if notification fails

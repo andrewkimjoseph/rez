@@ -182,12 +182,16 @@ export async function PATCH(request: NextRequest) {
       };
 
       // Fire and forget - don't await to avoid blocking the response
+      const internalToken = process.env.INTERNAL_API_TOKEN;
       fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/notifyRezTotifierOfUpdatedOrDeletedTask`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(internalToken && { 'x-internal-token': internalToken }),
+        },
         body: JSON.stringify(notificationData),
-      }).catch(() => {
-        // Ignore notification errors
+      }).catch(error => {
+        console.error('Failed to send Telegram notification for task update:', error);
       });
     } catch {
       // Ignore notification errors - don't fail the main request

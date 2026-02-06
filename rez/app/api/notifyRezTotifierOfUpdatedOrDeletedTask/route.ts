@@ -29,10 +29,16 @@ const processedTasks = new Set<string>();
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify super admin authentication (only admins can update/delete tasks)
-    const authResult = await requireSuperAdmin(request);
-    if (authResult instanceof NextResponse) {
-      return authResult;
+    // Allow internal server-side calls (with secret token) or super admin authentication
+    const internalToken = request.headers.get('x-internal-token');
+    const expectedToken = process.env.INTERNAL_API_TOKEN;
+    const isInternalCall = internalToken && expectedToken && internalToken === expectedToken;
+
+    if (!isInternalCall) {
+      const authResult = await requireSuperAdmin(request);
+      if (authResult instanceof NextResponse) {
+        return authResult;
+      }
     }
 
     const taskData: TaskNotificationData = await request.json();
