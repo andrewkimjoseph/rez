@@ -14,6 +14,7 @@ import { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { isFieldRejected, getRejectionReasonsForField } from '@/utils/rejection-highlighting';
 import { getRejectionReasonLabel } from '@/utils/rejection-reasons';
+import { TOOLTIP_TEXTS } from '@/data/tooltip-texts';
 
 const isValidUrl = (url: string): boolean => {
   if (!url) return false;
@@ -100,9 +101,7 @@ export default function Step4QuestionsTasks() {
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-[260px]">
-                  {isCheckOutApp 
-                    ? 'The URL where users can access your product or app (e.g., App Store, Play Store, or web app link).'
-                    : 'Use a Tally form (tally.so). In form settings, enable "Redirect on completion" and set the URL to thepaxtask:// so participants return to the app after submitting.'}
+                  {isCheckOutApp ? TOOLTIP_TEXTS.linkCheckOutApp : TOOLTIP_TEXTS.linkFillAForm}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -174,7 +173,7 @@ export default function Step4QuestionsTasks() {
                       </span>
                     </TooltipTrigger>
                     <TooltipContent side="top" className="max-w-[220px]">
-                      Provide clear step-by-step instructions on what users should do, look for, or test in your product. Be specific about what you want them to explore or evaluate.
+                      {TOOLTIP_TEXTS.instructionsCheckOutApp}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -219,7 +218,7 @@ export default function Step4QuestionsTasks() {
                       </span>
                     </TooltipTrigger>
                     <TooltipContent side="top" className="max-w-[220px]">
-                      The URL of the form where testers will submit their feedback, findings, and answers to your feedback questions after testing your product.
+                      {TOOLTIP_TEXTS.feedbackCheckOutApp}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>

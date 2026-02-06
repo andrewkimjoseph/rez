@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/tooltip';
 import { CurrencyDollarIcon, UserGroupIcon, QuestionMarkCircleIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
+import { TOOLTIP_TEXTS } from '@/data/tooltip-texts';
 
 export default function AboutStep3Cost() {
   // Demo data
@@ -45,7 +46,7 @@ export default function AboutStep3Cost() {
                     </span>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="max-w-[220px]">
-                    How many people do you want to complete your survey and give you answers?
+                    {TOOLTIP_TEXTS.participantsSurvey}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -78,7 +79,7 @@ export default function AboutStep3Cost() {
                     </span>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="max-w-[220px]">
-                    How many questions will your survey have?
+                    {TOOLTIP_TEXTS.questionsSurvey}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

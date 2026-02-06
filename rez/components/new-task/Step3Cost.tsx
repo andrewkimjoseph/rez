@@ -14,6 +14,7 @@ import { useCountUp } from '@/hooks/use-count-up';
 import { Badge } from '@/components/ui/badge';
 import { isFieldRejected, getRejectionReasonsForField } from '@/utils/rejection-highlighting';
 import { getRejectionReasonLabel } from '@/utils/rejection-reasons';
+import { TOOLTIP_TEXTS } from '@/data/tooltip-texts';
 
 export default function Step3Cost() {
   const { data, updateData, editMode, editingTaskReasons, hasFieldChanged } = useNewTaskStore();
@@ -26,12 +27,8 @@ export default function Step3Cost() {
   const participantsLabel = isOnlineSurvey ? 'Participants' : 'Testers';
   const participantsPlaceholder = isOnlineSurvey ? 'e.g. 100' : 'e.g. 50';
 
-  const participantsTooltip = isOnlineSurvey
-    ? 'How many people do you want to complete your survey and give you answers?'
-    : 'How many people do you want to test your product?';
-  const questionsTooltip = isOnlineSurvey
-    ? 'How many questions will your survey have?'
-    : 'How many feedback questions will testers answer about your product?';
+  const participantsTooltip = isOnlineSurvey ? TOOLTIP_TEXTS.participantsSurvey : TOOLTIP_TEXTS.participantsProduct;
+  const questionsTooltip = isOnlineSurvey ? TOOLTIP_TEXTS.questionsSurvey : TOOLTIP_TEXTS.questionsProduct;
 
   const questions = isOnlineSurvey
     ? (data.numberOfQuestions || 0)

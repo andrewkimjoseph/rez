@@ -41,6 +41,7 @@ import { supportedTokens } from "@/utils/currencies";
 import Image from "next/image";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
+import { TOOLTIP_TEXTS } from "@/data/tooltip-texts";
 
 interface AdminEditTaskDialogProps {
   task: Task | null;
@@ -341,7 +342,7 @@ export default function AdminEditTaskDialog({
                         </span>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="max-w-[220px]">
-                        A clear title that explains what participants will do. Shown in the task list.
+                        {TOOLTIP_TEXTS.titleAdmin}
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -361,7 +362,7 @@ export default function AdminEditTaskDialog({
                           </span>
                         </TooltipTrigger>
                         <TooltipContent side="top" className="max-w-[220px]">
-                          Category that best matches the task. Used for filtering and discovery.
+                          {TOOLTIP_TEXTS.categoryAdmin}
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -381,7 +382,7 @@ export default function AdminEditTaskDialog({
                           </span>
                         </TooltipTrigger>
                         <TooltipContent side="top" className="max-w-[220px]">
-                          Easy (5–10 min), Medium (10–20 min), or Hard (20+ min). Helps participants choose tasks.
+                          {TOOLTIP_TEXTS.difficultyAdmin}
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -403,7 +404,7 @@ export default function AdminEditTaskDialog({
                         </span>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="max-w-[220px]">
-                        Who can see this task. Use ALL for global, or country codes (e.g. KE, NG) comma-separated.
+                        {TOOLTIP_TEXTS.targetCountry}
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -431,7 +432,7 @@ export default function AdminEditTaskDialog({
                         </span>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="max-w-[220px]">
-                        Where participants complete the task (e.g. form URL, app store link, or web app).
+                        {TOOLTIP_TEXTS.link}
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -449,7 +450,7 @@ export default function AdminEditTaskDialog({
                         </span>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="max-w-[220px]">
-                        Step-by-step instructions shown to participants before they start the task.
+                        {TOOLTIP_TEXTS.instructions}
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -466,7 +467,7 @@ export default function AdminEditTaskDialog({
                         </span>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="max-w-[220px]">
-                        Optional URL where participants submit feedback or answers after completing the task.
+                        {TOOLTIP_TEXTS.feedback}
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -483,7 +484,7 @@ export default function AdminEditTaskDialog({
                         </span>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="max-w-[220px]">
-                        When and how participants are paid (e.g. after approval, within 7 days).
+                        {TOOLTIP_TEXTS.paymentTerms}
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -510,7 +511,7 @@ export default function AdminEditTaskDialog({
                         </span>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="max-w-[220px]">
-                        Maximum number of participants (or testers) for this task. Used in cost calculation.
+                        {TOOLTIP_TEXTS.targetNumberOfParticipants}
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -529,7 +530,7 @@ export default function AdminEditTaskDialog({
                           </span>
                         </TooltipTrigger>
                         <TooltipContent side="top" className="max-w-[220px]">
-                          For surveys: number of questions. Used in pricing.
+                          {TOOLTIP_TEXTS.numberOfQuestions}
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -546,7 +547,7 @@ export default function AdminEditTaskDialog({
                           </span>
                         </TooltipTrigger>
                         <TooltipContent side="top" className="max-w-[220px]">
-                          For product tests: number of feedback questions. Used in pricing.
+                          {TOOLTIP_TEXTS.numberOfFeedbackQuestions}
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -565,7 +566,7 @@ export default function AdminEditTaskDialog({
                           </span>
                         </TooltipTrigger>
                         <TooltipContent side="top" className="max-w-[220px]">
-                          Amount paid to each participant when they complete the task (in selected currency).
+                          {TOOLTIP_TEXTS.rewardAmountPerParticipant}
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -582,7 +583,7 @@ export default function AdminEditTaskDialog({
                           </span>
                         </TooltipTrigger>
                         <TooltipContent side="top" className="max-w-[220px]">
-                          Token or currency used for rewards (e.g. USDC, USDT).
+                          {TOOLTIP_TEXTS.rewardCurrencyId}
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -612,7 +613,7 @@ export default function AdminEditTaskDialog({
                         </span>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="max-w-[220px]">
-                        Optional smart contract address for reward distribution. Leave blank if not used.
+                        {TOOLTIP_TEXTS.managerContractAddress}
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -640,7 +641,7 @@ export default function AdminEditTaskDialog({
                           </span>
                         </TooltipTrigger>
                         <TooltipContent side="top" className="max-w-[220px]">
-                          How long participants typically need to complete this task. Shown in the task card.
+                          {TOOLTIP_TEXTS.estimatedTimeOfCompletion}
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -657,7 +658,7 @@ export default function AdminEditTaskDialog({
                           </span>
                         </TooltipTrigger>
                         <TooltipContent side="top" className="max-w-[220px]">
-                          Hours before a participant can do this task again. 0 = no cooldown.
+                          {TOOLTIP_TEXTS.numberOfCooldownHours}
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -676,7 +677,7 @@ export default function AdminEditTaskDialog({
                         </span>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="max-w-[220px]">
-                        Workflow: Pending → Approved → Published (active). Archived = complete and hidden.
+                        {TOOLTIP_TEXTS.reviewStatus}
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -721,7 +722,7 @@ export default function AdminEditTaskDialog({
                           </span>
                         </TooltipTrigger>
                         <TooltipContent side="top" className="max-w-[220px]">
-                          Select the reasons why this task was rejected. These will be shown to the task master.
+                          {TOOLTIP_TEXTS.reasonsForRejection}
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -802,7 +803,7 @@ export default function AdminEditTaskDialog({
                               </span>
                             </TooltipTrigger>
                             <TooltipContent side="top" className="max-w-[220px]">
-                              Reassign this task to another task master by email.
+                              {TOOLTIP_TEXTS.rezTaskMasterEmailAddress}
                             </TooltipContent>
                           </Tooltip>
                         </div>

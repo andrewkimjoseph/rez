@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/tooltip';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
+import { TOOLTIP_TEXTS } from '@/data/tooltip-texts';
 
 export default function AboutStep2TaskDetails() {
   // Demo data
@@ -42,7 +43,7 @@ export default function AboutStep2TaskDetails() {
                     </span>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="max-w-[220px]">
-                    A clear, descriptive title that explains what users will do. This helps participants understand the task before starting.
+                    {TOOLTIP_TEXTS.title}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -72,7 +73,7 @@ export default function AboutStep2TaskDetails() {
                     </span>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="max-w-[220px]">
-                    Select the category that best matches your task. This helps users find tasks that match their interests.
+                    {TOOLTIP_TEXTS.category}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -105,7 +106,7 @@ export default function AboutStep2TaskDetails() {
                     </span>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="max-w-[220px]">
-                    Estimate how long and complex this task will be for users. Easy (5-10 min), Medium (10-20 min), or Hard (20+ min).
+                    {TOOLTIP_TEXTS.difficulty}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

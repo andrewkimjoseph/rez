@@ -26,6 +26,7 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
+import { TOOLTIP_TEXTS } from "@/data/tooltip-texts";
 
 export default function ViewTasks() {
   const { tasks, taskCompletions, isLoading, error } = useTasksData({ autoFetch: false });
@@ -191,7 +192,7 @@ export default function ViewTasks() {
                             </Badge>
                           </TooltipTrigger>
                           <TooltipContent side="top" className="max-w-[300px]">
-                            <p className="font-medium mb-1">Rejection Reasons:</p>
+                            <p className="font-medium mb-1">{TOOLTIP_TEXTS.rejectionReasonsHeader}</p>
                             <p className="text-xs">{formatRejectionReasons(task.reasonsForRejection)}</p>
                           </TooltipContent>
                         </Tooltip>

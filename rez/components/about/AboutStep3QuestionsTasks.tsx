@@ -9,6 +9,7 @@ import {
 import { GlobeAltIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
+import { TOOLTIP_TEXTS } from '@/data/tooltip-texts';
 
 export default function AboutStep3QuestionsTasks() {
   // Demo data for "Fill a Form" type
@@ -41,7 +42,7 @@ export default function AboutStep3QuestionsTasks() {
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-[220px]">
-                  The URL where users will access and complete your form or survey (e.g., Google Forms, Typeform, etc.).
+                  {TOOLTIP_TEXTS.linkForm}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
