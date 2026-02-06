@@ -145,7 +145,8 @@ export async function POST(request: NextRequest) {
         .get();
 
       if (!taskMasterSnapshot.empty) {
-        const taskMasterId = taskMasterSnapshot.docs[0].id;
+        const taskMasterDoc = taskMasterSnapshot.docs[0];
+        const taskMasterName = taskMasterDoc.data()?.name || taskMasterDoc.data()?.displayName || 'Task Master';
         const internalToken = process.env.INTERNAL_API_TOKEN;
 
         // Only send email if internal token is configured (for security)
@@ -161,7 +162,7 @@ export async function POST(request: NextRequest) {
               to: [taskMasterEmail],
               template: 'taskCreated',
               variables: {
-                taskMasterId,
+                taskMasterName,
                 taskId,
               },
             }),

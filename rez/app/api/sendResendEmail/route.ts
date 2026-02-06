@@ -16,7 +16,7 @@ interface SendResendEmailRequest {
   to: string[];
   template: EmailTemplateType;
   variables: {
-    taskMasterId: string;
+    taskMasterName: string;
     taskId: string;
   };
 }
@@ -56,9 +56,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!body.variables?.taskMasterId || !body.variables?.taskId) {
+    if (!body.variables?.taskMasterName || !body.variables?.taskId) {
       return NextResponse.json(
-        { error: 'taskMasterId and taskId are required in variables' },
+        { error: 'taskMasterName and taskId are required in variables' },
         { status: 400 }
       );
     }
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
         template: {
           id: templateId,
           variables: {
-            taskMasterId: body.variables.taskMasterId,
+            taskMasterName: body.variables.taskMasterName,
             taskId: body.variables.taskId,
           },
         },

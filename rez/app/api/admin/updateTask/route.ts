@@ -206,7 +206,8 @@ export async function PATCH(request: NextRequest) {
             .get();
 
           if (!taskMasterSnapshot.empty) {
-            const taskMasterId = taskMasterSnapshot.docs[0].id;
+            const taskMasterDoc = taskMasterSnapshot.docs[0];
+            const taskMasterName = taskMasterDoc.data()?.name || taskMasterDoc.data()?.displayName || 'Task Master';
             let emailTemplate: 'taskRejected' | 'taskApproved' | 'taskPublished' | 'taskCompleted' | null = null;
 
             // Map review status to email template
@@ -234,7 +235,7 @@ export async function PATCH(request: NextRequest) {
                   to: [taskMasterEmail],
                   template: emailTemplate,
                   variables: {
-                    taskMasterId,
+                    taskMasterName,
                     taskId,
                   },
                 }),
