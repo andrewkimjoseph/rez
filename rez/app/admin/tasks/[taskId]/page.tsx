@@ -7,13 +7,6 @@ import Image from "next/image";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { useAdminStore } from "@/stores/admin-store";
 import { useSelectedTaskStore } from "@/stores/selected-task-store";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,16 +26,11 @@ import {
   ClockIcon,
   UserGroupIcon,
   CurrencyDollarIcon,
-  GlobeAltIcon,
-  DocumentTextIcon,
-  LinkIcon,
   CheckCircleIcon,
   XCircleIcon,
   BeakerIcon,
   ArrowTopRightOnSquareIcon,
-  CalendarIcon,
   ChartBarIcon,
-  CogIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import AdminEditTaskDialog from "@/components/admin/AdminEditTaskDialog";
@@ -73,6 +61,8 @@ export default function AdminTaskDetailsPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [reviewAction, setReviewAction] = useState<'approve' | 'reject' | null>(null);
+  const [instructionsExpanded, setInstructionsExpanded] = useState(false);
+  const [paymentTermsExpanded, setPaymentTermsExpanded] = useState(false);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -260,9 +250,9 @@ export default function AdminTaskDetailsPage() {
 
   return (
     <div className="min-h-screen p-6 md:p-8">
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Header */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
           <Link
             href="/admin/tasks"
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors w-fit"
@@ -344,246 +334,197 @@ export default function AdminTaskDetailsPage() {
           </div>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Basic Information */}
-          <Card className="cursor-default">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <DocumentTextIcon className="h-5 w-5 text-primary" />
-                Basic Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Type</p>
-                  <p className="font-medium">{formattedData.typeLabel}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Difficulty</p>
-                  <p className="font-medium">{formattedData.levelOfDifficulty}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Target Country</p>
-                  <p className="font-medium">{formattedData.targetCountry}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Rewards & Target */}
-          <Card className="cursor-default">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <CurrencyDollarIcon className="h-5 w-5 text-primary" />
-                Rewards & Target
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Reward per Participant</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    {formattedData.tokenInfo?.imagePath && (
-                      <Image
-                        src={formattedData.tokenInfo.imagePath}
-                        alt={formattedData.tokenInfo.name}
-                        width={20}
-                        height={20}
-                        className="rounded-full"
-                      />
-                    )}
-                    <p className="font-medium">{formattedData.formattedReward}</p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Target Participants</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <UserGroupIcon className="h-5 w-5 text-muted-foreground" />
-                    <p className="font-medium">{formattedData.targetNumberOfParticipants}</p>
-                  </div>
-                </div>
-              </div>
-              {formattedData.managerContractAddress && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Contract Address</p>
-                  <a
-                    href={formattedData.blockscoutUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-primary hover:underline font-mono text-sm break-all"
-                  >
-                    {formattedData.managerContractAddress}
-                    <ArrowTopRightOnSquareIcon className="h-4 w-4 flex-shrink-0" />
-                  </a>
-                </div>
+        {/* Dense Key-Value Grid */}
+        <dl className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-2.5 p-4 rounded-lg border bg-muted/30">
+          <div>
+            <dt className="text-xs text-muted-foreground">Type</dt>
+            <dd className="font-medium text-sm mt-0.5">{formattedData.typeLabel}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Difficulty</dt>
+            <dd className="font-medium text-sm mt-0.5">{formattedData.levelOfDifficulty}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Target Country</dt>
+            <dd className="font-medium text-sm mt-0.5">{formattedData.targetCountry}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Reward</dt>
+            <dd className="flex items-center gap-1.5 font-medium text-sm mt-0.5">
+              {formattedData.tokenInfo?.imagePath && (
+                <Image
+                  src={formattedData.tokenInfo.imagePath}
+                  alt={formattedData.tokenInfo.name}
+                  width={16}
+                  height={16}
+                  className="rounded-full"
+                />
               )}
-            </CardContent>
-          </Card>
-
-          {/* Task Links */}
-          <Card className="cursor-default">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <LinkIcon className="h-5 w-5 text-primary" />
-                Links
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {formattedData.link ? (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Task Link</p>
-                  <a
-                    href={formattedData.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-primary hover:underline break-all"
-                  >
-                    {formattedData.link}
-                    <ArrowTopRightOnSquareIcon className="h-4 w-4 flex-shrink-0" />
-                  </a>
-                </div>
+              {formattedData.formattedReward}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Estimated Time</dt>
+            <dd className="flex items-center gap-1.5 font-medium text-sm mt-0.5">
+              <ClockIcon className="h-3.5 w-3.5 text-muted-foreground" />
+              {formattedData.estimatedTimeOfCompletionInMinutes} min
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Cooldown</dt>
+            <dd className="font-medium text-sm mt-0.5">{formattedData.numberOfCooldownHours} hours</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Target Participants</dt>
+            <dd className="flex items-center gap-1.5 font-medium text-sm mt-0.5">
+              <UserGroupIcon className="h-3.5 w-3.5 text-muted-foreground" />
+              {formattedData.targetNumberOfParticipants}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Task Manager Contract Address</dt>
+            <dd className="mt-0.5 min-w-0">
+              {formattedData.managerContractAddress ? (
+                <a
+                  href={formattedData.blockscoutUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-primary hover:underline font-mono text-xs min-w-0"
+                  title={formattedData.managerContractAddress}
+                >
+                  <span className="truncate min-w-0 flex-1">{formattedData.managerContractAddress}</span>
+                  <ArrowTopRightOnSquareIcon className="h-3 w-3 flex-shrink-0" />
+                </a>
               ) : (
-                <p className="text-muted-foreground text-sm">No task link provided</p>
+                <span className="text-muted-foreground text-sm">—</span>
               )}
-              {formattedData.feedback && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Feedback Form</p>
-                  <a
-                    href={formattedData.feedback}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-primary hover:underline break-all"
-                  >
-                    {formattedData.feedback}
-                    <ArrowTopRightOnSquareIcon className="h-4 w-4 flex-shrink-0" />
-                  </a>
-                </div>
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Task Link</dt>
+            <dd className="mt-0.5">
+              {formattedData.link ? (
+                <a
+                  href={formattedData.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-primary hover:underline text-xs break-all"
+                >
+                  {formattedData.link}
+                  <ArrowTopRightOnSquareIcon className="h-3 w-3 flex-shrink-0" />
+                </a>
+              ) : (
+                <span className="text-muted-foreground text-sm">—</span>
               )}
-            </CardContent>
-          </Card>
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Feedback Form</dt>
+            <dd className="mt-0.5">
+              {formattedData.feedback ? (
+                <a
+                  href={formattedData.feedback}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-primary hover:underline text-xs break-all"
+                >
+                  {formattedData.feedback}
+                  <ArrowTopRightOnSquareIcon className="h-3 w-3 flex-shrink-0" />
+                </a>
+              ) : (
+                <span className="text-muted-foreground text-sm">—</span>
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Available</dt>
+            <dd className="flex items-center gap-1.5 font-medium text-sm mt-0.5">
+              {formattedData.isAvailable ? (
+                <CheckCircleIcon className="h-3.5 w-3.5 text-green-600" />
+              ) : (
+                <XCircleIcon className="h-3.5 w-3.5 text-red-500" />
+              )}
+              {formattedData.isAvailable ? "Yes" : "No"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Test</dt>
+            <dd className="flex items-center gap-1.5 font-medium text-sm mt-0.5">
+              {formattedData.isTest ? (
+                <BeakerIcon className="h-3.5 w-3.5 text-orange-500" />
+              ) : (
+                <CheckCircleIcon className="h-3.5 w-3.5 text-green-600" />
+              )}
+              {formattedData.isTest ? "Yes" : "No"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Created By</dt>
+            <dd className="font-medium text-sm mt-0.5">{formattedData.rezTaskMasterEmailAddress}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Task Master ID</dt>
+            <dd className="font-medium font-mono text-xs mt-0.5 truncate" title={formattedData.taskMasterId}>
+              {formattedData.taskMasterId || "—"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Created At</dt>
+            <dd className="font-medium text-sm mt-0.5">{formattedData.timeCreated}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Last Updated</dt>
+            <dd className="font-medium text-sm mt-0.5">{formattedData.timeUpdated}</dd>
+          </div>
+        </dl>
 
-          {/* Settings */}
-          <Card className="cursor-default">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <CogIcon className="h-5 w-5 text-primary" />
-                Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Estimated Time</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <ClockIcon className="h-5 w-5 text-muted-foreground" />
-                    <p className="font-medium">
-                      {formattedData.estimatedTimeOfCompletionInMinutes} min
-                    </p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Cooldown Period</p>
-                  <p className="font-medium mt-1">
-                    {formattedData.numberOfCooldownHours} hours
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-3 pt-2">
-                <div className="flex items-center gap-2">
-                  {formattedData.isAvailable ? (
-                    <CheckCircleIcon className="h-5 w-5 text-green-600" />
-                  ) : (
-                    <XCircleIcon className="h-5 w-5 text-red-500" />
-                  )}
-                  <span className="text-sm">
-                    {formattedData.isAvailable ? "Available" : "Not Available"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {formattedData.isTest ? (
-                    <BeakerIcon className="h-5 w-5 text-orange-500" />
-                  ) : (
-                    <CheckCircleIcon className="h-5 w-5 text-green-600" />
-                  )}
-                  <span className="text-sm">
-                    {formattedData.isTest ? "Test Task" : "Production Task"}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Instructions - Truncated with expand */}
+        {formattedData.instructions && (
+          <div className="rounded-lg border bg-muted/30 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <ChartBarIcon className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Instructions</span>
+            </div>
+            <p
+              className={`text-sm text-foreground whitespace-pre-wrap leading-relaxed ${
+                instructionsExpanded ? "" : "line-clamp-3 overflow-hidden"
+              }`}
+            >
+              {formattedData.instructions}
+            </p>
+            <button
+              type="button"
+              onClick={() => setInstructionsExpanded(!instructionsExpanded)}
+              className="text-xs text-primary hover:underline mt-1"
+            >
+              {instructionsExpanded ? "Show less" : "Show more"}
+            </button>
+          </div>
+        )}
 
-          {/* Instructions - Full Width */}
-          {formattedData.instructions && (
-            <Card className="lg:col-span-2 cursor-default">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <ChartBarIcon className="h-5 w-5 text-primary" />
-                  Instructions
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-foreground whitespace-pre-wrap">
-                  {formattedData.instructions}
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Payment Terms - Full Width */}
-          {formattedData.paymentTerms && (
-            <Card className="lg:col-span-2 cursor-default">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <CurrencyDollarIcon className="h-5 w-5 text-primary" />
-                  Payment Terms
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-foreground whitespace-pre-wrap">
-                  {formattedData.paymentTerms}
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Metadata */}
-          <Card className="lg:col-span-2 cursor-default">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <CalendarIcon className="h-5 w-5 text-primary" />
-                Metadata
-              </CardTitle>
-              <CardDescription>
-                Task creation and ownership information
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Created By</p>
-                  <p className="font-medium">{formattedData.rezTaskMasterEmailAddress}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Task Master ID</p>
-                  <p className="font-medium font-mono text-sm truncate" title={formattedData.taskMasterId}>
-                    {formattedData.taskMasterId || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Created At</p>
-                  <p className="font-medium">{formattedData.timeCreated}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Last Updated</p>
-                  <p className="font-medium">{formattedData.timeUpdated}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Payment Terms - Truncated with expand */}
+        {formattedData.paymentTerms && (
+          <div className="rounded-lg border bg-muted/30 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <CurrencyDollarIcon className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Payment Terms</span>
+            </div>
+            <p
+              className={`text-sm text-foreground whitespace-pre-wrap leading-relaxed ${
+                paymentTermsExpanded ? "" : "line-clamp-3 overflow-hidden"
+              }`}
+            >
+              {formattedData.paymentTerms}
+            </p>
+            <button
+              type="button"
+              onClick={() => setPaymentTermsExpanded(!paymentTermsExpanded)}
+              className="text-xs text-primary hover:underline mt-1"
+            >
+              {paymentTermsExpanded ? "Show less" : "Show more"}
+            </button>
+          </div>
+        )}
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
