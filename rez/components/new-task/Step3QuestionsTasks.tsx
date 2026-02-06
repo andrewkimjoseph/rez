@@ -35,7 +35,7 @@ export default function Step4QuestionsTasks() {
   };
 
   const getLinkPlaceholder = () => {
-    if (data.type === 'fillAForm') return 'https://forms.google.com/...';
+    if (data.type === 'fillAForm') return 'https://tally.so/r/... or https://tally.so/forms/...';
     if (data.type === 'checkOutApp') return 'https://play.google.com/... or App Store link';
     return 'https://...';
   };
@@ -99,10 +99,10 @@ export default function Step4QuestionsTasks() {
                     <InformationCircleIcon className="w-3.5 h-3.5" />
                   </span>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-[220px]">
+                <TooltipContent side="top" className="max-w-[260px]">
                   {isCheckOutApp 
                     ? 'The URL where users can access your product or app (e.g., App Store, Play Store, or web app link).'
-                    : 'The URL where users will access and complete your form or survey (e.g., Google Forms, Typeform, etc.).'}
+                    : 'Use a Tally form (tally.so). In form settings, enable "Redirect on completion" and set the URL to thepaxtask:// so participants return to the app after submitting.'}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -138,6 +138,20 @@ export default function Step4QuestionsTasks() {
               <p className="flex items-center gap-1 mt-1 text-[11px] text-red-500">
                 <ExclamationCircleIcon className="w-3 h-3 flex-shrink-0" />
                 {linkValidation.message}
+              </p>
+            )}
+            {data.type === 'fillAForm' && (
+              <p className="mt-1.5 text-[11px] text-muted-foreground">
+                Use a <span className="font-medium">Tally form</span> (tally.so) with{' '}
+                <a
+                  href="https://tally.so/help/redirect-on-completion"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Redirect on completion
+                </a>
+                {' '}set to <code className="px-1 py-0.5 rounded bg-muted text-[10px] font-mono">thepaxtask://</code>
               </p>
             )}
           </div>
