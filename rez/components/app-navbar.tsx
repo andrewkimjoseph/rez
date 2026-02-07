@@ -17,6 +17,8 @@ import {
   ArrowRightOnRectangleIcon,
   ChevronDownIcon,
   UserIcon,
+  DocumentTextIcon,
+  ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -130,6 +132,18 @@ export function AppNavbar() {
                 <Link href="/account" className="cursor-pointer" onClick={() => accountSettingsClicked()}>
                   <UserIcon className="mr-2 h-4 w-4" />
                   Account Settings
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/terms-of-service" className="cursor-pointer">
+                  <DocumentTextIcon className="mr-2 h-4 w-4" />
+                  Terms of Service
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/privacy-policy" className="cursor-pointer">
+                  <ShieldCheckIcon className="mr-2 h-4 w-4" />
+                  Privacy Policy
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />

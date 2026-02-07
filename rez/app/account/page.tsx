@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -73,25 +72,15 @@ export default function Account() {
         Account Management
       </h1>
       <p className="text-muted-foreground mb-6">
-        Manage your account settings, team access, and subscription detail
+        View your account information
       </p>
-      <Tabs defaultValue="profile" className="w-full mb-6">
-        <TabsList className="bg-white">
-          <TabsTrigger
-            value="profile"
-            className="data-[state=active]:bg-[#5C29A3] data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-[#5C29A3] px-6 py-2"
-          >
-            Profile
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
       <Card className="p-6 cursor-default">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Profile Photo */}
           <div className="flex-1 flex flex-col items-center md:items-start">
             <h2 className="text-lg font-semibold mb-1">Profile Photo</h2>
             <p className="text-sm text-muted-foreground mb-4">
-              Your profile picture is visible to team members
+              Your profile picture
             </p>
             <Avatar className="w-40 h-40 mb-2">
 
