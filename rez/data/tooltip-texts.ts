@@ -27,14 +27,14 @@ export const TOOLTIP_TEXTS = {
 
   paymentTerms: 'When and how participants are paid (e.g. after approval, within 7 days).',
 
-  targetNumberOfParticipants: 'Maximum number of participants (or testers) for this task. Used in cost calculation.',
-  participantsSurvey: 'How many people do you want to complete your survey and give you answers?',
-  participantsProduct: 'How many people do you want to test your product?',
+  targetNumberOfParticipants: 'Maximum number of participants (or testers) for this task. Used in cost calculation. Minimum: 50 for surveys, 10 for product testing.',
+  participantsSurvey: 'How many people do you want to complete your survey and give you answers? Minimum: 50 participants.',
+  participantsProduct: 'How many people do you want to test your product? Minimum: 10 testers.',
 
-  numberOfQuestions: 'For surveys: number of questions. Used in pricing.',
-  numberOfFeedbackQuestions: 'For product tests: number of feedback questions. Used in pricing.',
-  questionsSurvey: 'How many questions will your survey have?',
-  questionsProduct: 'How many feedback questions will testers answer about your product?',
+  numberOfQuestions: 'For surveys: number of questions. Used in pricing. Minimum: 5 questions.',
+  numberOfFeedbackQuestions: 'For product tests: number of feedback questions. One action in the product (e.g. try a feature, complete a flow) equates to one feedback question. Minimum: 3.',
+  questionsSurvey: 'How many questions will your survey have? Minimum: 5 questions.',
+  questionsProduct: 'How many feedback questions will testers answer about your product? One action in the product (e.g. try a feature, complete a flow) equates to one feedback question. Minimum: 3.',
 
   rewardAmountPerParticipant: 'Amount paid to each participant when they complete the task (in selected currency).',
 

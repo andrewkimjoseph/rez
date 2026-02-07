@@ -25,7 +25,7 @@ export default function Step3Cost() {
   const questionsLabel = isOnlineSurvey ? 'Questions' : 'Feedback questions';
   const questionsPlaceholder = isOnlineSurvey ? 'e.g. 10' : 'e.g. 5';
   const participantsLabel = isOnlineSurvey ? 'Participants' : 'Testers';
-  const participantsPlaceholder = isOnlineSurvey ? 'e.g. 100' : 'e.g. 50';
+  const participantsPlaceholder = isOnlineSurvey ? 'e.g. 100' : 'e.g. 100';
 
   const participantsTooltip = isOnlineSurvey ? TOOLTIP_TEXTS.participantsSurvey : TOOLTIP_TEXTS.participantsProduct;
   const questionsTooltip = isOnlineSurvey ? TOOLTIP_TEXTS.questionsSurvey : TOOLTIP_TEXTS.questionsProduct;
@@ -35,19 +35,23 @@ export default function Step3Cost() {
     : (data.numberOfFeedbackQuestions || 0);
   const participants = data.targetNumberOfParticipants || 0;
 
+  const minQuestions = isOnlineSurvey ? 5 : 3;
+  const minParticipants = isOnlineSurvey ? 50 : 10;
+
   const { cost, agencyCost, savingsPercent } = useMemo(() => {
     let baseCost = 0;
 
     if (isOnlineSurvey) {
-      baseCost = 50 * (questions / 10) * (participants / 20);
+      baseCost = 50 * (questions / 10) * (participants / 50);
     } else if (isProductTesting) {
-      baseCost = 100 * (questions / 10) * (participants / 100);
+      baseCost = 100 * (questions / 5) * (participants / 100);
     }
 
-    const agencyCost = baseCost * 10;
-    const savingsPercent = agencyCost > 0 ? Math.round(((agencyCost - baseCost) / agencyCost) * 100) : 0;
+    const roundedCost = Math.round(baseCost * 100) / 100;
+    const roundedAgencyCost = Math.round(baseCost * 10 * 100) / 100;
+    const savingsPercent = roundedAgencyCost > 0 ? Math.round(((roundedAgencyCost - roundedCost) / roundedAgencyCost) * 100) : 0;
 
-    return { cost: baseCost, agencyCost, savingsPercent };
+    return { cost: roundedCost, agencyCost: roundedAgencyCost, savingsPercent };
   }, [questions, participants, isOnlineSurvey, isProductTesting]);
 
   const handleQuestionsChange = (value: string) => {
@@ -59,15 +63,32 @@ export default function Step3Cost() {
     }
   };
 
+  const handleQuestionsBlur = () => {
+    if (questions > 0 && questions < minQuestions) {
+      if (isOnlineSurvey) {
+        updateData({ numberOfQuestions: minQuestions });
+      } else {
+        updateData({ numberOfFeedbackQuestions: minQuestions });
+      }
+    }
+  };
+
   const handleParticipantsChange = (value: string) => {
     const numValue = parseInt(value) || 0;
     updateData({ targetNumberOfParticipants: numValue > 0 ? numValue : undefined });
   };
 
-  const allFieldsComplete = questions > 0 && participants > 0;
+  const handleParticipantsBlur = () => {
+    if (participants > 0 && participants < minParticipants) {
+      updateData({ targetNumberOfParticipants: minParticipants });
+    }
+  };
 
-  const animatedCost = useCountUp(cost, 500, allFieldsComplete);
-  const animatedAgencyCost = useCountUp(agencyCost, 500, allFieldsComplete);
+  const hasValues = questions > 0 && participants > 0;
+  const meetsMinimums = questions >= minQuestions && participants >= minParticipants;
+
+  const animatedCost = useCountUp(cost, 500, hasValues);
+  const animatedAgencyCost = useCountUp(agencyCost, 500, hasValues);
 
   const questionsFieldName = isOnlineSurvey ? 'numberOfQuestions' : 'numberOfFeedbackQuestions';
   const questionsWasRejected = editMode && isFieldRejected(questionsFieldName, editingTaskReasons, data.type || null);
@@ -111,9 +132,10 @@ export default function Step3Cost() {
             <Input
               id="participants"
               type="number"
-              min={1}
+              min={minParticipants}
               value={participants || ''}
               onChange={e => handleParticipantsChange(e.target.value)}
+              onBlur={handleParticipantsBlur}
               placeholder={participantsPlaceholder}
               className="h-9 text-sm"
             />
@@ -146,9 +168,10 @@ export default function Step3Cost() {
               <Input
                 id="questions"
                 type="number"
-                min={1}
+                min={minQuestions}
                 value={questions || ''}
                 onChange={e => handleQuestionsChange(e.target.value)}
+                onBlur={handleQuestionsBlur}
                 placeholder={questionsPlaceholder}
                 className={`h-9 text-sm ${isQuestionsRejected ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
               />
@@ -172,16 +195,23 @@ export default function Step3Cost() {
           </div>
         </div>
 
-        {allFieldsComplete && (
+        {hasValues && (
           <div className="p-3 rounded-lg border border-gray-200 bg-gray-50/50">
+            {!meetsMinimums && (
+              <p className="text-xs text-amber-600 mb-2">
+                {isOnlineSurvey
+                  ? "Minimum: 5 questions and 50 participants"
+                  : "Minimum: 3 feedback questions and 10 testers"}
+              </p>
+            )}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CurrencyDollarIcon className="w-4 h-4 text-green-600" />
                 <span className="text-sm text-gray-600">Your price</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-semibold text-green-600 tabular-nums">${animatedCost}</span>
-                <span className="text-xs text-gray-400 line-through tabular-nums">${animatedAgencyCost}</span>
+                <span className="text-lg font-semibold text-green-600 tabular-nums">${Number(animatedCost).toFixed(2)}</span>
+                <span className="text-xs text-gray-400 line-through tabular-nums">${Number(animatedAgencyCost).toFixed(2)}</span>
                 <span className="text-xs text-green-600 font-medium">({savingsPercent}% off)</span>
               </div>
             </div>

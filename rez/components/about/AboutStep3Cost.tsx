@@ -15,8 +15,8 @@ export default function AboutStep3Cost() {
   const demoData = {
     participants: 100,
     questions: 10,
-    cost: 2500,
-    agencyCost: 25000,
+    cost: 100,      // $50 × (10/10) × (100/50) = $100
+    agencyCost: 1000,
     savingsPercent: 90,
   };
 

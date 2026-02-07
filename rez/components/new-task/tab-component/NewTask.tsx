@@ -238,13 +238,13 @@ export default function NewTask() {
         // Step 2: Task Details - requires title, category, and difficulty
         return !!(data.title && data.category && data.difficulty);
       case 3:
-        // Step 3: Cost - requires questions/feedback questions and participants/testers
+        // Step 3: Cost - requires questions/feedback questions and participants/testers at minimums
         if (data.type === 'fillAForm') {
-          return !!(data.numberOfQuestions && data.numberOfQuestions > 0 && 
-                   data.targetNumberOfParticipants && data.targetNumberOfParticipants > 0);
+          return !!(data.numberOfQuestions && data.numberOfQuestions >= 5 &&
+                   data.targetNumberOfParticipants && data.targetNumberOfParticipants >= 50);
         } else if (data.type === 'checkOutApp') {
-          return !!(data.numberOfFeedbackQuestions && data.numberOfFeedbackQuestions > 0 && 
-                   data.targetNumberOfParticipants && data.targetNumberOfParticipants > 0);
+          return !!(data.numberOfFeedbackQuestions && data.numberOfFeedbackQuestions >= 3 &&
+                   data.targetNumberOfParticipants && data.targetNumberOfParticipants >= 10);
         }
         return false;
       case 4:
@@ -263,9 +263,9 @@ export default function NewTask() {
           data.targetNumberOfParticipants &&
           data.link
         );
-        const costFieldsValid = data.type === 'fillAForm' 
-          ? !!(data.numberOfQuestions && data.numberOfQuestions > 0)
-          : !!(data.numberOfFeedbackQuestions && data.numberOfFeedbackQuestions > 0);
+        const costFieldsValid = data.type === 'fillAForm'
+          ? !!(data.numberOfQuestions && data.numberOfQuestions >= 5 && data.targetNumberOfParticipants && data.targetNumberOfParticipants >= 50)
+          : !!(data.numberOfFeedbackQuestions && data.numberOfFeedbackQuestions >= 3 && data.targetNumberOfParticipants && data.targetNumberOfParticipants >= 10);
         if (data.type === 'checkOutApp') {
           return baseFieldsValid && costFieldsValid && !!(data.instructions && data.feedback);
         }
