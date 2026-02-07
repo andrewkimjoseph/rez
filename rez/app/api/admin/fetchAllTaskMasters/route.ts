@@ -5,44 +5,61 @@ import { getAuth } from 'firebase-admin/auth';
 import { getApp } from 'firebase-admin/app';
 import { requireSuperAdmin } from '@/lib/api-auth';
 
+const DEFAULT_LIMIT = 50;
+const MAX_LIMIT = 100;
+
 export async function GET(request: NextRequest) {
   try {
-    // Verify authentication and super admin status
     const authResult = await requireSuperAdmin(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
 
-    // Fetch all task masters from Rez Firestore
-    const taskMastersRef = rezDB.collection(COLLECTIONS.TASK_MASTERS);
-    const taskMastersSnapshot = await taskMastersRef.orderBy('timeCreated', 'desc').get();
+    const { searchParams } = new URL(request.url);
+    const limit = Math.min(
+      Math.max(1, parseInt(searchParams.get('limit') || String(DEFAULT_LIMIT), 10) || DEFAULT_LIMIT),
+      MAX_LIMIT
+    );
+    const startAfterDocId = searchParams.get('startAfterDocId') || undefined;
 
-    // Get Firebase Auth instance
+    const taskMastersRef = rezDB.collection(COLLECTIONS.TASK_MASTERS);
+    let query = taskMastersRef.orderBy('timeCreated', 'desc').limit(limit);
+
+    if (startAfterDocId) {
+      const lastDoc = await taskMastersRef.doc(startAfterDocId).get();
+      if (lastDoc.exists) {
+        query = query.startAfter(lastDoc);
+      }
+    }
+
+    const taskMastersSnapshot = await query.get();
     const auth = getAuth(getApp('rezApp'));
 
-    // Fetch disabled status from Firebase Auth for each task master
     const taskMasters = await Promise.all(
       taskMastersSnapshot.docs.map(async (doc) => {
         const data = doc.data();
         let disabled = false;
-        
+
         try {
           const userRecord = await auth.getUser(doc.id);
           disabled = userRecord.disabled;
         } catch {
-          // User might not exist in Auth, default to not disabled
           disabled = false;
         }
-        
+
         return {
           id: doc.id,
           ...data,
-          disabled
+          disabled,
         };
       })
     );
 
-    return NextResponse.json({ taskMasters });
+    const lastDoc = taskMastersSnapshot.docs[taskMastersSnapshot.docs.length - 1];
+    const hasMore = taskMastersSnapshot.docs.length === limit;
+    const nextCursor = hasMore && lastDoc ? { startAfterDocId: lastDoc.id } : null;
+
+    return NextResponse.json({ taskMasters, hasMore, nextCursor });
   } catch (error) {
     console.error('Error fetching all task masters:', error);
     return NextResponse.json(

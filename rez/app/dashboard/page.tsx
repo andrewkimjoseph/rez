@@ -68,7 +68,7 @@ export default function Dashboard() {
       return;
     }
     try {
-      await refetch();
+      await refetch(true);
       updateRefreshTime();
       toast.success("Dashboard data refreshed successfully!");
     } catch (error) {

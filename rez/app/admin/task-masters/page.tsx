@@ -55,8 +55,11 @@ export default function AdminTaskMastersPage() {
   const {
     taskMasters,
     isLoadingTaskMasters,
-    isTogglingStatus,
+    isLoadingMoreTaskMasters,
+    hasMoreTaskMasters,
     fetchAllTaskMasters,
+    loadMoreTaskMasters,
+    isTogglingStatus,
     toggleTaskMasterStatus,
     error
   } = useAdminStore();
@@ -455,9 +458,29 @@ export default function AdminTaskMastersPage() {
           </div>
         )}
 
-        <p className="text-sm text-muted-foreground text-center">
-          Showing {sortedTaskMasters.length} of {taskMasters.length} task master{taskMasters.length !== 1 ? 's' : ''}
-        </p>
+        <div className="flex flex-col items-center gap-3">
+          <p className="text-sm text-muted-foreground text-center">
+            Showing {sortedTaskMasters.length} task master{sortedTaskMasters.length !== 1 ? 's' : ''}
+            {hasMoreTaskMasters && ' (more available)'}
+          </p>
+          {hasMoreTaskMasters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => loadMoreTaskMasters()}
+              disabled={isLoadingMoreTaskMasters}
+            >
+              {isLoadingMoreTaskMasters ? (
+                <>
+                  <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                'Load more'
+              )}
+            </Button>
+          )}
+        </div>
 
         {/* Edit Task Master Dialog */}
         <AdminEditTaskMasterDialog

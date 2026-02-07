@@ -90,7 +90,7 @@ export default function SignInPage() {
           }
           setTaskMasterUser(existingTaskMaster);
           // Refresh tasks after login
-          fetchTasksAndCompletions();
+          fetchTasksAndCompletions(true);
           router.push("/dashboard");
           setTaskMasterId(user.uid);
           identifyTaskMaster({

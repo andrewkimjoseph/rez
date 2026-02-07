@@ -18,6 +18,9 @@ export interface EditTaskData {
   rewardAmountPerParticipant?: number;
 }
 
+// Skip API call if data was fetched within this window (unless forceRefresh)
+const FETCH_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 interface TasksStore {
   tasks: Task[];
   taskCompletions: TaskCompletion[];
@@ -26,7 +29,8 @@ interface TasksStore {
   isUpdatingStatus: boolean;
   isEditing: boolean;
   error: string | null;
-  fetchTasksAndCompletions: () => Promise<void>;
+  lastTasksFetchedAt: number | null;
+  fetchTasksAndCompletions: (forceRefresh?: boolean) => Promise<void>;
   deleteTask: (taskId: string) => Promise<boolean>;
   updateTaskStatus: (taskId: string, isAvailable: boolean) => Promise<boolean>;
   editTask: (taskId: string, data: EditTaskData) => Promise<boolean>;
@@ -45,8 +49,9 @@ export const useTasksStore = create<TasksStore>()(
       isUpdatingStatus: false,
       isEditing: false,
       error: null,
+      lastTasksFetchedAt: null,
 
-      fetchTasksAndCompletions: async () => {
+      fetchTasksAndCompletions: async (forceRefresh = false) => {
         const taskMaster = useTaskMasterStore.getState().user;
         
         if (!taskMaster?.emailAddress) {
@@ -56,6 +61,12 @@ export const useTasksStore = create<TasksStore>()(
             error: 'No valid taskMaster email address found' 
           });
           return;
+        }
+
+        const { lastTasksFetchedAt } = get();
+        const now = Date.now();
+        if (!forceRefresh && lastTasksFetchedAt != null && (now - lastTasksFetchedAt) < FETCH_TTL_MS) {
+          return; // Skip - data is still fresh
         }
 
         set({ isLoading: true, error: null });
@@ -75,7 +86,8 @@ export const useTasksStore = create<TasksStore>()(
             tasks, 
             taskCompletions, 
             isLoading: false, 
-            error: null 
+            error: null,
+            lastTasksFetchedAt: Date.now(),
           });
         } catch (error) {
           console.error('Error fetching tasks and completions:', error);
@@ -228,7 +240,8 @@ export const useTasksStore = create<TasksStore>()(
       name: 'tasks-storage',
       partialize: (state) => ({ 
         tasks: state.tasks, 
-        taskCompletions: state.taskCompletions 
+        taskCompletions: state.taskCompletions,
+        lastTasksFetchedAt: state.lastTasksFetchedAt,
       }),
     }
   )

@@ -60,9 +60,12 @@ export default function AdminTasksPage() {
   const {
     tasks,
     isLoadingTasks,
+    isLoadingMoreTasks,
+    hasMoreTasks,
     isDeleting,
     isUpdating,
     fetchAllTasks,
+    loadMoreTasks,
     deleteTask,
     updateTask,
     error
@@ -687,9 +690,29 @@ export default function AdminTasksPage() {
           </div>
         )}
 
-        <p className="text-sm text-muted-foreground text-center">
-          Showing {sortedTasks.length} of {tasks.length} task{tasks.length !== 1 ? 's' : ''}
-        </p>
+        <div className="flex flex-col items-center gap-3">
+          <p className="text-sm text-muted-foreground text-center">
+            Showing {sortedTasks.length} task{sortedTasks.length !== 1 ? 's' : ''}
+            {hasMoreTasks && ' (more available)'}
+          </p>
+          {hasMoreTasks && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => loadMoreTasks()}
+              disabled={isLoadingMoreTasks}
+            >
+              {isLoadingMoreTasks ? (
+                <>
+                  <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                'Load more'
+              )}
+            </Button>
+          )}
+        </div>
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

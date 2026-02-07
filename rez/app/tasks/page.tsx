@@ -115,7 +115,7 @@ function TasksContent() {
     }
 
     try {
-      await fetchTasksAndCompletions();
+      await fetchTasksAndCompletions(true);
       updateRefreshTime();
       toast.success("Tasks data refreshed successfully!");
     } catch (error) {

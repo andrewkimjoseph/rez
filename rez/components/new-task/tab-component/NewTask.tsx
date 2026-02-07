@@ -328,7 +328,7 @@ export default function NewTask() {
             task_link: data.link,
           });
           // Refresh the tasks list
-          await fetchTasksAndCompletions();
+          await fetchTasksAndCompletions(true);
           // Reset the form after successful update
           reset();
         } else {
@@ -384,7 +384,7 @@ export default function NewTask() {
             task_link: data.link,
           });
           // Refresh the tasks list to include the newly created task
-          await fetchTasksAndCompletions();
+          await fetchTasksAndCompletions(true);
 
           // Reset the form after successful creation
           reset();

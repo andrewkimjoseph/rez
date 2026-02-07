@@ -20,9 +20,11 @@ import {
   ChartBarIcon,
   ArrowPathIcon,
   ExclamationTriangleIcon,
+  CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { toast } from "sonner";
+import { fetchWithAuthRetry } from "@/lib/api-fetch";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -39,6 +41,8 @@ export default function AdminDashboard() {
   
   const [isHydrated, setIsHydrated] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [taskCompletionsCount, setTaskCompletionsCount] = useState<number | null>(null);
+  const [isLoadingCompletionsCount, setIsLoadingCompletionsCount] = useState(false);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -52,6 +56,14 @@ export default function AdminDashboard() {
         const t = setTimeout(() => {
           fetchAllTasks();
           fetchAllTaskMasters();
+          setIsLoadingCompletionsCount(true);
+          fetchWithAuthRetry('/api/admin/activeTaskCompletionsCount')
+            .then((res) => res.json())
+            .then((data) => {
+              if (typeof data.count === 'number') setTaskCompletionsCount(data.count);
+            })
+            .catch(() => {})
+            .finally(() => setIsLoadingCompletionsCount(false));
         }, 150);
         return () => clearTimeout(t);
       } else {
@@ -257,6 +269,31 @@ export default function AdminDashboard() {
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       View and edit task master profiles, manage admin permissions
                     </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/admin/task-completions" className="group">
+              <Card className="enterprise-card border-0 h-full transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer">
+                <CardContent className="flex items-start gap-4 p-5">
+                  <div className="p-3 rounded-xl bg-green-500/10 group-hover:bg-green-500/15 transition-colors">
+                    <CheckCircleIcon className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div className="space-y-1 flex-1">
+                    <h3 className="font-semibold text-foreground group-hover:text-green-600 transition-colors">
+                      Manage Task Completions
+                    </h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Validate or invalidate participant completions for active tasks
+                    </p>
+                    {isLoadingCompletionsCount ? (
+                      <Skeleton className="h-6 w-12 mt-1" />
+                    ) : taskCompletionsCount != null ? (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {taskCompletionsCount.toLocaleString()} total
+                      </p>
+                    ) : null}
                   </div>
                 </CardContent>
               </Card>
