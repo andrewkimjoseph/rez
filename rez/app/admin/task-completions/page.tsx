@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { toast } from "sonner";
 import { fetchWithAuthRetry } from "@/lib/api-fetch";
+import AdminAccessDenied from "@/components/admin/AdminAccessDenied";
 
 export default function AdminTaskCompletionsPage() {
   const router = useRouter();
@@ -57,7 +58,6 @@ export default function AdminTaskCompletionsPage() {
         fetchAllTasks();
       } else {
         setIsAuthorized(false);
-        router.push("/dashboard");
       }
     } else if (isHydrated && !user) {
       router.push("/sign-in");
@@ -160,7 +160,7 @@ export default function AdminTaskCompletionsPage() {
   }
 
   if (isAuthorized === false) {
-    return null;
+    return <AdminAccessDenied />;
   }
 
   return (

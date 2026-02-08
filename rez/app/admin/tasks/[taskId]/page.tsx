@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import AdminEditTaskDialog from "@/components/admin/AdminEditTaskDialog";
 import AdminRejectTaskDialog from "@/components/admin/AdminRejectTaskDialog";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
+import AdminAccessDenied from "@/components/admin/AdminAccessDenied";
 
 
 export default function AdminTaskDetailsPage() {
@@ -75,7 +76,6 @@ export default function AdminTaskDetailsPage() {
         fetchAllTasks();
       } else {
         setIsAuthorized(false);
-        router.push("/dashboard");
       }
     } else if (isHydrated && !user) {
       router.push("/sign-in");
@@ -211,7 +211,7 @@ export default function AdminTaskDetailsPage() {
   }
 
   if (isAuthorized === false) {
-    return null;
+    return <AdminAccessDenied />;
   }
 
   if (isLoadingTasks && !task) {

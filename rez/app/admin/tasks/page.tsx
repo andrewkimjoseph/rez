@@ -44,6 +44,7 @@ import Image from "next/image";
 import { toast } from "sonner";
 import AdminEditTaskDialog from "@/components/admin/AdminEditTaskDialog";
 import AdminRejectTaskDialog from "@/components/admin/AdminRejectTaskDialog";
+import AdminAccessDenied from "@/components/admin/AdminAccessDenied";
 import { getTokenInfo } from "@/utils/currencies";
 import {
   DropdownMenu,
@@ -123,7 +124,6 @@ export default function AdminTasksPage() {
         fetchAllTasks();
       } else {
         setIsAuthorized(false);
-        router.push("/dashboard");
       }
     } else if (isHydrated && !user) {
       router.push("/sign-in");
@@ -404,7 +404,7 @@ export default function AdminTasksPage() {
   }
 
   if (isAuthorized === false) {
-    return null; // Will redirect
+    return <AdminAccessDenied />;
   }
 
   return (

@@ -48,6 +48,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
+import AdminAccessDenied from "@/components/admin/AdminAccessDenied";
 
 export default function AdminTaskMastersPage() {
   const router = useRouter();
@@ -95,7 +96,6 @@ export default function AdminTaskMastersPage() {
         fetchAllTaskMasters();
       } else {
         setIsAuthorized(false);
-        router.push("/dashboard");
       }
     } else if (isHydrated && !user) {
       router.push("/sign-in");
@@ -260,7 +260,7 @@ export default function AdminTaskMastersPage() {
   }
 
   if (isAuthorized === false) {
-    return null; // Will redirect
+    return <AdminAccessDenied />;
   }
 
   return (
