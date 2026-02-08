@@ -85,14 +85,51 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    const taskCompletions = completionsSnapshot.docs.map((doc) => {
-      const data = doc.data();
+    const rawCompletions = completionsSnapshot.docs.map((doc) => {
+      const data = doc.data() as Record<string, unknown> & { participantId?: string | null };
       const completionId = doc.id;
       const reward = rewardsByCompletionId.get(completionId);
       return {
         id: completionId,
         ...data,
         ...(reward && { reward }),
+      };
+    });
+
+    const uniqueParticipantIds = [
+      ...new Set(
+        rawCompletions
+          .map((c) => c.participantId)
+          .filter((id): id is string => typeof id === 'string' && id.length > 0)
+      ),
+    ];
+
+    const participantsRef = paxDB.collection(COLLECTIONS.PARTICIPANTS);
+    const BATCH_SIZE = 10;
+    const emailByParticipantId = new Map<string, string | null>();
+
+    for (let i = 0; i < uniqueParticipantIds.length; i += BATCH_SIZE) {
+      const batch = uniqueParticipantIds.slice(i, i + BATCH_SIZE);
+      const docRefs = batch.map((id) => participantsRef.doc(id));
+      const participantSnaps = await paxDB.getAll(...docRefs);
+      participantSnaps.forEach((snap, idx) => {
+        const participantId = batch[idx];
+        const email = snap.exists ? (snap.data()?.emailAddress ?? null) : null;
+        if (participantId) {
+          emailByParticipantId.set(participantId, typeof email === 'string' ? email : null);
+        }
+      });
+    }
+
+    const taskCompletions = rawCompletions.map((c) => {
+      const participantId = c.participantId;
+      const participantEmailAddress =
+        participantId != null && participantId !== ''
+          ? (emailByParticipantId.get(participantId) ?? null)
+          : null;
+      return {
+        ...c,
+        participantEmailAddress,
       };
     });
 

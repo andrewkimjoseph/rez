@@ -4,4 +4,5 @@ export const COLLECTIONS = {
   TASKS: 'tasks',
   TASK_COMPLETIONS: 'task_completions',
   REWARDS: 'rewards',
+  PARTICIPANTS: 'participants',
 }; 
