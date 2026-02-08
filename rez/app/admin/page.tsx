@@ -278,6 +278,24 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             </Link>
+
+            <Link href="/admin/participants" className="group">
+              <Card className="enterprise-card border-0 h-full transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer">
+                <CardContent className="flex items-start gap-4 p-5">
+                  <div className="p-3 rounded-xl bg-violet-500/10 group-hover:bg-violet-500/15 transition-colors">
+                    <UsersIcon className="h-5 w-5 text-violet-600" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="font-semibold text-foreground group-hover:text-violet-600 transition-colors">
+                      Manage Participants
+                    </h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      View and disable/enable participant accounts in Pax
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         </div>
       </div>

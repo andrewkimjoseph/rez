@@ -36,35 +36,53 @@ export interface AdminUpdateTaskMasterData {
   isSuperAdmin?: boolean;
 }
 
+export interface AdminParticipant {
+  id: string;
+  emailAddress: string | null;
+  displayName: string | null;
+  disabled: boolean;
+}
+
 // Cache duration: 30 minutes
 const CACHE_DURATION = 30 * 60 * 1000;
 
 interface AdminStore {
   tasks: Task[];
   taskMasters: TaskMaster[];
+  participants: AdminParticipant[];
   isLoadingTasks: boolean;
   isLoadingTaskMasters: boolean;
+  isLoadingParticipants: boolean;
   isLoadingMoreTasks: boolean;
   isLoadingMoreTaskMasters: boolean;
+  isLoadingMoreParticipants: boolean;
   hasMoreTasks: boolean;
   hasMoreTaskMasters: boolean;
+  hasMoreParticipants: boolean;
   tasksNextCursor: { startAfterDocId: string } | null;
   taskMastersNextCursor: { startAfterDocId: string } | null;
+  participantsNextCursor: { startAfterDocId: string } | null;
+  participantsSearchQuery: string;
   isUpdating: boolean;
   isDeleting: boolean;
   isTogglingStatus: boolean;
+  isTogglingParticipantStatus: boolean;
   error: string | null;
   lastTasksFetch: number | null;
   lastTaskMastersFetch: number | null;
+  lastParticipantsFetch: number | null;
 
   fetchAllTasks: (forceRefresh?: boolean) => Promise<void>;
   fetchAllTaskMasters: (forceRefresh?: boolean) => Promise<void>;
+  fetchAllParticipants: (forceRefresh?: boolean, search?: string) => Promise<void>;
   loadMoreTasks: () => Promise<void>;
   loadMoreTaskMasters: () => Promise<void>;
+  loadMoreParticipants: () => Promise<void>;
   updateTask: (taskId: string, data: AdminUpdateTaskData) => Promise<boolean>;
   deleteTask: (taskId: string) => Promise<boolean>;
   updateTaskMaster: (taskMasterId: string, data: AdminUpdateTaskMasterData) => Promise<boolean>;
   toggleTaskMasterStatus: (taskMasterId: string, disabled: boolean) => Promise<boolean>;
+  toggleParticipantStatus: (participantId: string, disabled: boolean) => Promise<boolean>;
   clearError: () => void;
   clearCache: () => void;
 }
@@ -72,20 +90,28 @@ interface AdminStore {
 export const useAdminStore = create<AdminStore>()((set, get) => ({
   tasks: [],
   taskMasters: [],
+  participants: [],
   isLoadingTasks: false,
   isLoadingTaskMasters: false,
+  isLoadingParticipants: false,
   isLoadingMoreTasks: false,
   isLoadingMoreTaskMasters: false,
+  isLoadingMoreParticipants: false,
   hasMoreTasks: false,
   hasMoreTaskMasters: false,
+  hasMoreParticipants: false,
   tasksNextCursor: null,
   taskMastersNextCursor: null,
+  participantsNextCursor: null,
+  participantsSearchQuery: '',
   isUpdating: false,
   isDeleting: false,
   isTogglingStatus: false,
+  isTogglingParticipantStatus: false,
   error: null,
   lastTasksFetch: null,
   lastTaskMastersFetch: null,
+  lastParticipantsFetch: null,
 
   fetchAllTasks: async (forceRefresh = false) => {
     const { tasks, lastTasksFetch, isLoadingTasks } = get();
@@ -201,6 +227,70 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
     }
   },
 
+  fetchAllParticipants: async (forceRefresh = false, search?: string) => {
+    const { participants, lastParticipantsFetch, isLoadingParticipants, participantsSearchQuery } = get();
+    const now = Date.now();
+    const searchTerm = search ?? participantsSearchQuery;
+
+    if (isLoadingParticipants) return;
+
+    const cacheOk = !forceRefresh && participants.length > 0 && lastParticipantsFetch && now - lastParticipantsFetch < CACHE_DURATION && !searchTerm;
+    if (cacheOk) return;
+
+    set({ isLoadingParticipants: true, error: null, participantsSearchQuery: searchTerm });
+
+    try {
+      let url = '/api/admin/participants?limit=50';
+      if (searchTerm) {
+        url += `&search=${encodeURIComponent(searchTerm)}`;
+      }
+      const response = await fetchWithAuthRetry(url);
+      const { participants: newParticipants, hasMore, nextCursor } = await response.json();
+      set({
+        participants: newParticipants || [],
+        isLoadingParticipants: false,
+        lastParticipantsFetch: Date.now(),
+        hasMoreParticipants: !!hasMore,
+        participantsNextCursor: nextCursor,
+      });
+    } catch (error) {
+      console.error('Error fetching participants:', error);
+      set({
+        isLoadingParticipants: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch participants',
+      });
+    }
+  },
+
+  loadMoreParticipants: async () => {
+    const { participantsNextCursor, isLoadingMoreParticipants, hasMoreParticipants, participantsSearchQuery } = get();
+    if (!participantsNextCursor || isLoadingMoreParticipants || !hasMoreParticipants) return;
+
+    set({ isLoadingMoreParticipants: true, error: null });
+
+    try {
+      let url = `/api/admin/participants?limit=50&startAfterDocId=${encodeURIComponent(participantsNextCursor.startAfterDocId)}`;
+      if (participantsSearchQuery) {
+        url += `&search=${encodeURIComponent(participantsSearchQuery)}`;
+      }
+      const response = await fetchWithAuthRetry(url);
+      const { participants: moreParticipants, hasMore, nextCursor } = await response.json();
+      const currentParticipants = get().participants;
+      set({
+        participants: [...currentParticipants, ...(moreParticipants || [])],
+        isLoadingMoreParticipants: false,
+        hasMoreParticipants: !!hasMore,
+        participantsNextCursor: nextCursor,
+      });
+    } catch (error) {
+      console.error('Error loading more participants:', error);
+      set({
+        isLoadingMoreParticipants: false,
+        error: error instanceof Error ? error.message : 'Failed to load more participants',
+      });
+    }
+  },
+
   updateTask: async (taskId: string, data: AdminUpdateTaskData): Promise<boolean> => {
     set({ isUpdating: true, error: null });
 
@@ -298,17 +388,43 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
     }
   },
 
+  toggleParticipantStatus: async (participantId: string, disabled: boolean): Promise<boolean> => {
+    set({ isTogglingParticipantStatus: true, error: null });
+
+    try {
+      await fetchWithAuthRetry('/api/admin/toggleParticipantStatus', {
+        method: 'PATCH',
+        body: JSON.stringify({ participantId, disabled })
+      });
+
+      set({ isTogglingParticipantStatus: false });
+      return true;
+    } catch (error) {
+      console.error('Error toggling participant status:', error);
+      set({
+        isTogglingParticipantStatus: false,
+        error: error instanceof Error ? error.message : 'Failed to toggle participant status'
+      });
+      return false;
+    }
+  },
+
   clearError: () => set({ error: null }),
   
   clearCache: () => set({
     tasks: [],
     taskMasters: [],
+    participants: [],
     lastTasksFetch: null,
     lastTaskMastersFetch: null,
+    lastParticipantsFetch: null,
     hasMoreTasks: false,
     hasMoreTaskMasters: false,
+    hasMoreParticipants: false,
     tasksNextCursor: null,
     taskMastersNextCursor: null,
+    participantsNextCursor: null,
+    participantsSearchQuery: '',
   }),
 }));
 
