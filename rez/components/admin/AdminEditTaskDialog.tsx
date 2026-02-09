@@ -56,6 +56,7 @@ const taskTypes = [
 ];
 const categories = ["Finance", "Climate", "Education", "Health", "Technology", "Social", "Other"];
 const difficulties = ["Easy", "Medium", "Hard"];
+const PAYMENT_TERMS_NONE = "__none__";
 
 export default function AdminEditTaskDialog({
   task,
@@ -491,12 +492,12 @@ export default function AdminEditTaskDialog({
                       </TooltipContent>
                     </Tooltip>
                   </div>
-                  <Select value={paymentTerms || ""} onValueChange={(value) => setPaymentTerms(value === "" ? null : value)}>
+                  <Select value={paymentTerms ?? PAYMENT_TERMS_NONE} onValueChange={(value) => setPaymentTerms(value === PAYMENT_TERMS_NONE ? null : value)}>
                     <SelectTrigger id="edit-payment-terms" className="h-9 text-sm">
                       <SelectValue placeholder="Not specified" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Not specified</SelectItem>
+                      <SelectItem value={PAYMENT_TERMS_NONE}>Not specified</SelectItem>
                       <SelectItem value="delayed">Delayed</SelectItem>
                       <SelectItem value="instant">Instant</SelectItem>
                     </SelectContent>
