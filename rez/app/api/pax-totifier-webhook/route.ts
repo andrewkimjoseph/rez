@@ -58,10 +58,20 @@ export async function POST(request: NextRequest) {
       return new NextResponse(null, { status: 200 });
     }
 
+    const auth = getAuth(getApp('paxApp'));
+    try {
+      const existing = await auth.getUser(participantId);
+      if (existing.disabled) {
+        await sendTelegramReply(chatId, `ℹ️ Participant already disabled.\nParticipant ID: ${participantId}`);
+        return new NextResponse(null, { status: 200 });
+      }
+    } catch {
+      // User may not exist; continue and let updateUser surface the error
+    }
+
     await sendTelegramReply(chatId, `⏳ Disabling participant: ${participantId}...`);
 
     try {
-      const auth = getAuth(getApp('paxApp'));
       await auth.updateUser(participantId, { disabled: true });
       await sendTelegramReply(
         chatId,
@@ -71,6 +81,47 @@ export async function POST(request: NextRequest) {
       const message = error instanceof Error ? error.message : String(error);
       console.error('Error disabling participant via webhook:', error);
       await sendTelegramReply(chatId, `❌ Failed to disable participant.\nError: ${message}`);
+    }
+  }
+
+  if (text?.startsWith('/enable')) {
+    const participantId = text.split(/\s+/)[1]?.trim();
+
+    if (!chatId) {
+      return new NextResponse(null, { status: 200 });
+    }
+
+    if (!participantId) {
+      await sendTelegramReply(
+        chatId,
+        '❌ Please provide a participant ID.\nUsage: /enable [participantId]'
+      );
+      return new NextResponse(null, { status: 200 });
+    }
+
+    const auth = getAuth(getApp('paxApp'));
+    try {
+      const existing = await auth.getUser(participantId);
+      if (!existing.disabled) {
+        await sendTelegramReply(chatId, `ℹ️ Participant already enabled.\nParticipant ID: ${participantId}`);
+        return new NextResponse(null, { status: 200 });
+      }
+    } catch {
+      // User may not exist; continue and let updateUser surface the error
+    }
+
+    await sendTelegramReply(chatId, `⏳ Enabling participant: ${participantId}...`);
+
+    try {
+      await auth.updateUser(participantId, { disabled: false });
+      await sendTelegramReply(
+        chatId,
+        `✅ Participant enabled successfully.\nParticipant ID: ${participantId}`
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('Error enabling participant via webhook:', error);
+      await sendTelegramReply(chatId, `❌ Failed to enable participant.\nError: ${message}`);
     }
   }
 
