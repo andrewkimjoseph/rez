@@ -22,7 +22,7 @@ export interface AdminUpdateTaskData {
   rewardAmountPerParticipant?: number;
   rewardCurrencyId?: number;
   numberOfCooldownHours?: number;
-  paymentTerms?: string;
+  paymentTerms?: string | null;
   managerContractAddress?: string;
   reviewStatus?: 'pending' | 'approved' | 'rejected' | 'published' | 'archived';
   reasonsForRejection?: number[]; // Array of rejection reason IDs (1-8)

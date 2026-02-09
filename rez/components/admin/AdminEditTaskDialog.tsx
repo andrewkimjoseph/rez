@@ -87,7 +87,7 @@ export default function AdminEditTaskDialog({
   const [link, setLink] = useState("");
   const [instructions, setInstructions] = useState("");
   const [feedback, setFeedback] = useState("");
-  const [paymentTerms, setPaymentTerms] = useState("");
+  const [paymentTerms, setPaymentTerms] = useState<string | null>(null);
   const [targetCountry, setTargetCountry] = useState("");
   const [targetNumberOfParticipants, setTargetNumberOfParticipants] = useState<number>(0);
   const [numberOfQuestions, setNumberOfQuestions] = useState<number>(0);
@@ -117,7 +117,7 @@ export default function AdminEditTaskDialog({
       setLink(task.link || "");
       setInstructions(task.instructions || "");
       setFeedback(task.feedback || "");
-      setPaymentTerms(task.paymentTerms || "");
+      setPaymentTerms(task.paymentTerms || null);
       setTargetCountry(task.targetCountry || "");
       setTargetNumberOfParticipants(task.targetNumberOfParticipants || 0);
       setNumberOfQuestions(task.numberOfQuestions || 0);
@@ -146,7 +146,10 @@ export default function AdminEditTaskDialog({
     if (link !== (task.link || "")) updateData.link = link;
     if (instructions !== (task.instructions || "")) updateData.instructions = instructions;
     if (feedback !== (task.feedback || "")) updateData.feedback = feedback;
-    if (paymentTerms !== (task.paymentTerms || "")) updateData.paymentTerms = paymentTerms;
+    const currentPaymentTerms = task.paymentTerms || null;
+    if (paymentTerms !== currentPaymentTerms) {
+      updateData.paymentTerms = paymentTerms === null ? null : paymentTerms;
+    }
     if (targetCountry !== (task.targetCountry || "")) updateData.targetCountry = targetCountry;
     if (targetNumberOfParticipants !== (task.targetNumberOfParticipants || 0)) updateData.targetNumberOfParticipants = targetNumberOfParticipants;
     if (numberOfQuestions !== (task.numberOfQuestions || 0)) updateData.numberOfQuestions = numberOfQuestions;
@@ -488,7 +491,16 @@ export default function AdminEditTaskDialog({
                       </TooltipContent>
                     </Tooltip>
                   </div>
-                  <Textarea id="edit-payment-terms" value={paymentTerms} onChange={(e) => setPaymentTerms(e.target.value)} placeholder="Payment terms..." rows={2} className="text-sm resize-none min-h-[56px]" />
+                  <Select value={paymentTerms || ""} onValueChange={(value) => setPaymentTerms(value === "" ? null : value)}>
+                    <SelectTrigger id="edit-payment-terms" className="h-9 text-sm">
+                      <SelectValue placeholder="Not specified" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Not specified</SelectItem>
+                      <SelectItem value="delayed">Delayed</SelectItem>
+                      <SelectItem value="instant">Instant</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </TabsContent>

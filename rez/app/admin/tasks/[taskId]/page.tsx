@@ -31,6 +31,7 @@ import {
   BeakerIcon,
   ArrowTopRightOnSquareIcon,
   ChartBarIcon,
+  ClipboardDocumentIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import AdminEditTaskDialog from "@/components/admin/AdminEditTaskDialog";
@@ -185,6 +186,14 @@ export default function AdminTaskDetailsPage() {
     setReviewAction(null);
   };
 
+  const copyToClipboard = (text: string, label: string) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(
+      () => toast.success(`${label} copied`),
+      () => toast.error("Failed to copy")
+    );
+  };
+
   const getReviewStatusBadge = (reviewStatus: string | null | undefined) => {
     switch (reviewStatus) {
       case 'pending':
@@ -288,9 +297,16 @@ export default function AdminTaskDetailsPage() {
                   </Badge>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground mt-2">
-                Task ID: {formattedData.id}
-              </p>
+              <div className="py-3 flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Task ID:</span>
+                <button
+                  onClick={() => copyToClipboard(formattedData.id, "Task ID")}
+                  className="group/copy flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors font-mono"
+                >
+                  <span>{formattedData.id}</span>
+                  <ClipboardDocumentIcon className="h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover/copy:opacity-100 transition-opacity" aria-hidden />
+                </button>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               {task.reviewStatus === 'pending' && (

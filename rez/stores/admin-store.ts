@@ -22,7 +22,7 @@ export interface AdminUpdateTaskData {
   rewardAmountPerParticipant?: number;
   rewardCurrencyId?: number;
   numberOfCooldownHours?: number;
-  paymentTerms?: string;
+  paymentTerms?: string | null;
   managerContractAddress?: string;
   rezTaskMasterEmailAddress?: string; // Super admin can reassign task to different task master
   reviewStatus?: 'pending' | 'approved' | 'rejected' | 'published' | 'archived'; // Task review workflow
