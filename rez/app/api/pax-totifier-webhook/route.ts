@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { getApp } from 'firebase-admin/app';
+import '@/firebase/serverConfig';
 
 /** Telegram Update object (minimal shape we use) */
 interface TelegramUpdate {
