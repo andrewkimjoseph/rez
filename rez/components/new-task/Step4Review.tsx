@@ -66,15 +66,16 @@ export default function Step5Review() {
     let baseCost = 0;
 
     if (isOnlineSurvey) {
-      baseCost = 50 * (questions / 10) * (participants / 20);
+      baseCost = 50 * (questions / 10) * (participants / 50);
     } else if (isProductTesting) {
-      baseCost = 100 * (questions / 10) * (participants / 100);
+      baseCost = 100 * (questions / 5) * (participants / 100);
     }
 
-    const agencyCost = baseCost * 10;
-    const savingsPercent = agencyCost > 0 ? Math.round(((agencyCost - baseCost) / agencyCost) * 100) : 0;
+    const roundedCost = Math.round(baseCost * 100) / 100;
+    const roundedAgencyCost = Math.round(baseCost * 10 * 100) / 100;
+    const savingsPercent = roundedAgencyCost > 0 ? Math.round(((roundedAgencyCost - roundedCost) / roundedAgencyCost) * 100) : 0;
 
-    return { cost: baseCost, agencyCost, savingsPercent };
+    return { cost: roundedCost, agencyCost: roundedAgencyCost, savingsPercent };
   }, [questions, participants, isOnlineSurvey, isProductTesting]);
 
   const handleEdit = (step: TaskStep) => setStep(step);
