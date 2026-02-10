@@ -273,10 +273,21 @@ export default function AdminTaskDetailsPage() {
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <ShieldCheckIcon className="h-6 w-6 text-primary" />
+                <ShieldCheckIcon className="h-6 w-6 text-primary shrink-0" />
                 <h1 className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight">
                   {formattedData.title}
                 </h1>
+                {formattedData.title && (
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(formattedData.title ?? "", "Title")}
+                    className="shrink-0 rounded p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    title="Copy title"
+                    aria-label="Copy task title"
+                  >
+                    <ClipboardDocumentIcon className="h-5 w-5" aria-hidden />
+                  </button>
+                )}
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline">{formattedData.typeLabel}</Badge>
@@ -476,7 +487,20 @@ export default function AdminTaskDetailsPage() {
           </div>
           <div>
             <dt className="text-xs text-muted-foreground">Created By</dt>
-            <dd className="font-medium text-sm mt-0.5">{formattedData.rezTaskMasterEmailAddress}</dd>
+            <dd className="font-medium text-sm mt-0.5 flex items-center gap-1.5">
+              <span>{formattedData.rezTaskMasterEmailAddress || "—"}</span>
+              {formattedData.rezTaskMasterEmailAddress && (
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(formattedData.rezTaskMasterEmailAddress ?? "", "Email")}
+                  className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  title="Copy email"
+                  aria-label="Copy email address"
+                >
+                  <ClipboardDocumentIcon className="h-4 w-4" aria-hidden />
+                </button>
+              )}
+            </dd>
           </div>
           <div>
             <dt className="text-xs text-muted-foreground">Task Master ID</dt>
