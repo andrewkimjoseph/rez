@@ -46,8 +46,14 @@ export async function PATCH(request: NextRequest) {
       isValid,
       timeUpdated: FieldValue.serverTimestamp(),
       ...(isValid === false
-        ? { invalidatedAt: FieldValue.serverTimestamp() }
-        : { invalidatedAt: null }
+        ? { 
+            invalidatedAt: FieldValue.serverTimestamp(),
+            invalidatedBy: authResult.email || null
+          }
+        : { 
+            invalidatedAt: null,
+            invalidatedBy: null
+          }
       ),
     });
 

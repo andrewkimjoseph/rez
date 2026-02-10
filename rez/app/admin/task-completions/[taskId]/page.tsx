@@ -88,51 +88,52 @@ export default function AdminTaskCompletionsDetailPage() {
     }
   }, [isHydrated, user, router, fetchAllTasks]);
 
-  useEffect(() => {
-    if (!taskId || !isAuthorized || !task || !isTaskActive) return;
-
-    const loadCompletions = async () => {
-      setIsLoadingCompletions(true);
-      try {
-        const res = await fetchWithAuthRetry(`/api/admin/taskCompletions?taskId=${encodeURIComponent(taskId)}`);
-        const data = await res.json();
-        if (data.taskCompletions) {
-          setTaskCompletions(
-            data.taskCompletions.map((c: any) => ({
-              ...c,
-              id: c.id ?? null,
-              isValid: c.isValid === true,
-              participantId: c.participantId ?? null,
-              participantEmailAddress: c.participantEmailAddress ?? null,
-              screeningId: c.screeningId ?? null,
-              screeningTimeCreated: c.screeningTimeCreated ?? null,
-              invalidatedAt: c.invalidatedAt ?? null,
-              taskId: c.taskId ?? null,
-              timeCompleted: c.timeCompleted ?? null,
-              timeCreated: c.timeCreated ?? null,
-              timeUpdated: c.timeUpdated ?? null,
-              reward: c.reward ?? undefined,
-            }))
-          );
-          setHasMoreCompletions(data.hasMore === true);
-          setLastDocIdForCursor(
-            data.nextCursor?.startAfterDocId ?? null
-          );
-        } else {
-          setTaskCompletions([]);
-          setHasMoreCompletions(false);
-          setLastDocIdForCursor(null);
-        }
-      } catch {
-        toast.error("Failed to load completions");
+  const loadCompletions = async () => {
+    if (!taskId) return;
+    setIsLoadingCompletions(true);
+    try {
+      const res = await fetchWithAuthRetry(`/api/admin/taskCompletions?taskId=${encodeURIComponent(taskId)}`);
+      const data = await res.json();
+      if (data.taskCompletions) {
+        setTaskCompletions(
+          data.taskCompletions.map((c: any) => ({
+            ...c,
+            id: c.id ?? null,
+            isValid: c.isValid === true,
+            participantId: c.participantId ?? null,
+            participantEmailAddress: c.participantEmailAddress ?? null,
+            screeningId: c.screeningId ?? null,
+            screeningTimeCreated: c.screeningTimeCreated ?? null,
+            invalidatedAt: c.invalidatedAt ?? null,
+            invalidatedBy: c.invalidatedBy ?? null,
+            taskId: c.taskId ?? null,
+            timeCompleted: c.timeCompleted ?? null,
+            timeCreated: c.timeCreated ?? null,
+            timeUpdated: c.timeUpdated ?? null,
+            reward: c.reward ?? undefined,
+          }))
+        );
+        setHasMoreCompletions(data.hasMore === true);
+        setLastDocIdForCursor(
+          data.nextCursor?.startAfterDocId ?? null
+        );
+      } else {
         setTaskCompletions([]);
         setHasMoreCompletions(false);
         setLastDocIdForCursor(null);
-      } finally {
-        setIsLoadingCompletions(false);
       }
-    };
+    } catch {
+      toast.error("Failed to load completions");
+      setTaskCompletions([]);
+      setHasMoreCompletions(false);
+      setLastDocIdForCursor(null);
+    } finally {
+      setIsLoadingCompletions(false);
+    }
+  };
 
+  useEffect(() => {
+    if (!taskId || !isAuthorized || !task || !isTaskActive) return;
     loadCompletions();
   }, [taskId, isAuthorized, task, isTaskActive]);
 
@@ -145,9 +146,7 @@ export default function AdminTaskCompletionsDetailPage() {
         body: JSON.stringify({ completionId: completion.id, isValid: true }),
       });
       if (res.ok) {
-        setTaskCompletions((prev) =>
-          prev.map((c) => (c.id === completion.id ? { ...c, isValid: true, invalidatedAt: null } : c))
-        );
+        await loadCompletions();
         toast.success("Completion validated");
       } else {
         toast.error("Failed to validate completion");
@@ -170,9 +169,7 @@ export default function AdminTaskCompletionsDetailPage() {
         body: JSON.stringify({ completionId: completion.id, isValid: false }),
       });
       if (res.ok) {
-        setTaskCompletions((prev) =>
-          prev.map((c) => (c.id === completion.id ? { ...c, isValid: false } : c))
-        );
+        await loadCompletions();
         toast.success("Completion invalidated");
       } else {
         toast.error("Failed to invalidate completion");
@@ -222,37 +219,6 @@ export default function AdminTaskCompletionsDetailPage() {
     }
   };
 
-  const loadCompletions = () => {
-    if (!taskId) return;
-    setIsLoadingCompletions(true);
-    fetchWithAuthRetry(`/api/admin/taskCompletions?taskId=${encodeURIComponent(taskId)}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.taskCompletions) {
-          setTaskCompletions(
-            data.taskCompletions.map((c: any) => ({
-              ...c,
-              id: c.id ?? null,
-              isValid: c.isValid === true,
-              participantId: c.participantId ?? null,
-              participantEmailAddress: c.participantEmailAddress ?? null,
-              screeningId: c.screeningId ?? null,
-              screeningTimeCreated: c.screeningTimeCreated ?? null,
-              invalidatedAt: c.invalidatedAt ?? null,
-              taskId: c.taskId ?? null,
-              timeCompleted: c.timeCompleted ?? null,
-              timeCreated: c.timeCreated ?? null,
-              timeUpdated: c.timeUpdated ?? null,
-              reward: c.reward ?? undefined,
-            }))
-          );
-          setHasMoreCompletions(data.hasMore === true);
-          setLastDocIdForCursor(data.nextCursor?.startAfterDocId ?? null);
-        }
-      })
-      .catch(() => toast.error("Failed to refresh"))
-      .finally(() => setIsLoadingCompletions(false));
-  };
 
   const loadMoreCompletions = () => {
     if (!taskId || !lastDocIdForCursor || isLoadingMoreCompletions) return;
@@ -272,6 +238,7 @@ export default function AdminTaskCompletionsDetailPage() {
             screeningId: c.screeningId ?? null,
             screeningTimeCreated: c.screeningTimeCreated ?? null,
             invalidatedAt: c.invalidatedAt ?? null,
+            invalidatedBy: c.invalidatedBy ?? null,
             taskId: c.taskId ?? null,
             timeCompleted: c.timeCompleted ?? null,
             timeCreated: c.timeCreated ?? null,

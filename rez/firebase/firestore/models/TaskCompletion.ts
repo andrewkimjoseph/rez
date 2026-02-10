@@ -10,4 +10,5 @@ export interface TaskCompletion {
   timeCreated: any | null; // Firestore Timestamp
   timeUpdated: any | null; // Firestore Timestamp
   invalidatedAt?: any | null; // Firestore Timestamp - set when superadmin invalidates
+  invalidatedBy?: string | null; // Email of superadmin who invalidated
 } 
