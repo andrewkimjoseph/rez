@@ -80,6 +80,8 @@ export default function AdminTaskCompletionsDetailPage() {
     const twoHoursInMs = 2 * 60 * 60 * 1000;
     const now = Date.now();
     const expired = taskCompletions.filter(c => {
+      // Only count invalid completions that have expired
+      if (c.isValid) return false;
       const ts = c.screeningTimeCreated as { seconds?: number; _seconds?: number } | null | undefined;
       if (ts == null) return false;
       const sec = ts.seconds ?? ts._seconds;
