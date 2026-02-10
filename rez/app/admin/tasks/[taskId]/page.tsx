@@ -602,7 +602,7 @@ export default function AdminTaskDetailsPage() {
                 <DialogTitle>Approve Task</DialogTitle>
                 <DialogDescription>
                   Are you sure you want to approve &quot;{formattedData.title}&quot;?
-                  This will make the task active and available for users to complete.
+                  The task will be marked as Approved. It will not be visible to participants until it is published.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
