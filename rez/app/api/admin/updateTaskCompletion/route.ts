@@ -45,6 +45,10 @@ export async function PATCH(request: NextRequest) {
     await docRef.update({
       isValid,
       timeUpdated: FieldValue.serverTimestamp(),
+      ...(isValid === false
+        ? { invalidatedAt: FieldValue.serverTimestamp() }
+        : { invalidatedAt: null }
+      ),
     });
 
     return NextResponse.json({ success: true });

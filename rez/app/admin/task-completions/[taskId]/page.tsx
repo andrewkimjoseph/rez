@@ -106,6 +106,7 @@ export default function AdminTaskCompletionsDetailPage() {
               participantEmailAddress: c.participantEmailAddress ?? null,
               screeningId: c.screeningId ?? null,
               screeningTimeCreated: c.screeningTimeCreated ?? null,
+              invalidatedAt: c.invalidatedAt ?? null,
               taskId: c.taskId ?? null,
               timeCompleted: c.timeCompleted ?? null,
               timeCreated: c.timeCreated ?? null,
@@ -145,7 +146,7 @@ export default function AdminTaskCompletionsDetailPage() {
       });
       if (res.ok) {
         setTaskCompletions((prev) =>
-          prev.map((c) => (c.id === completion.id ? { ...c, isValid: true } : c))
+          prev.map((c) => (c.id === completion.id ? { ...c, isValid: true, invalidatedAt: null } : c))
         );
         toast.success("Completion validated");
       } else {
@@ -237,6 +238,7 @@ export default function AdminTaskCompletionsDetailPage() {
               participantEmailAddress: c.participantEmailAddress ?? null,
               screeningId: c.screeningId ?? null,
               screeningTimeCreated: c.screeningTimeCreated ?? null,
+              invalidatedAt: c.invalidatedAt ?? null,
               taskId: c.taskId ?? null,
               timeCompleted: c.timeCompleted ?? null,
               timeCreated: c.timeCreated ?? null,
@@ -269,6 +271,7 @@ export default function AdminTaskCompletionsDetailPage() {
             participantEmailAddress: c.participantEmailAddress ?? null,
             screeningId: c.screeningId ?? null,
             screeningTimeCreated: c.screeningTimeCreated ?? null,
+            invalidatedAt: c.invalidatedAt ?? null,
             taskId: c.taskId ?? null,
             timeCompleted: c.timeCompleted ?? null,
             timeCreated: c.timeCreated ?? null,
@@ -403,6 +406,7 @@ export default function AdminTaskCompletionsDetailPage() {
                   <TableHead className="font-semibold">Email</TableHead>
                   <TableHead className="font-semibold">Screening time</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
+                  <TableHead className="font-semibold">Invalidated at</TableHead>
                   <TableHead className="font-semibold">Paid</TableHead>
                   <TableHead className="font-semibold">Completed</TableHead>
                   <TableHead className="text-right font-semibold">Actions</TableHead>
@@ -458,6 +462,9 @@ export default function AdminTaskCompletionsDetailPage() {
                           Invalid
                         </Badge>
                       )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {completion.invalidatedAt ? formatTimestamp(completion.invalidatedAt) : "—"}
                     </TableCell>
                     <TableCell>
                       {completion.reward?.txnHash ? (
