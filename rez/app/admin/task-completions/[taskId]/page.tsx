@@ -73,9 +73,10 @@ export default function AdminTaskCompletionsDetailPage() {
 
   const stats = useMemo(() => {
     const completed = taskCompletions.filter(c => c.timeCompleted != null).length;
-    const invalidated = taskCompletions.filter(c => !c.isValid || c.invalidatedAt != null).length;
+    const invalid = taskCompletions.filter(c => !c.isValid).length;
+    const invalidated = taskCompletions.filter(c => c.invalidatedAt != null).length;
     const paid = taskCompletions.filter(c => c.reward?.txnHash != null).length;
-    return { completed, invalidated, paid };
+    return { completed, invalid, invalidated, paid };
   }, [taskCompletions]);
 
   useEffect(() => {
@@ -226,6 +227,23 @@ export default function AdminTaskCompletionsDetailPage() {
     }
   };
 
+  const isExpired = (screeningTimeCreated: unknown) => {
+    if (!screeningTimeCreated) return false;
+    try {
+      const ts = screeningTimeCreated as { seconds?: number; _seconds?: number };
+      const seconds = ts.seconds ?? ts._seconds;
+      if (seconds != null) {
+        const screeningTime = seconds * 1000;
+        const now = Date.now();
+        const twoHoursInMs = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+        return (now - screeningTime) > twoHoursInMs;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
 
   const loadMoreCompletions = () => {
     if (!taskId || !lastDocIdForCursor || isLoadingMoreCompletions) return;
@@ -337,7 +355,7 @@ export default function AdminTaskCompletionsDetailPage() {
                 Validate or invalidate participant completions
                 {hasMoreCompletions
                   ? ` (${taskCompletions.length} shown, load more for more)`
-                  : ` (${taskCompletions.length} total, ${stats.completed} completed, ${stats.invalidated} invalidated, ${stats.paid} paid)`}
+                  : ` (${taskCompletions.length} total, ${stats.completed} completed, ${stats.invalid} invalid, ${stats.invalidated} invalidated, ${stats.paid} paid)`}
               </p>
             </div>
             <Button
@@ -381,6 +399,7 @@ export default function AdminTaskCompletionsDetailPage() {
                   <TableHead className="font-semibold">Screening time</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
                   <TableHead className="font-semibold">Invalidated at</TableHead>
+                  <TableHead className="font-semibold">Expired</TableHead>
                   <TableHead className="font-semibold">Paid</TableHead>
                   <TableHead className="font-semibold">Completed</TableHead>
                   <TableHead className="text-right font-semibold">Actions</TableHead>
@@ -439,6 +458,17 @@ export default function AdminTaskCompletionsDetailPage() {
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {completion.invalidatedAt ? formatTimestamp(completion.invalidatedAt) : "—"}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {isExpired(completion.screeningTimeCreated) ? (
+                        <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100/80 border-0">
+                          Yes
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100/80 border-0">
+                          No
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell>
                       {completion.reward?.txnHash ? (
