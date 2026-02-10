@@ -85,8 +85,12 @@ export async function GET(request: NextRequest) {
       }
     });
 
+    type CompletionData = Record<string, unknown> & {
+      participantId?: string | null;
+      screeningId?: string | null;
+    };
     const rawCompletions = completionsSnapshot.docs.map((doc) => {
-      const data = doc.data() as Record<string, unknown> & { participantId?: string | null };
+      const data = doc.data() as CompletionData;
       const completionId = doc.id;
       const reward = rewardsByCompletionId.get(completionId);
       return {
@@ -121,15 +125,46 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    const screeningIds = [
+      ...new Set(
+        rawCompletions
+          .map((c) => c.screeningId)
+          .filter((id): id is string => typeof id === 'string' && id.length > 0)
+      ),
+    ];
+
+    const screeningsRef = paxDB.collection('screenings');
+    const screeningTimeById = new Map<string, unknown>();
+
+    for (let i = 0; i < screeningIds.length; i += BATCH_SIZE) {
+      const batch = screeningIds.slice(i, i + BATCH_SIZE);
+      const docRefs = batch.map((id) => screeningsRef.doc(id));
+      const screeningSnaps = await paxDB.getAll(...docRefs);
+      screeningSnaps.forEach((snap, idx) => {
+        const screeningId = batch[idx];
+        if (snap.exists && screeningId) {
+          const data = snap.data();
+          const timeCreated = data?.timeCreated ?? null;
+          screeningTimeById.set(screeningId, timeCreated);
+        }
+      });
+    }
+
     const taskCompletions = rawCompletions.map((c) => {
       const participantId = c.participantId;
       const participantEmailAddress =
         participantId != null && participantId !== ''
           ? (emailByParticipantId.get(participantId) ?? null)
           : null;
+      const screeningId = c.screeningId;
+      const screeningTimeCreated =
+        screeningId != null && screeningId !== ''
+          ? screeningTimeById.get(screeningId) ?? null
+          : null;
       return {
         ...c,
         participantEmailAddress,
+        screeningTimeCreated,
       };
     });
 

@@ -10,6 +10,7 @@ import { TaskCompletion } from "@/firebase/firestore/models/TaskCompletion";
 type TaskCompletionWithReward = TaskCompletion & {
   reward?: { txnHash: string };
   participantEmailAddress?: string | null;
+  screeningTimeCreated?: unknown | null;
 };
 import {
   Table,
@@ -104,6 +105,7 @@ export default function AdminTaskCompletionsDetailPage() {
               participantId: c.participantId ?? null,
               participantEmailAddress: c.participantEmailAddress ?? null,
               screeningId: c.screeningId ?? null,
+              screeningTimeCreated: c.screeningTimeCreated ?? null,
               taskId: c.taskId ?? null,
               timeCompleted: c.timeCompleted ?? null,
               timeCreated: c.timeCreated ?? null,
@@ -194,6 +196,11 @@ export default function AdminTaskCompletionsDetailPage() {
     );
   };
 
+  const truncateDisplay = (value: string | null | undefined, maxLen: number, fallback: string) => {
+    if (value == null || value === "") return fallback;
+    return value.length <= maxLen ? value : `${value.slice(0, maxLen)}…`;
+  };
+
   const formatTimestamp = (timestamp: unknown) => {
     if (!timestamp) return "N/A";
     try {
@@ -229,6 +236,7 @@ export default function AdminTaskCompletionsDetailPage() {
               participantId: c.participantId ?? null,
               participantEmailAddress: c.participantEmailAddress ?? null,
               screeningId: c.screeningId ?? null,
+              screeningTimeCreated: c.screeningTimeCreated ?? null,
               taskId: c.taskId ?? null,
               timeCompleted: c.timeCompleted ?? null,
               timeCreated: c.timeCreated ?? null,
@@ -260,6 +268,7 @@ export default function AdminTaskCompletionsDetailPage() {
             participantId: c.participantId ?? null,
             participantEmailAddress: c.participantEmailAddress ?? null,
             screeningId: c.screeningId ?? null,
+            screeningTimeCreated: c.screeningTimeCreated ?? null,
             taskId: c.taskId ?? null,
             timeCompleted: c.timeCompleted ?? null,
             timeCreated: c.timeCreated ?? null,
@@ -392,7 +401,7 @@ export default function AdminTaskCompletionsDetailPage() {
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
                   <TableHead className="font-semibold">Participant ID</TableHead>
                   <TableHead className="font-semibold">Email</TableHead>
-                  <TableHead className="font-semibold">Screening ID</TableHead>
+                  <TableHead className="font-semibold">Screening time</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
                   <TableHead className="font-semibold">Paid</TableHead>
                   <TableHead className="font-semibold">Completed</TableHead>
@@ -410,10 +419,10 @@ export default function AdminTaskCompletionsDetailPage() {
                           copyToClipboard(completion.participantId || "", "Participant ID");
                         }}
                         className="group/copy inline-flex items-center gap-2 rounded px-1.5 -mx-1.5 py-1 hover:bg-muted/80 transition-colors text-left w-full disabled:pointer-events-none disabled:opacity-100"
-                        title={completion.participantId ? "Copy participant ID" : undefined}
+                        title={completion.participantId ? String(completion.participantId) : undefined}
                         disabled={!completion.participantId}
                       >
-                        <span className="truncate min-w-0 flex-1">{completion.participantId || "N/A"}</span>
+                        <span className="truncate min-w-0 flex-1">{truncateDisplay(completion.participantId, 12, "N/A")}</span>
                         {completion.participantId && (
                           <ClipboardDocumentIcon className="h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover/copy:opacity-100" aria-hidden />
                         )}
@@ -427,17 +436,17 @@ export default function AdminTaskCompletionsDetailPage() {
                           copyToClipboard(completion.participantEmailAddress || "", "Email");
                         }}
                         className="group/copy inline-flex items-center gap-2 rounded px-1.5 -mx-1.5 py-1 hover:bg-muted/80 transition-colors text-left w-full disabled:pointer-events-none disabled:opacity-100"
-                        title={completion.participantEmailAddress ? "Copy email" : undefined}
+                        title={completion.participantEmailAddress ? String(completion.participantEmailAddress) : undefined}
                         disabled={!completion.participantEmailAddress}
                       >
-                        <span className="truncate min-w-0 flex-1">{completion.participantEmailAddress || "—"}</span>
+                        <span className="truncate min-w-0 flex-1">{truncateDisplay(completion.participantEmailAddress, 20, "—")}</span>
                         {completion.participantEmailAddress && (
                           <ClipboardDocumentIcon className="h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover/copy:opacity-100" aria-hidden />
                         )}
                       </button>
                     </TableCell>
-                    <TableCell className="font-mono text-sm">
-                      {completion.screeningId || "N/A"}
+                    <TableCell className="text-muted-foreground text-sm">
+                      {formatTimestamp(completion.screeningTimeCreated)}
                     </TableCell>
                     <TableCell>
                       {completion.isValid ? (
