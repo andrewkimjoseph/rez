@@ -67,6 +67,7 @@ export default function AdminTaskCompletionsDetailPage() {
   const [hasMoreCompletions, setHasMoreCompletions] = useState(false);
   const [lastDocIdForCursor, setLastDocIdForCursor] = useState<string | null>(null);
   const [isLoadingMoreCompletions, setIsLoadingMoreCompletions] = useState(false);
+  const [countdownTick, setCountdownTick] = useState(0);
 
   const task = tasks.find((t) => t.id === taskId);
   const isTaskActive = task?.isAvailable === true;
@@ -76,8 +77,17 @@ export default function AdminTaskCompletionsDetailPage() {
     const invalid = taskCompletions.filter(c => !c.isValid).length;
     const invalidated = taskCompletions.filter(c => c.invalidatedAt != null).length;
     const paid = taskCompletions.filter(c => c.reward?.txnHash != null).length;
-    return { completed, invalid, invalidated, paid };
-  }, [taskCompletions]);
+    const twoHoursInMs = 2 * 60 * 60 * 1000;
+    const now = Date.now();
+    const expired = taskCompletions.filter(c => {
+      const ts = c.screeningTimeCreated as { seconds?: number; _seconds?: number } | null | undefined;
+      if (ts == null) return false;
+      const sec = ts.seconds ?? ts._seconds;
+      if (sec == null) return false;
+      return (now - sec * 1000) > twoHoursInMs;
+    }).length;
+    return { completed, invalid, invalidated, paid, expired };
+  }, [taskCompletions, countdownTick]);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -144,6 +154,18 @@ export default function AdminTaskCompletionsDetailPage() {
     if (!taskId || !isAuthorized || !task || !isTaskActive) return;
     loadCompletions();
   }, [taskId, isAuthorized, task, isTaskActive]);
+
+  useEffect(() => {
+    // Only set up interval if there are non-expired completions
+    const hasNonExpired = taskCompletions.some(c => !isExpired(c.screeningTimeCreated));
+    
+    if (hasNonExpired) {
+      const interval = setInterval(() => {
+        setCountdownTick(t => t + 1);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [taskCompletions]);
 
   const handleValidate = async (completion: TaskCompletionWithReward) => {
     if (!completion.id) return;
@@ -241,6 +263,37 @@ export default function AdminTaskCompletionsDetailPage() {
       return false;
     } catch {
       return false;
+    }
+  };
+
+  const getTimeUntilExpiration = (screeningTimeCreated: unknown): string | null => {
+    if (!screeningTimeCreated) return null;
+    try {
+      const ts = screeningTimeCreated as { seconds?: number; _seconds?: number };
+      const seconds = ts.seconds ?? ts._seconds;
+      if (seconds != null) {
+        const screeningTime = seconds * 1000;
+        const now = Date.now();
+        const twoHoursInMs = 2 * 60 * 60 * 1000;
+        const timeRemainingMs = twoHoursInMs - (now - screeningTime);
+        
+        if (timeRemainingMs <= 0) return null; // Expired
+        
+        const hours = Math.floor(timeRemainingMs / (60 * 60 * 1000));
+        const minutes = Math.floor((timeRemainingMs % (60 * 60 * 1000)) / (60 * 1000));
+        const secs = Math.floor((timeRemainingMs % (60 * 1000)) / 1000);
+        
+        if (hours > 0) {
+          return `${hours}h ${minutes}m`;
+        } else if (minutes > 0) {
+          return `${minutes}m ${secs}s`;
+        } else {
+          return `${secs}s`;
+        }
+      }
+      return null;
+    } catch {
+      return null;
     }
   };
 
@@ -355,7 +408,7 @@ export default function AdminTaskCompletionsDetailPage() {
                 Validate or invalidate participant completions
                 {hasMoreCompletions
                   ? ` (${taskCompletions.length} shown, load more for more)`
-                  : ` (${taskCompletions.length} total, ${stats.completed} completed, ${stats.invalid} invalid, ${stats.invalidated} invalidated, ${stats.paid} paid)`}
+                  : ` (${taskCompletions.length} total, ${stats.completed} completed, ${stats.invalid} invalid, ${stats.invalidated} invalidated, ${stats.expired} expired, ${stats.paid} paid)`}
               </p>
             </div>
             <Button
@@ -464,11 +517,16 @@ export default function AdminTaskCompletionsDetailPage() {
                         <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100/80 border-0">
                           Yes
                         </Badge>
-                      ) : (
-                        <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100/80 border-0">
-                          No
-                        </Badge>
-                      )}
+                      ) : (() => {
+                        const timeRemaining = getTimeUntilExpiration(completion.screeningTimeCreated);
+                        return timeRemaining ? (
+                          <span className="text-muted-foreground text-sm">{timeRemaining}</span>
+                        ) : (
+                          <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100/80 border-0">
+                            No
+                          </Badge>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell>
                       {completion.reward?.txnHash ? (
