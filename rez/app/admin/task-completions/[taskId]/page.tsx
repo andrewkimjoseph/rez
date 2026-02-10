@@ -540,7 +540,7 @@ export default function AdminTaskCompletionsDetailPage() {
             <DialogHeader>
               <DialogTitle>Invalidate completion?</DialogTitle>
               <DialogDescription>
-                The participant will no longer count as having completed the task.
+                This completion will be invalidated and the participant will not be able to claim the reward.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
