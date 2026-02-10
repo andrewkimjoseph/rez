@@ -91,10 +91,8 @@ export async function PATCH(request: NextRequest) {
       updateData[key] = value;
     });
 
-    // isAvailable is true only when reviewStatus is 'published' (after approval + payment)
-    if (updateData.reviewStatus === 'published' && oldReviewStatus !== 'published') {
-      updateData.isAvailable = true;
-    }
+    // Keep availability in sync for clearly inactive states, but do not
+    // automatically activate tasks when they are published.
     if (updateData.reviewStatus === 'rejected' || updateData.reviewStatus === 'archived') {
       updateData.isAvailable = false;
     }

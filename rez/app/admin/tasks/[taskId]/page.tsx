@@ -32,6 +32,7 @@ import {
   ArrowTopRightOnSquareIcon,
   ChartBarIcon,
   ClipboardDocumentIcon,
+  PowerIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import AdminEditTaskDialog from "@/components/admin/AdminEditTaskDialog";
@@ -65,6 +66,7 @@ export default function AdminTaskDetailsPage() {
   const [reviewAction, setReviewAction] = useState<'approve' | 'reject' | null>(null);
   const [instructionsExpanded, setInstructionsExpanded] = useState(false);
   const [paymentTermsExpanded, setPaymentTermsExpanded] = useState(false);
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -118,6 +120,9 @@ export default function AdminTaskDetailsPage() {
     adminTaskRejectClicked,
     adminTaskRejectComplete,
     adminTaskRejectFailed,
+    adminTaskPublishClicked,
+    adminTaskPublishComplete,
+    adminTaskPublishFailed,
   } = useAmplitudeEvents();
 
   const handleReviewClick = (action: 'approve' | 'reject') => {
@@ -184,6 +189,51 @@ export default function AdminTaskDetailsPage() {
   const handleCancelReview = () => {
     setReviewDialogOpen(false);
     setReviewAction(null);
+  };
+
+  const handleOpenPublishDialog = () => {
+    if (!task) return;
+    setPublishDialogOpen(true);
+  };
+
+  const handleConfirmPublishToggle = async () => {
+    if (!task?.id || !formattedData) return;
+
+    const isCurrentlyActive = formattedData.isAvailable;
+    // Activate = set to Published (only for approved tasks). Deactivate = set to Approved and isAvailable false.
+    const payload = isCurrentlyActive
+      ? { reviewStatus: 'approved' as const, isAvailable: false }
+      : { reviewStatus: 'published' as const };
+
+    if (!isCurrentlyActive) {
+      adminTaskPublishClicked({ task_id: task.id, task_title: task.title });
+    }
+
+    const success = await updateTask(task.id, payload);
+    if (success) {
+      if (!isCurrentlyActive) {
+        adminTaskPublishComplete({
+          task_id: task.id,
+          task_title: task.title,
+        });
+      }
+      toast.success(isCurrentlyActive ? 'Task unpublished' : 'Task published');
+      setPublishDialogOpen(false);
+      await fetchAllTasks(true);
+    } else {
+      if (!isCurrentlyActive) {
+        adminTaskPublishFailed({
+          task_id: task.id,
+          task_title: task.title,
+          error_message: "Failed to publish task",
+        });
+      }
+      toast.error('Failed to update task status');
+    }
+  };
+
+  const handleCancelPublishToggle = () => {
+    setPublishDialogOpen(false);
   };
 
   const copyToClipboard = (text: string, label: string) => {
@@ -341,6 +391,16 @@ export default function AdminTaskDetailsPage() {
                   </Button>
                 </>
               )}
+              {(task.reviewStatus === 'approved' || task.reviewStatus === 'published') && (
+                <Button
+                  variant={formattedData.isAvailable ? "secondary" : "default"}
+                  size="sm"
+                  onClick={handleOpenPublishDialog}
+                >
+                  <PowerIcon className={`h-4 w-4 mr-2 ${formattedData.isAvailable ? '' : 'opacity-50'}`} />
+                  {formattedData.isAvailable ? 'Unpublish' : 'Publish'}
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -412,16 +472,34 @@ export default function AdminTaskDetailsPage() {
             <dt className="text-xs text-muted-foreground">Task Manager Contract Address</dt>
             <dd className="mt-0.5 min-w-0">
               {formattedData.managerContractAddress ? (
-                <a
-                  href={formattedData.blockscoutUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-primary hover:underline font-mono text-xs min-w-0"
-                  title={formattedData.managerContractAddress}
-                >
-                  <span className="truncate min-w-0 flex-1">{formattedData.managerContractAddress}</span>
-                  <ArrowTopRightOnSquareIcon className="h-3 w-3 flex-shrink-0" />
-                </a>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <a
+                    href={formattedData.blockscoutUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-primary hover:underline font-mono text-xs min-w-0"
+                    title={formattedData.managerContractAddress}
+                  >
+                    <span className="truncate min-w-0 flex-1">
+                      {formattedData.managerContractAddress}
+                    </span>
+                    <ArrowTopRightOnSquareIcon className="h-3 w-3 flex-shrink-0" />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      copyToClipboard(
+                        formattedData.managerContractAddress ?? "",
+                        "Contract address"
+                      )
+                    }
+                    className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    title="Copy contract address"
+                    aria-label="Copy contract address"
+                  >
+                    <ClipboardDocumentIcon className="h-4 w-4" aria-hidden />
+                  </button>
+                </div>
               ) : (
                 <span className="text-muted-foreground text-sm">—</span>
               )}
@@ -541,6 +619,45 @@ export default function AdminTaskDetailsPage() {
             </button>
           </div>
         )}
+
+        {/* Publish / Unpublish Confirmation Dialog */}
+        <Dialog open={publishDialogOpen} onOpenChange={setPublishDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {formattedData.isAvailable ? 'Unpublish Task' : 'Publish Task'}
+              </DialogTitle>
+              <DialogDescription>
+                Are you sure you want to {formattedData.isAvailable ? 'unpublish' : 'publish'} &quot;{formattedData.title || 'this task'}&quot;?
+                {formattedData.isAvailable
+                  ? ' The task will move back to Approved and no longer be active for participants.'
+                  : ' The task will be marked as Published. This does not automatically activate the task or change its availability.'
+                }
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={handleCancelPublishToggle}
+                disabled={isUpdating}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant={formattedData.isAvailable ? "secondary" : "default"}
+                onClick={handleConfirmPublishToggle}
+                disabled={isUpdating}
+              >
+                {isUpdating ? (
+                  <>
+                    <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
+                    Updating...
+                  </>
+                ) : formattedData.isAvailable ? 'Unpublish' : 'Publish'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Payment Terms - Truncated with expand */}
         {formattedData.paymentTerms && (

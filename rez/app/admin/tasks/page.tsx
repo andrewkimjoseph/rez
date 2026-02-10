@@ -759,7 +759,7 @@ export default function AdminTasksPage() {
                 Are you sure you want to {taskToToggle?.isAvailable ? 'unpublish' : 'publish'} &quot;{taskToToggle?.title || 'this task'}&quot;?
                 {taskToToggle?.isAvailable
                   ? ' The task will move back to Approved and no longer be active for participants.'
-                  : ' The task will become active and available for participants to complete.'
+                  : ' The task will be marked as Published. This does not automatically activate the task or change its availability.'
                 }
               </DialogDescription>
             </DialogHeader>

@@ -453,7 +453,7 @@ export default function AdminTaskCompletionsDetailPage() {
                     <TableCell>
                       {completion.reward?.txnHash ? (
                         <a
-                          href={`https://celo.blockscout.com/tx/${completion.reward.txnHash}`}
+                          href={`https://celoscan.io/tx/${completion.reward.txnHash}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-primary hover:underline"

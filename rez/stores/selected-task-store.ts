@@ -85,7 +85,7 @@ const formatTaskData = (task: Task): FormattedTaskData => {
 
   const managerContractAddress = task.managerContractAddress || '';
   const blockscoutUrl = managerContractAddress
-    ? `https://celo.blockscout.com/address/${managerContractAddress}`
+    ? `https://celoscan.io/address/${managerContractAddress}`
     : '';
 
   return {
