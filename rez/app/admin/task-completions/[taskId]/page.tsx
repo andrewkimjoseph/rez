@@ -76,7 +76,7 @@ export default function AdminTaskCompletionsDetailPage() {
     const completed = taskCompletions.filter(c => c.timeCompleted != null).length;
     const invalid = taskCompletions.filter(c => !c.isValid).length;
     const invalidated = taskCompletions.filter(c => c.invalidatedAt != null).length;
-    const paid = taskCompletions.filter(c => c.reward?.txnHash != null).length;
+    const claimed = taskCompletions.filter(c => c.reward?.txnHash != null).length;
     const twoHoursInMs = 2 * 60 * 60 * 1000;
     const now = Date.now();
     const expired = taskCompletions.filter(c => {
@@ -88,7 +88,7 @@ export default function AdminTaskCompletionsDetailPage() {
       if (sec == null) return false;
       return (now - sec * 1000) > twoHoursInMs;
     }).length;
-    return { completed, invalid, invalidated, paid, expired };
+    return { completed, invalid, invalidated, claimed, expired };
   }, [taskCompletions, countdownTick]);
 
   useEffect(() => {
@@ -410,7 +410,7 @@ export default function AdminTaskCompletionsDetailPage() {
                 Validate or invalidate participant completions
                 {hasMoreCompletions
                   ? ` (${taskCompletions.length} shown, load more for more)`
-                  : ` (${taskCompletions.length} total, ${stats.completed} completed, ${stats.invalid} invalid, ${stats.invalidated} invalidated, ${stats.expired} expired, ${stats.paid} paid)`}
+                  : ` (${taskCompletions.length} total, ${stats.completed} completed, ${stats.invalid} invalid, ${stats.invalidated} invalidated, ${stats.expired} expired, ${stats.claimed} claimed)`}
               </p>
             </div>
             <Button
@@ -455,7 +455,7 @@ export default function AdminTaskCompletionsDetailPage() {
                   <TableHead className="font-semibold">Status</TableHead>
                   <TableHead className="font-semibold">Invalidated at</TableHead>
                   <TableHead className="font-semibold">Expired</TableHead>
-                  <TableHead className="font-semibold">Paid</TableHead>
+                  <TableHead className="font-semibold">Claimed</TableHead>
                   <TableHead className="font-semibold">Completed</TableHead>
                   <TableHead className="text-right font-semibold">Actions</TableHead>
                 </TableRow>
@@ -543,7 +543,7 @@ export default function AdminTaskCompletionsDetailPage() {
                           className="inline-flex items-center gap-1 text-primary hover:underline"
                         >
                           <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100/80 border-0">
-                            Paid
+                            Claimed
                           </Badge>
                           <span className="text-xs font-mono truncate max-w-[80px]">
                             {completion.reward.txnHash.slice(0, 10)}…
@@ -585,7 +585,7 @@ export default function AdminTaskCompletionsDetailPage() {
                             onClick={() => openInvalidateDialog(completion)}
                             className="cursor-pointer text-red-700"
                             disabled={!completion.isValid || !!completion.reward?.txnHash}
-                            title={completion.reward?.txnHash ? "Cannot invalidate: already paid out" : undefined}
+                            title={completion.reward?.txnHash ? "Cannot invalidate: already claimed" : undefined}
                           >
                             <XCircleIcon className="h-4 w-4 mr-2" />
                             Invalidate
