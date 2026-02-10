@@ -36,6 +36,11 @@ import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 import { useRejectedTasksCount } from "@/hooks/use-rejected-tasks-count";
 import { usePendingTasksCount } from "@/hooks/use-pending-tasks-count";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Main navigation items
 const mainNavItems = [
@@ -103,7 +108,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { user } = useTaskMasterStore();
   const isSuperAdmin = user?.isSuperAdmin === true;
-  const { isMobile, setOpenMobile } = useSidebar();
+  const { isMobile, setOpenMobile, state } = useSidebar();
   const { sidebarCreateTaskClicked, adminDashboardClicked } = useAmplitudeEvents();
   const { count: rejectedTasksCount } = useRejectedTasksCount();
   const { count: pendingTasksCount } = usePendingTasksCount();
@@ -148,15 +153,22 @@ export function AppSidebar() {
       <SidebarContent className="px-2 group-data-[collapsible=icon]:overflow-hidden">
         {/* Prominent Create Task Button */}
         <div className="px-3 mb-4 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
-          <Link href="/tasks" className="block w-full min-w-0 group-data-[collapsible=icon]:w-auto" onClick={() => sidebarCreateTaskClicked()}>
-            <Button
-              className="w-full rez-gradient hover:opacity-90 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 h-11 text-base group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:min-w-8 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:shadow-none group-data-[collapsible=icon]:justify-center"
-              size="lg"
-            >
-              <PlusIcon className="w-5 h-5 group-data-[collapsible=icon]:w-4 group-data-[collapsible=icon]:h-4" />
-              <span className="group-data-[collapsible=icon]:hidden ml-1">Create Task</span>
-            </Button>
-          </Link>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link href="/tasks" className="block w-full min-w-0 group-data-[collapsible=icon]:w-auto" onClick={() => sidebarCreateTaskClicked()}>
+                <Button
+                  className="w-full rez-gradient hover:opacity-90 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 h-11 text-base group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:min-w-8 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:shadow-none group-data-[collapsible=icon]:justify-center"
+                  size="lg"
+                >
+                  <PlusIcon className="w-5 h-5 group-data-[collapsible=icon]:w-4 group-data-[collapsible=icon]:h-4" />
+                  <span className="group-data-[collapsible=icon]:hidden ml-1">Create Task</span>
+                </Button>
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right" align="center" hidden={state !== "collapsed" || isMobile}>
+              Create Task
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         <Separator className="mb-3 bg-sidebar-border/50 group-data-[collapsible=icon]:hidden" />
@@ -174,6 +186,7 @@ export function AppSidebar() {
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton 
                       asChild
+                      tooltip={item.title}
                       isActive={isActive(item.url)}
                       className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent data-[active=true]:rez-gradient data-[active=true]:text-white data-[active=true]:shadow-sm group-data-[collapsible=icon]:justify-center"
                     >
@@ -207,6 +220,7 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     asChild
+                    tooltip={item.title}
                     isActive={isActive(item.url)}
                     className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent data-[active=true]:rez-gradient data-[active=true]:text-white data-[active=true]:shadow-sm group-data-[collapsible=icon]:justify-center"
                   >
@@ -237,6 +251,7 @@ export function AppSidebar() {
                       <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton
                           asChild
+                          tooltip={item.title}
                           isActive={isActive(item.url)}
                           className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-amber-500/10 data-[active=true]:bg-amber-500/20 data-[active=true]:text-amber-700 group-data-[collapsible=icon]:justify-center"
                         >
@@ -268,6 +283,7 @@ export function AppSidebar() {
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton 
                 asChild
+                tooltip={item.title}
                 isActive={isActive(item.url)}
                 className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent group-data-[collapsible=icon]:justify-center"
               >
@@ -285,6 +301,7 @@ export function AppSidebar() {
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 asChild
+                tooltip={item.title}
                 isActive={isActive(item.url)}
                 className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent group-data-[collapsible=icon]:justify-center"
               >
