@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
@@ -70,6 +70,13 @@ export default function AdminTaskCompletionsDetailPage() {
 
   const task = tasks.find((t) => t.id === taskId);
   const isTaskActive = task?.isAvailable === true;
+
+  const stats = useMemo(() => {
+    const completed = taskCompletions.filter(c => c.timeCompleted != null).length;
+    const invalidated = taskCompletions.filter(c => !c.isValid || c.invalidatedAt != null).length;
+    const paid = taskCompletions.filter(c => c.reward?.txnHash != null).length;
+    return { completed, invalidated, paid };
+  }, [taskCompletions]);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -330,7 +337,7 @@ export default function AdminTaskCompletionsDetailPage() {
                 Validate or invalidate participant completions
                 {hasMoreCompletions
                   ? ` (${taskCompletions.length} shown, load more for more)`
-                  : ` (${taskCompletions.length} total)`}
+                  : ` (${taskCompletions.length} total, ${stats.completed} completed, ${stats.invalidated} invalidated, ${stats.paid} paid)`}
               </p>
             </div>
             <Button
