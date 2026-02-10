@@ -515,7 +515,11 @@ export default function AdminTaskCompletionsDetailPage() {
                       {completion.invalidatedAt ? formatTimestamp(completion.invalidatedAt) : "—"}
                     </TableCell>
                     <TableCell className="text-sm">
-                      {isExpired(completion.screeningTimeCreated) ? (
+                      {completion.isValid && completion.timeCompleted != null ? (
+                        <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100/80 border-0">
+                          No
+                        </Badge>
+                      ) : isExpired(completion.screeningTimeCreated) ? (
                         <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100/80 border-0">
                           Yes
                         </Badge>
