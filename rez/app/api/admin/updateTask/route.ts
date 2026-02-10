@@ -258,6 +258,43 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
+    // Send taskActivated email when task is activated (isAvailable set to true)
+    if (action === 'activated') {
+      try {
+        const taskMasterEmail = taskData?.rezTaskMasterEmailAddress;
+        if (taskMasterEmail) {
+          const taskMasterSnapshot = await rezDB.collection(COLLECTIONS.TASK_MASTERS)
+            .where('emailAddress', '==', taskMasterEmail)
+            .limit(1)
+            .get();
+          if (!taskMasterSnapshot.empty) {
+            const taskMasterDoc = taskMasterSnapshot.docs[0];
+            const taskMasterName = taskMasterDoc.data()?.name || taskMasterDoc.data()?.displayName || 'Task Master';
+            const internalToken = process.env.INTERNAL_API_TOKEN;
+            fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/sendResendEmail`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(internalToken && { 'x-internal-token': internalToken }),
+              },
+              body: JSON.stringify({
+                to: [taskMasterEmail],
+                template: 'taskActivated',
+                variables: {
+                  taskMasterName,
+                  taskId,
+                },
+              }),
+            }).catch(error => {
+              console.error('Failed to send taskActivated email:', error);
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error sending taskActivated email:', error);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Task updated successfully'

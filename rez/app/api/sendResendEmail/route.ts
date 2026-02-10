@@ -1,16 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSuperAdmin } from '@/lib/api-auth';
+import { EMAIL_TEMPLATES, type EmailTemplateType } from '@/data/email-templates';
 
-// Email template IDs from Resend
-const EMAIL_TEMPLATES = {
-  taskCreated: 'd24dcde1-e155-40f3-9ab5-6377cf878e20',
-  taskRejected: '7aea42e0-e714-407e-809e-bbe323c88d16',
-  taskApproved: '28a64ff9-3dd5-4af9-9d45-2ef3976302bb',
-  taskPublished: 'ffda9f53-e424-49e5-9b6f-cdee85545d4c',
-  taskCompleted: '967b5e39-248b-495f-9d79-3b356b5e18e5',
-} as const;
-
-export type EmailTemplateType = keyof typeof EMAIL_TEMPLATES;
+export type { EmailTemplateType };
 
 interface SendResendEmailRequest {
   to: string[];
