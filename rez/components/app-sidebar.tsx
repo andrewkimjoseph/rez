@@ -123,17 +123,17 @@ export function AppSidebar() {
     <Sidebar 
       variant="sidebar" 
       collapsible="icon" 
-      className="border-r-0"
+      className="border-r-0 data-[collapsible=icon]:overflow-hidden"
     >
       {/* Header with Logo */}
-      <SidebarHeader className="px-4 py-5">
-        <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+      <SidebarHeader className="px-4 py-5 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:overflow-hidden">
+        <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:w-full">
           <Image 
             src="/rez-logo.svg" 
             alt="Rez" 
             width={48} 
             height={48} 
-            className="shrink-0"
+            className="shrink-0 w-12 h-12 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8"
           />
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
             <span className="text-lg font-semibold rez-gradient-text">Rez</span>
@@ -145,12 +145,12 @@ export function AppSidebar() {
         </Link>
       </SidebarHeader>
 
-      <SidebarContent className="px-2">
+      <SidebarContent className="px-2 group-data-[collapsible=icon]:overflow-hidden">
         {/* Prominent Create Task Button */}
-        <div className="px-3 mb-4">
-          <Link href="/tasks" className="block" onClick={() => sidebarCreateTaskClicked()}>
+        <div className="px-3 mb-4 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
+          <Link href="/tasks" className="block w-full min-w-0 group-data-[collapsible=icon]:w-auto" onClick={() => sidebarCreateTaskClicked()}>
             <Button
-              className="w-full rez-gradient hover:opacity-90 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 h-11 text-base group-data-[collapsible=icon]:w-12 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center"
+              className="w-full rez-gradient hover:opacity-90 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 h-11 text-base group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:min-w-8 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:shadow-none group-data-[collapsible=icon]:justify-center"
               size="lg"
             >
               <PlusIcon className="w-5 h-5 group-data-[collapsible=icon]:w-4 group-data-[collapsible=icon]:h-4" />
@@ -162,7 +162,7 @@ export function AppSidebar() {
         <Separator className="mb-3 bg-sidebar-border/50 group-data-[collapsible=icon]:hidden" />
 
         {/* Main Navigation */}
-        <SidebarGroup>
+        <SidebarGroup className="group-data-[collapsible=icon]:px-0">
           <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs font-medium uppercase tracking-wider px-3 mb-1">
             Navigation
           </SidebarGroupLabel>
@@ -175,11 +175,11 @@ export function AppSidebar() {
                     <SidebarMenuButton 
                       asChild
                       isActive={isActive(item.url)}
-                      className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent data-[active=true]:rez-gradient data-[active=true]:text-white data-[active=true]:shadow-sm"
+                      className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent data-[active=true]:rez-gradient data-[active=true]:text-white data-[active=true]:shadow-sm group-data-[collapsible=icon]:justify-center"
                     >
                       <Link href={item.url}>
                         <item.icon className="w-[18px] h-[18px] shrink-0" />
-                        <span className="font-medium">{item.title}</span>
+                        <span className="font-medium group-data-[collapsible=icon]:hidden">{item.title}</span>
                         {showBadge && (
                           <Badge className="ml-2 h-5 min-w-5 px-1.5 flex items-center justify-center bg-red-500 text-white text-[10px] font-semibold rounded-full group-data-[collapsible=icon]:hidden">
                             {rejectedTasksCount > 9 ? '9+' : rejectedTasksCount}
@@ -197,7 +197,7 @@ export function AppSidebar() {
         <Separator className="my-3 bg-sidebar-border/50" />
 
         {/* Settings */}
-        <SidebarGroup>
+        <SidebarGroup className="group-data-[collapsible=icon]:px-0">
           <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs font-medium uppercase tracking-wider px-3 mb-1">
             Settings
           </SidebarGroupLabel>
@@ -208,11 +208,11 @@ export function AppSidebar() {
                   <SidebarMenuButton 
                     asChild
                     isActive={isActive(item.url)}
-                    className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent data-[active=true]:rez-gradient data-[active=true]:text-white data-[active=true]:shadow-sm"
+                    className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent data-[active=true]:rez-gradient data-[active=true]:text-white data-[active=true]:shadow-sm group-data-[collapsible=icon]:justify-center"
                   >
                     <Link href={item.url}>
                       <item.icon className="w-[18px] h-[18px] shrink-0" />
-                      <span className="font-medium">{item.title}</span>
+                      <span className="font-medium group-data-[collapsible=icon]:hidden">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -225,7 +225,7 @@ export function AppSidebar() {
         {isSuperAdmin && (
           <>
             <Separator className="my-3 bg-sidebar-border/50" />
-            <SidebarGroup>
+            <SidebarGroup className="group-data-[collapsible=icon]:px-0">
               <SidebarGroupLabel className="text-amber-600/80 text-xs font-medium uppercase tracking-wider px-3 mb-1">
                 Admin
               </SidebarGroupLabel>
@@ -238,11 +238,11 @@ export function AppSidebar() {
                         <SidebarMenuButton
                           asChild
                           isActive={isActive(item.url)}
-                          className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-amber-500/10 data-[active=true]:bg-amber-500/20 data-[active=true]:text-amber-700"
+                          className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-amber-500/10 data-[active=true]:bg-amber-500/20 data-[active=true]:text-amber-700 group-data-[collapsible=icon]:justify-center"
                         >
                           <Link href={item.url} onClick={() => adminDashboardClicked()}>
                             <item.icon className="w-[18px] h-[18px] shrink-0 text-amber-600" />
-                            <span className="font-medium">{item.title}</span>
+                            <span className="font-medium group-data-[collapsible=icon]:hidden">{item.title}</span>
                             {showBadge && (
                               <Badge className="ml-2 h-5 min-w-5 px-1.5 flex items-center justify-center bg-amber-500 text-white text-[10px] font-semibold rounded-full group-data-[collapsible=icon]:hidden">
                                 {pendingTasksCount > 9 ? '9+' : pendingTasksCount}
@@ -269,11 +269,11 @@ export function AppSidebar() {
               <SidebarMenuButton 
                 asChild
                 isActive={isActive(item.url)}
-                className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent"
+                className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent group-data-[collapsible=icon]:justify-center"
               >
                 <Link href={item.url}>
                   {item.iconElement}
-                  <span className="font-medium">{item.title}</span>
+                  <span className="font-medium group-data-[collapsible=icon]:hidden">{item.title}</span>
                   {item.external && (
                     <ArrowTopRightOnSquareIcon className="w-3 h-3 ml-auto opacity-50" />
                   )}
@@ -286,11 +286,11 @@ export function AppSidebar() {
               <SidebarMenuButton
                 asChild
                 isActive={isActive(item.url)}
-                className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent"
+                className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent group-data-[collapsible=icon]:justify-center"
               >
                 <Link href={item.url}>
                   <item.icon className="w-[18px] h-[18px] shrink-0 opacity-60" />
-                  <span className="font-medium text-sidebar-foreground/70 text-sm">{item.title}</span>
+                  <span className="font-medium text-sidebar-foreground/70 text-sm group-data-[collapsible=icon]:hidden">{item.title}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
