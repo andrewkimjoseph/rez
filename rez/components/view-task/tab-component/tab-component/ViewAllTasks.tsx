@@ -10,15 +10,11 @@ import {
 } from "@/components/ui/table";
 import { useTasksData } from "@/hooks/use-tasks-data";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Task } from "@/firebase/firestore/models/Task";
 import {
   XCircleIcon,
   ArrowPathIcon,
-  PencilIcon,
 } from "@heroicons/react/24/outline";
 import { formatRejectionReasons } from "@/utils/rejection-reasons";
-import Link from "next/link";
 import {
   Tooltip,
   TooltipContent,
@@ -30,7 +26,7 @@ import { TOOLTIP_TEXTS } from "@/data/tooltip-texts";
 
 export default function ViewTasks() {
   const { tasks, taskCompletions, isLoading, error } = useTasksData({ autoFetch: false });
-  const { rejectedTaskEditClicked, rejectionReasonsTooltipViewed } = useAmplitudeEvents();
+  const { rejectionReasonsTooltipViewed } = useAmplitudeEvents();
 
   const getTaskTypeLabel = (type: string | null | undefined) => {
     switch (type) {
@@ -42,6 +38,49 @@ export default function ViewTasks() {
         return 'Video Interview';
       default:
         return type || 'N/A';
+    }
+  };
+
+  const getReviewStatusDisplay = (status: string | null | undefined) => {
+    const dotClass = "w-2 h-2 rounded-full shrink-0";
+    switch (status) {
+      case 'pending':
+        return (
+          <span className="flex items-center gap-2 text-sm">
+            <span className={`${dotClass} bg-yellow-500`} />
+            Pending Review
+          </span>
+        );
+      case 'approved':
+        return (
+          <span className="flex items-center gap-2 text-sm">
+            <span className={`${dotClass} bg-green-500`} />
+            Approved
+          </span>
+        );
+      case 'published':
+        return (
+          <span className="flex items-center gap-2 text-sm">
+            <span className={`${dotClass} bg-[#5C29A3]`} />
+            Published
+          </span>
+        );
+      case 'archived':
+        return (
+          <span className="flex items-center gap-2 text-sm">
+            <span className={`${dotClass} bg-slate-500`} />
+            Archived
+          </span>
+        );
+      case 'rejected':
+        return (
+          <span className="flex items-center gap-2 text-sm">
+            <span className={`${dotClass} bg-red-500`} />
+            Rejected
+          </span>
+        );
+      default:
+        return <span className="text-sm text-muted-foreground">—</span>;
     }
   };
 
@@ -142,11 +181,11 @@ export default function ViewTasks() {
               <TableHead className="w-[50px] font-semibold">#</TableHead>
               <TableHead className="font-semibold min-w-[380px]">Title</TableHead>
               <TableHead className="font-semibold">Type</TableHead>
+              <TableHead className="font-semibold">Difficulty</TableHead>
+              <TableHead className="font-semibold">Stage</TableHead>
               <TableHead className="font-semibold">Status</TableHead>
-              <TableHead className="text-right font-semibold">Target</TableHead>
               <TableHead className="text-right font-semibold">Completions</TableHead>
               <TableHead className="font-semibold">Created</TableHead>
-              <TableHead className="font-semibold w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -168,7 +207,13 @@ export default function ViewTasks() {
                     {getTaskTypeLabel(task.type)}
                   </Badge>
                 </TableCell>
-                <TableCell className="min-w-[200px] whitespace-nowrap">
+                <TableCell className="text-muted-foreground">
+                  {task.levelOfDifficulty || '—'}
+                </TableCell>
+                <TableCell>
+                  {getReviewStatusDisplay(task.reviewStatus)}
+                </TableCell>
+                <TableCell className="whitespace-nowrap">
                   <div className="flex flex-nowrap items-center gap-2">
                     <Badge 
                       variant={task.isAvailable ? "default" : "secondary"}
@@ -200,31 +245,11 @@ export default function ViewTasks() {
                     )}
                   </div>
                 </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {task.targetNumberOfParticipants || 0}
-                </TableCell>
                 <TableCell className="text-right tabular-nums font-medium">
                   {getTaskCompletionsCount(task.id)}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {formatTaskTimestamp(task.timeCreated)}
-                </TableCell>
-                <TableCell>
-                  {task.reviewStatus === 'rejected' && (
-                    <Link 
-                      href={`/tasks/edit/${task.id}`}
-                      onClick={() => rejectedTaskEditClicked({ 
-                        task_id: task.id,
-                        task_title: task.title,
-                        rejection_reasons_count: task.reasonsForRejection?.length || 0,
-                      })}
-                    >
-                      <Button variant="outline" size="sm" className="h-8 text-xs">
-                        <PencilIcon className="h-3.5 w-3.5 mr-1.5" />
-                        Edit
-                      </Button>
-                    </Link>
-                  )}
                 </TableCell>
               </TableRow>
             ))}

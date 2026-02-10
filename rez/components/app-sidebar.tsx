@@ -138,6 +138,9 @@ export function AppSidebar() {
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
             <span className="text-lg font-semibold rez-gradient-text">Rez</span>
             <span className="text-xs text-sidebar-foreground/60">by Canvassing</span>
+            {process.env.NEXT_PUBLIC_APP_VERSION && (
+              <span className="text-[10px] text-sidebar-foreground/50 mt-0.5">v{process.env.NEXT_PUBLIC_APP_VERSION}</span>
+            )}
           </div>
         </Link>
       </SidebarHeader>
