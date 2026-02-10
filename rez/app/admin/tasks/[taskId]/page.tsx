@@ -442,7 +442,7 @@ export default function AdminTaskDetailsPage() {
                   size="sm"
                   onClick={handleOpenPublishDialog}
                 >
-                  <PowerIcon className="h-4 w-4 mr-2" />
+                  <PowerIcon className="h-4 w-4 mr-2 text-white" />
                   Publish
                 </Button>
               )}
@@ -452,7 +452,7 @@ export default function AdminTaskDetailsPage() {
                   size="sm"
                   onClick={handleOpenActivateDialog}
                 >
-                  <PowerIcon className={`h-4 w-4 mr-2 ${formattedData.isAvailable ? '' : 'opacity-50'}`} />
+                  <PowerIcon className={`h-4 w-4 mr-2 ${formattedData.isAvailable ? '' : 'text-white'}`} />
                   {formattedData.isAvailable ? 'Deactivate' : 'Activate'}
                 </Button>
               )}
