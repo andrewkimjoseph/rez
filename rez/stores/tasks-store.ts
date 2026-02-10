@@ -19,7 +19,8 @@ export interface EditTaskData {
 }
 
 // Skip API call if data was fetched within this window (unless forceRefresh)
-const FETCH_TTL_MS = 5 * 60 * 1000; // 5 minutes
+// Increased to 15 minutes to reduce Firestore reads while keeping data reasonably fresh.
+const FETCH_TTL_MS = 15 * 60 * 1000; // 15 minutes
 
 interface TasksStore {
   tasks: Task[];
@@ -72,28 +73,25 @@ export const useTasksStore = create<TasksStore>()(
         set({ isLoading: true, error: null });
 
         try {
-          // Fetch tasks
-          const tasksResponse = await fetchWithAuthRetry('/api/fetchAllTasksForRezTaskMaster');
-          const tasksData = await tasksResponse.json();
-          const tasks: Task[] = tasksData.tasks || [];
+          // Fetch tasks and completions in a single API call to avoid duplicate task reads.
+          const response = await fetchWithAuthRetry('/api/fetchTasksAndCompletionsForRezTaskMaster');
+          const data = await response.json();
 
-          // Fetch task completions
-          const completionsResponse = await fetchWithAuthRetry('/api/fetchAllTaskCompletionsForRezTaskMaster');
-          const completionsData = await completionsResponse.json();
-          const taskCompletions: TaskCompletion[] = completionsData.taskCompletions || [];
+          const tasks: Task[] = data.tasks || [];
+          const taskCompletions: TaskCompletion[] = data.taskCompletions || [];
 
-          set({ 
-            tasks, 
-            taskCompletions, 
-            isLoading: false, 
+          set({
+            tasks,
+            taskCompletions,
+            isLoading: false,
             error: null,
             lastTasksFetchedAt: Date.now(),
           });
         } catch (error) {
           console.error('Error fetching tasks and completions:', error);
-          set({ 
-            isLoading: false, 
-            error: error instanceof Error ? error.message : 'Failed to fetch data' 
+          set({
+            isLoading: false,
+            error: error instanceof Error ? error.message : 'Failed to fetch data',
           });
         }
       },

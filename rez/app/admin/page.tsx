@@ -26,6 +26,12 @@ import { toast } from "sonner";
 import { fetchWithAuthRetry } from "@/lib/api-fetch";
 import AdminAccessDenied from "@/components/admin/AdminAccessDenied";
 
+// Cache the task completions count in module scope so we don't re-hit Firestore
+// on every admin dashboard mount within a short window.
+let cachedTaskCompletionsCount: number | null = null;
+let cachedTaskCompletionsFetchedAt: number | null = null;
+const COMPLETIONS_COUNT_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
 export default function AdminDashboard() {
   const router = useRouter();
   const { user } = useTaskMasterStore();
@@ -56,13 +62,31 @@ export default function AdminDashboard() {
         const t = setTimeout(() => {
           fetchAllTasks();
           fetchAllTaskMasters();
+
+          // Use cached completions count if it's still fresh
+          const now = Date.now();
+          if (
+            cachedTaskCompletionsCount !== null &&
+            cachedTaskCompletionsFetchedAt !== null &&
+            now - cachedTaskCompletionsFetchedAt < COMPLETIONS_COUNT_TTL_MS
+          ) {
+            setTaskCompletionsCount(cachedTaskCompletionsCount);
+            return;
+          }
+
           setIsLoadingCompletionsCount(true);
           fetchWithAuthRetry('/api/admin/activeTaskCompletionsCount')
             .then((res) => res.json())
             .then((data) => {
-              if (typeof data.count === 'number') setTaskCompletionsCount(data.count);
+              if (typeof data.count === 'number') {
+                cachedTaskCompletionsCount = data.count;
+                cachedTaskCompletionsFetchedAt = Date.now();
+                setTaskCompletionsCount(data.count);
+              }
             })
-            .catch(() => {})
+            .catch(() => {
+              // Non-blocking error: leave count as null
+            })
             .finally(() => setIsLoadingCompletionsCount(false));
         }, 150);
         return () => clearTimeout(t);

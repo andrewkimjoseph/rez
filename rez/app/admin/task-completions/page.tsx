@@ -29,6 +29,16 @@ import { toast } from "sonner";
 import { fetchWithAuthRetry } from "@/lib/api-fetch";
 import AdminAccessDenied from "@/components/admin/AdminAccessDenied";
 
+// Simple in-memory cache for completion counts per task ID set, keyed by
+// a stable, comma-separated list of task IDs.
+type CompletionCountsCacheEntry = {
+  counts: Record<string, number>;
+  fetchedAt: number;
+};
+
+const completionCountsCache = new Map<string, CompletionCountsCacheEntry>();
+const COMPLETION_COUNTS_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 export default function AdminTaskCompletionsPage() {
   const router = useRouter();
   const { user } = useTaskMasterStore();
@@ -134,6 +144,17 @@ export default function AdminTaskCompletionsPage() {
   useEffect(() => {
     if (!isAuthorized || !taskIdsForCounts) return;
     const taskIds = taskIdsForCounts.split(",").filter(Boolean);
+    if (taskIds.length === 0) return;
+
+    const cacheKey = taskIds.join(",");
+    const now = Date.now();
+
+    // Use cached counts if available and fresh
+    const cached = completionCountsCache.get(cacheKey);
+    if (cached && now - cached.fetchedAt < COMPLETION_COUNTS_TTL_MS) {
+      setCompletionCounts(cached.counts);
+      return;
+    }
 
     const loadCounts = async () => {
       try {
@@ -143,6 +164,10 @@ export default function AdminTaskCompletionsPage() {
         const data = await res.json();
         if (data.counts && typeof data.counts === "object") {
           setCompletionCounts(data.counts);
+          completionCountsCache.set(cacheKey, {
+            counts: data.counts as Record<string, number>,
+            fetchedAt: Date.now(),
+          });
         }
       } catch {
         // Non-blocking: leave counts empty on error
