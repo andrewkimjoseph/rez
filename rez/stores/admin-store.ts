@@ -22,6 +22,7 @@ export interface AdminUpdateTaskData {
   rewardAmountPerParticipant?: number;
   rewardCurrencyId?: number;
   numberOfCooldownHours?: number;
+  deadline?: string | null; // ISO date string; null to clear
   paymentTerms?: string | null;
   managerContractAddress?: string;
   rezTaskMasterEmailAddress?: string; // Super admin can reassign task to different task master

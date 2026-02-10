@@ -37,6 +37,7 @@ import { ArrowPathIcon, DocumentTextIcon, LinkIcon, CurrencyDollarIcon, CogIcon,
 import { CheckCircleIcon as CheckCircleSolidIcon } from "@heroicons/react/24/solid";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar } from "@/components/ui/calendar";
 import { supportedTokens } from "@/utils/currencies";
 import Image from "next/image";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
@@ -97,6 +98,7 @@ export default function AdminEditTaskDialog({
   const [rewardCurrencyId, setRewardCurrencyId] = useState<number>(0);
   const [estimatedTimeOfCompletionInMinutes, setEstimatedTimeOfCompletionInMinutes] = useState<number>(0);
   const [numberOfCooldownHours, setNumberOfCooldownHours] = useState<number>(0);
+  const [deadline, setDeadline] = useState<Date | undefined>(undefined);
   const [isAvailable, setIsAvailable] = useState(false);
   const [isTest, setIsTest] = useState(false);
   const [reviewStatus, setReviewStatus] = useState<'pending' | 'approved' | 'rejected' | 'published' | 'archived'>('pending');
@@ -127,6 +129,15 @@ export default function AdminEditTaskDialog({
       setRewardCurrencyId(task.rewardCurrencyId || 0);
       setEstimatedTimeOfCompletionInMinutes(task.estimatedTimeOfCompletionInMinutes || 0);
       setNumberOfCooldownHours(task.numberOfCooldownHours || 0);
+      const deadlineTs = task.deadline as { seconds?: number; _seconds?: number; toDate?: () => Date } | null | undefined;
+      if (!deadlineTs) {
+        setDeadline(undefined);
+      } else {
+        const d = typeof deadlineTs.toDate === "function"
+          ? deadlineTs.toDate()
+          : new Date((deadlineTs.seconds ?? deadlineTs._seconds ?? 0) * 1000);
+        setDeadline(isNaN(d.getTime()) ? undefined : d);
+      }
       setIsAvailable(task.isAvailable || false);
       setIsTest(task.isTest || false);
       setReviewStatus((task.reviewStatus || 'pending') as 'pending' | 'approved' | 'rejected' | 'published' | 'archived');
@@ -159,6 +170,17 @@ export default function AdminEditTaskDialog({
     if (rewardCurrencyId !== (task.rewardCurrencyId || 0)) updateData.rewardCurrencyId = rewardCurrencyId;
     if (estimatedTimeOfCompletionInMinutes !== (task.estimatedTimeOfCompletionInMinutes || 0)) updateData.estimatedTimeOfCompletionInMinutes = estimatedTimeOfCompletionInMinutes;
     if (numberOfCooldownHours !== (task.numberOfCooldownHours || 0)) updateData.numberOfCooldownHours = numberOfCooldownHours;
+    const taskDeadlineTs = task.deadline as { seconds?: number; _seconds?: number; toDate?: () => Date } | null | undefined;
+    const taskDeadlineDate = taskDeadlineTs
+      ? (typeof taskDeadlineTs.toDate === "function"
+          ? taskDeadlineTs.toDate()
+          : new Date((taskDeadlineTs.seconds ?? taskDeadlineTs._seconds ?? 0) * 1000))
+      : undefined;
+    const taskDeadlineTime = taskDeadlineDate && !isNaN(taskDeadlineDate.getTime()) ? taskDeadlineDate.getTime() : null;
+    const deadlineTime = deadline && !isNaN(deadline.getTime()) ? deadline.getTime() : null;
+    if (deadlineTime !== taskDeadlineTime) {
+      updateData.deadline = deadline ? deadline.toISOString() : null;
+    }
     if (isAvailable !== (task.isAvailable || false)) updateData.isAvailable = isAvailable;
     if (isTest !== (task.isTest || false)) updateData.isTest = isTest;
     if (reviewStatus !== (task.reviewStatus || 'pending')) updateData.reviewStatus = reviewStatus;
@@ -678,6 +700,29 @@ export default function AdminEditTaskDialog({
                     <Input id="edit-cooldown" type="number" min={0} value={numberOfCooldownHours ?? ""} onChange={(e) => setNumberOfCooldownHours(Number(e.target.value) || 0)} className="h-9 text-sm" />
                     <p className="text-[11px] text-gray-400 mt-1">0 = no cooldown</p>
                   </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Label className="text-xs font-medium text-gray-500">Deadline</Label>
+                    {deadline && <CheckCircleSolidIcon className="w-3.5 h-3.5 text-green-500" />}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex text-gray-400 hover:text-gray-600 cursor-help" aria-label="Deadline">
+                          <InformationCircleIcon className="w-3.5 h-3.5" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[220px]">
+                        When the task is due. Optional.
+                      </TooltipContent>
+                    </Tooltip>
+                    {deadline && (
+                      <Button type="button" variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground ml-auto" onClick={() => setDeadline(undefined)}>
+                        Clear
+                      </Button>
+                    )}
+                  </div>
+                  <Calendar mode="single" selected={deadline} onSelect={setDeadline} className="rounded-lg border" captionLayout="dropdown" />
                 </div>
 
                 <div>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { paxDB, rezDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { requireSuperAdmin } from '@/lib/api-auth';
 
 export interface AdminUpdateTaskData {
@@ -22,6 +22,7 @@ export interface AdminUpdateTaskData {
   rewardAmountPerParticipant?: number;
   rewardCurrencyId?: number;
   numberOfCooldownHours?: number;
+  deadline?: string | null; // ISO date string; null to clear
   paymentTerms?: string | null;
   managerContractAddress?: string;
   reviewStatus?: 'pending' | 'approved' | 'rejected' | 'published' | 'archived';
@@ -79,12 +80,15 @@ export async function PATCH(request: NextRequest) {
     const oldIsAvailable = oldTaskData?.isAvailable;
     const oldReviewStatus = oldTaskData?.reviewStatus;
 
-    // Filter out undefined values
+    // Filter out undefined values and convert deadline to Timestamp
     const updateData: Record<string, unknown> = {};
     Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined) {
-        updateData[key] = value;
+      if (value === undefined) return;
+      if (key === 'deadline') {
+        updateData.deadline = value === null ? null : Timestamp.fromDate(new Date(value as string));
+        return;
       }
+      updateData[key] = value;
     });
 
     // isAvailable is true only when reviewStatus is 'published' (after approval + payment)
