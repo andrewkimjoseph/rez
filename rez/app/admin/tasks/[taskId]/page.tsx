@@ -67,6 +67,7 @@ export default function AdminTaskDetailsPage() {
   const [instructionsExpanded, setInstructionsExpanded] = useState(false);
   const [paymentTermsExpanded, setPaymentTermsExpanded] = useState(false);
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
+  const [actionType, setActionType] = useState<'publish' | 'activate' | 'deactivate' | null>(null);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -123,6 +124,12 @@ export default function AdminTaskDetailsPage() {
     adminTaskPublishClicked,
     adminTaskPublishComplete,
     adminTaskPublishFailed,
+    adminTaskActivateClicked,
+    adminTaskActivateComplete,
+    adminTaskActivateFailed,
+    adminTaskDeactivateClicked,
+    adminTaskDeactivateComplete,
+    adminTaskDeactivateFailed,
   } = useAmplitudeEvents();
 
   const handleReviewClick = (action: 'approve' | 'reject') => {
@@ -193,47 +200,85 @@ export default function AdminTaskDetailsPage() {
 
   const handleOpenPublishDialog = () => {
     if (!task) return;
+    setActionType('publish');
     setPublishDialogOpen(true);
   };
 
-  const handleConfirmPublishToggle = async () => {
-    if (!task?.id || !formattedData) return;
+  const handleOpenActivateDialog = () => {
+    if (!task) return;
+    const isActive = formattedData?.isAvailable ?? false;
+    setActionType(isActive ? 'deactivate' : 'activate');
+    setPublishDialogOpen(true);
+  };
 
-    const isCurrentlyActive = formattedData.isAvailable;
-    // Activate = set to Published (only for approved tasks). Deactivate = set to Approved and isAvailable false.
-    const payload = isCurrentlyActive
-      ? { reviewStatus: 'approved' as const, isAvailable: false }
-      : { reviewStatus: 'published' as const };
+  const handleConfirmAction = async () => {
+    if (!task?.id || !formattedData || !actionType) return;
 
-    if (!isCurrentlyActive) {
+    let payload: any;
+    let successMessage: string;
+    let errorMessage: string;
+
+    if (actionType === 'publish') {
+      // Publish: approved → published
+      payload = { reviewStatus: 'published' as const };
+      successMessage = 'Task published';
+      errorMessage = 'Failed to publish task';
       adminTaskPublishClicked({ task_id: task.id, task_title: task.title });
+    } else if (actionType === 'activate') {
+      // Activate: published + inactive → active
+      payload = { isAvailable: true };
+      successMessage = 'Task activated';
+      errorMessage = 'Failed to activate task';
+      adminTaskActivateClicked({ task_id: task.id, task_title: task.title });
+    } else {
+      // Deactivate: published + active → inactive
+      payload = { isAvailable: false };
+      successMessage = 'Task deactivated';
+      errorMessage = 'Failed to deactivate task';
+      adminTaskDeactivateClicked({ task_id: task.id, task_title: task.title });
     }
 
     const success = await updateTask(task.id, payload);
     if (success) {
-      if (!isCurrentlyActive) {
+      if (actionType === 'publish') {
         adminTaskPublishComplete({
           task_id: task.id,
           task_title: task.title,
         });
+      } else if (actionType === 'activate') {
+        adminTaskActivateComplete({ task_id: task.id });
+      } else {
+        adminTaskDeactivateComplete({ task_id: task.id });
       }
-      toast.success(isCurrentlyActive ? 'Task unpublished' : 'Task published');
+      toast.success(successMessage);
       setPublishDialogOpen(false);
+      setActionType(null);
       await fetchAllTasks(true);
     } else {
-      if (!isCurrentlyActive) {
+      if (actionType === 'publish') {
         adminTaskPublishFailed({
           task_id: task.id,
           task_title: task.title,
-          error_message: "Failed to publish task",
+          error_message: errorMessage,
+        });
+      } else if (actionType === 'activate') {
+        adminTaskActivateFailed({
+          task_id: task.id,
+          error_message: errorMessage,
+        });
+      } else {
+        adminTaskDeactivateFailed({
+          task_id: task.id,
+          error_message: errorMessage,
         });
       }
-      toast.error('Failed to update task status');
+      toast.error(errorMessage);
     }
   };
 
-  const handleCancelPublishToggle = () => {
+  const handleCancelAction = () => {
     setPublishDialogOpen(false);
+    setActionType(null);
   };
 
   const copyToClipboard = (text: string, label: string) => {
@@ -391,14 +436,24 @@ export default function AdminTaskDetailsPage() {
                   </Button>
                 </>
               )}
-              {(task.reviewStatus === 'approved' || task.reviewStatus === 'published') && (
+              {task.reviewStatus === 'approved' && (
                 <Button
-                  variant={formattedData.isAvailable ? "secondary" : "default"}
+                  variant="default"
                   size="sm"
                   onClick={handleOpenPublishDialog}
                 >
+                  <PowerIcon className="h-4 w-4 mr-2" />
+                  Publish
+                </Button>
+              )}
+              {task.reviewStatus === 'published' && (
+                <Button
+                  variant={formattedData.isAvailable ? "secondary" : "default"}
+                  size="sm"
+                  onClick={handleOpenActivateDialog}
+                >
                   <PowerIcon className={`h-4 w-4 mr-2 ${formattedData.isAvailable ? '' : 'opacity-50'}`} />
-                  {formattedData.isAvailable ? 'Unpublish' : 'Publish'}
+                  {formattedData.isAvailable ? 'Deactivate' : 'Activate'}
                 </Button>
               )}
               <Button
@@ -620,32 +675,53 @@ export default function AdminTaskDetailsPage() {
           </div>
         )}
 
-        {/* Publish / Unpublish Confirmation Dialog */}
-        <Dialog open={publishDialogOpen} onOpenChange={setPublishDialogOpen}>
+        {/* Publish / Activate / Deactivate Confirmation Dialog */}
+        <Dialog open={publishDialogOpen} onOpenChange={(open) => {
+          if (!open) {
+            handleCancelAction();
+          } else {
+            setPublishDialogOpen(true);
+          }
+        }}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                {formattedData.isAvailable ? 'Unpublish Task' : 'Publish Task'}
+                {actionType === 'publish' && 'Publish Task'}
+                {actionType === 'activate' && 'Activate Task'}
+                {actionType === 'deactivate' && 'Deactivate Task'}
               </DialogTitle>
               <DialogDescription>
-                Are you sure you want to {formattedData.isAvailable ? 'unpublish' : 'publish'} &quot;{formattedData.title || 'this task'}&quot;?
-                {formattedData.isAvailable
-                  ? ' The task will move back to Approved and no longer be active for participants.'
-                  : ' The task will be marked as Published. This does not automatically activate the task or change its availability.'
-                }
+                {actionType === 'publish' && (
+                  <>
+                    Are you sure you want to publish &quot;{formattedData.title || 'this task'}&quot;?
+                    The task will be marked as Published. This does not automatically activate the task or change its availability.
+                  </>
+                )}
+                {actionType === 'activate' && (
+                  <>
+                    Are you sure you want to activate &quot;{formattedData.title || 'this task'}&quot;?
+                    The task will become active and available for participants to complete.
+                  </>
+                )}
+                {actionType === 'deactivate' && (
+                  <>
+                    Are you sure you want to deactivate &quot;{formattedData.title || 'this task'}&quot;?
+                    The task will no longer be active and available for participants.
+                  </>
+                )}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button
                 variant="outline"
-                onClick={handleCancelPublishToggle}
+                onClick={handleCancelAction}
                 disabled={isUpdating}
               >
                 Cancel
               </Button>
               <Button
-                variant={formattedData.isAvailable ? "secondary" : "default"}
-                onClick={handleConfirmPublishToggle}
+                variant={actionType === 'deactivate' ? "secondary" : "default"}
+                onClick={handleConfirmAction}
                 disabled={isUpdating}
               >
                 {isUpdating ? (
@@ -653,7 +729,13 @@ export default function AdminTaskDetailsPage() {
                     <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
                     Updating...
                   </>
-                ) : formattedData.isAvailable ? 'Unpublish' : 'Publish'}
+                ) : (
+                  <>
+                    {actionType === 'publish' && 'Publish'}
+                    {actionType === 'activate' && 'Activate'}
+                    {actionType === 'deactivate' && 'Deactivate'}
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
