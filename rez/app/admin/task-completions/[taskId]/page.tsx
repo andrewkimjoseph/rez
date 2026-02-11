@@ -74,7 +74,6 @@ export default function AdminTaskCompletionsDetailPage() {
 
   const stats = useMemo(() => {
     const completed = taskCompletions.filter(c => c.timeCompleted != null).length;
-    const invalid = taskCompletions.filter(c => !c.isValid).length;
     const invalidated = taskCompletions.filter(c => c.invalidatedAt != null).length;
     const claimed = taskCompletions.filter(c => c.reward?.txnHash != null).length;
     const twoHoursInMs = 2 * 60 * 60 * 1000;
@@ -88,7 +87,17 @@ export default function AdminTaskCompletionsDetailPage() {
       if (sec == null) return false;
       return (now - sec * 1000) > twoHoursInMs;
     }).length;
-    return { completed, invalid, invalidated, claimed, expired };
+    const invalid = taskCompletions.filter(c => {
+      // Invalid but not expired
+      if (c.isValid) return false;
+      const ts = c.screeningTimeCreated as { seconds?: number; _seconds?: number } | null | undefined;
+      if (ts == null) return false;
+      const sec = ts.seconds ?? ts._seconds;
+      if (sec == null) return false;
+      return (now - sec * 1000) <= twoHoursInMs;
+    }).length;
+    const totalInvalid = invalid + expired;
+    return { completed, invalid, invalidated, claimed, expired, totalInvalid };
   }, [taskCompletions, countdownTick]);
 
   useEffect(() => {
@@ -423,7 +432,7 @@ export default function AdminTaskCompletionsDetailPage() {
                 Validate or invalidate participant completions
                 {hasMoreCompletions
                   ? ` (${taskCompletions.length} shown, load more for more)`
-                  : ` (${taskCompletions.length} total, ${stats.completed} completed, ${stats.invalid} invalid, ${stats.invalidated} invalidated, ${stats.expired} expired, ${stats.claimed} claimed)`}
+                  : ` (${taskCompletions.length} total, ${stats.completed} completed, ${stats.totalInvalid} total invalid, ${stats.invalidated} invalidated, ${stats.claimed} claimed)`}
               </p>
             </div>
             <Button
@@ -529,11 +538,11 @@ export default function AdminTaskCompletionsDetailPage() {
                     </TableCell>
                     <TableCell className="text-sm">
                       {completion.isValid && completion.timeCompleted != null ? (
-                        <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100/80 border-0">
+                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
                           No
                         </Badge>
                       ) : isExpired(completion.screeningTimeCreated) ? (
-                        <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100/80 border-0">
+                        <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">
                           Yes
                         </Badge>
                       ) : (() => {
@@ -541,7 +550,7 @@ export default function AdminTaskCompletionsDetailPage() {
                         return timeRemaining ? (
                           <span className="text-muted-foreground text-sm">{timeRemaining}</span>
                         ) : (
-                          <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100/80 border-0">
+                          <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
                             No
                           </Badge>
                         );
