@@ -776,7 +776,11 @@ export default function AdminTaskCompletionsDetailPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-sm">
-                      {completion.isValid && completion.timeCompleted != null ? (
+                      {completion.invalidatedAt != null ? (
+                        <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">
+                          Yes
+                        </Badge>
+                      ) : completion.isValid && completion.timeCompleted != null ? (
                         <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
                           No
                         </Badge>
