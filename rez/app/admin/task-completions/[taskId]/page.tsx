@@ -406,6 +406,19 @@ export default function AdminTaskCompletionsDetailPage() {
                   Completions for {task?.title || "Task"}
                 </h1>
               </div>
+              {taskId && (
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(taskId, "Task ID")}
+                  className="group/copy inline-flex items-center gap-2 rounded px-1.5 -ml-1.5 py-1 hover:bg-muted/80 transition-colors text-left mb-1"
+                  title={`Copy task ID: ${taskId}`}
+                >
+                  <span className="text-sm font-mono text-muted-foreground">
+                    Task ID: {taskId}
+                  </span>
+                  <ClipboardDocumentIcon className="h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover/copy:opacity-100" aria-hidden />
+                </button>
+              )}
               <p className="text-muted-foreground">
                 Validate or invalidate participant completions
                 {hasMoreCompletions
