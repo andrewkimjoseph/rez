@@ -201,16 +201,22 @@ export default function AdminTaskCompletionsDetailPage() {
   }, [taskId, isAuthorized, task, isTaskActive]);
 
   useEffect(() => {
-    // Only set up interval if there are non-expired completions
+    // Set up interval if there are non-expired completions or completions waiting for cooldown
     const hasNonExpired = taskCompletions.some(c => !isExpired(c.screeningTimeCreated));
+    // Check if there are completions that might be in cooldown (have timeCompleted and task has cooldown)
+    const hasCooldownActive = taskCompletions.some(c => 
+      c.timeCompleted != null && 
+      task?.numberOfCooldownHours != null && 
+      task.numberOfCooldownHours > 0
+    );
     
-    if (hasNonExpired) {
+    if (hasNonExpired || hasCooldownActive) {
       const interval = setInterval(() => {
         setCountdownTick(t => t + 1);
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [taskCompletions]);
+  }, [taskCompletions, task]);
 
   const openValidateDialog = (completion: TaskCompletionWithReward) => {
     setCompletionToValidate(completion);
@@ -368,6 +374,40 @@ export default function AdminTaskCompletionsDetailPage() {
         const timeRemainingMs = twoHoursInMs - (now - screeningTime);
         
         if (timeRemainingMs <= 0) return null; // Expired
+        
+        const hours = Math.floor(timeRemainingMs / (60 * 60 * 1000));
+        const minutes = Math.floor((timeRemainingMs % (60 * 60 * 1000)) / (60 * 1000));
+        const secs = Math.floor((timeRemainingMs % (60 * 1000)) / 1000);
+        
+        if (hours > 0) {
+          return `${hours}h ${minutes}m`;
+        } else if (minutes > 0) {
+          return `${minutes}m ${secs}s`;
+        } else {
+          return `${secs}s`;
+        }
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  const getTimeUntilCanClaim = (timeCompleted: unknown, numberOfCooldownHours: number | null): string | null => {
+    if (!timeCompleted) return null;
+    if (!numberOfCooldownHours || numberOfCooldownHours === 0) return null; // No cooldown, can claim immediately
+    
+    try {
+      const ts = timeCompleted as { seconds?: number; _seconds?: number };
+      const seconds = ts.seconds ?? ts._seconds;
+      if (seconds != null) {
+        const completionTime = seconds * 1000;
+        const now = Date.now();
+        const cooldownMs = numberOfCooldownHours * 60 * 60 * 1000;
+        const timeSinceCompletion = now - completionTime;
+        const timeRemainingMs = cooldownMs - timeSinceCompletion;
+        
+        if (timeRemainingMs <= 0) return null; // Cooldown passed, can claim
         
         const hours = Math.floor(timeRemainingMs / (60 * 60 * 1000));
         const minutes = Math.floor((timeRemainingMs % (60 * 60 * 1000)) / (60 * 1000));
@@ -617,6 +657,7 @@ export default function AdminTaskCompletionsDetailPage() {
                   <TableHead className="font-semibold">Expired</TableHead>
                   <TableHead className="font-semibold">Claimed</TableHead>
                   <TableHead className="font-semibold">Completed at</TableHead>
+                  <TableHead className="font-semibold">Can Claim</TableHead>
                   <TableHead className="text-right font-semibold">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -736,6 +777,26 @@ export default function AdminTaskCompletionsDetailPage() {
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {formatTimestamp(completion.timeCompleted)}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {!completion.timeCompleted ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (() => {
+                        const timeUntilCanClaim = getTimeUntilCanClaim(completion.timeCompleted, task?.numberOfCooldownHours ?? null);
+                        if (timeUntilCanClaim === null) {
+                          // Cooldown passed or no cooldown, can claim
+                          return (
+                            <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
+                              Yes
+                            </Badge>
+                          );
+                        } else {
+                          // Still in cooldown, show countdown
+                          return (
+                            <span className="text-muted-foreground text-sm">{timeUntilCanClaim}</span>
+                          );
+                        }
+                      })()}
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
