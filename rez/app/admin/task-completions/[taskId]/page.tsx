@@ -74,6 +74,7 @@ export default function AdminTaskCompletionsDetailPage() {
   const [completionToValidate, setCompletionToValidate] = useState<TaskCompletionWithReward | null>(null);
   const [validationDate, setValidationDate] = useState<Date | undefined>(undefined);
   const [validationTime, setValidationTime] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<'all' | 'complete' | 'invalid' | 'invalidated' | 'claimed'>('all');
   const [hasMoreCompletions, setHasMoreCompletions] = useState(false);
   const [lastDocIdForCursor, setLastDocIdForCursor] = useState<string | null>(null);
   const [isLoadingMoreCompletions, setIsLoadingMoreCompletions] = useState(false);
@@ -109,6 +110,25 @@ export default function AdminTaskCompletionsDetailPage() {
     const totalInvalid = invalid + expired;
     return { completed, invalid, invalidated, claimed, expired, totalInvalid };
   }, [taskCompletions, countdownTick]);
+
+  const filteredCompletions = useMemo(() => {
+    if (statusFilter === 'all') return taskCompletions;
+    
+    return taskCompletions.filter((completion) => {
+      switch (statusFilter) {
+        case 'complete':
+          return completion.timeCompleted != null && completion.isValid === true;
+        case 'invalid':
+          return !completion.isValid;
+        case 'invalidated':
+          return completion.invalidatedAt != null;
+        case 'claimed':
+          return completion.reward?.txnHash != null;
+        default:
+          return true;
+      }
+    });
+  }, [taskCompletions, statusFilter]);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -479,7 +499,7 @@ export default function AdminTaskCompletionsDetailPage() {
                 Validate or invalidate participant completions
                 {hasMoreCompletions
                   ? ` (${taskCompletions.length} shown, load more for more)`
-                  : ` (${taskCompletions.length} total, ${stats.completed} completed, ${stats.totalInvalid} total invalid, ${stats.invalidated} invalidated, ${stats.claimed} claimed)`}
+                  : ` (${taskCompletions.length} total, ${stats.completed} completed, ${stats.totalInvalid} invalid, ${stats.invalidated} invalidated, ${stats.claimed} claimed)`}
               </p>
             </div>
             <Button
@@ -501,6 +521,51 @@ export default function AdminTaskCompletionsDetailPage() {
           </div>
         )}
 
+        {/* Filter Buttons */}
+        {!isLoadingCompletions && taskCompletions.length > 0 && (
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              variant={statusFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setStatusFilter('all')}
+            >
+              All
+            </Button>
+            <Button
+              variant={statusFilter === 'complete' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setStatusFilter('complete')}
+              className={statusFilter === 'complete' ? '' : 'text-green-700 border-green-300 hover:bg-green-50'}
+            >
+              Complete
+            </Button>
+            <Button
+              variant={statusFilter === 'invalid' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setStatusFilter('invalid')}
+              className={statusFilter === 'invalid' ? '' : 'text-red-700 border-red-300 hover:bg-red-50'}
+            >
+              Invalid
+            </Button>
+            <Button
+              variant={statusFilter === 'invalidated' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setStatusFilter('invalidated')}
+              className={statusFilter === 'invalidated' ? '' : 'text-orange-700 border-orange-300 hover:bg-orange-50'}
+            >
+              Invalidated
+            </Button>
+            <Button
+              variant={statusFilter === 'claimed' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setStatusFilter('claimed')}
+              className={statusFilter === 'claimed' ? '' : 'text-emerald-700 border-emerald-300 hover:bg-emerald-50'}
+            >
+              Claimed
+            </Button>
+          </div>
+        )}
+
         {!isLoadingCompletions && taskCompletions.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="p-3 rounded-full bg-muted mb-3">
@@ -513,7 +578,19 @@ export default function AdminTaskCompletionsDetailPage() {
           </div>
         )}
 
-        {!isLoadingCompletions && taskCompletions.length > 0 && (
+        {!isLoadingCompletions && taskCompletions.length > 0 && filteredCompletions.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="p-3 rounded-full bg-muted mb-3">
+              <XCircleIcon className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <p className="font-medium text-foreground">No completions match the selected filter</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Try selecting a different filter
+            </p>
+          </div>
+        )}
+
+        {!isLoadingCompletions && taskCompletions.length > 0 && filteredCompletions.length > 0 && (
           <div className="bg-white rounded-lg border border-border/50 overflow-hidden shadow-sm">
             <Table>
               <TableHeader>
@@ -530,7 +607,7 @@ export default function AdminTaskCompletionsDetailPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {taskCompletions.map((completion) => (
+                {filteredCompletions.map((completion) => (
                   <TableRow key={completion.id || completion.participantId || completion.screeningId || Math.random()} className="hover:bg-muted/20">
                     <TableCell className="font-mono text-sm align-middle">
                       <button
