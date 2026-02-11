@@ -57,6 +57,7 @@ import { format } from "date-fns";
 import { ChevronDownIcon } from "lucide-react";
 import { CircleFlag } from "react-circle-flags";
 import { countries } from "country-data-list";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 export default function AdminTaskCompletionsDetailPage() {
   const router = useRouter();
@@ -651,7 +652,7 @@ export default function AdminTaskCompletionsDetailPage() {
                   <TableHead className="w-[50px] font-semibold">#</TableHead>
                   <TableHead className="font-semibold">Completion ID</TableHead>
                   <TableHead className="font-semibold">Participant ID</TableHead>
-                  <TableHead className="font-semibold w-[200px]">Email</TableHead>
+                  <TableHead className="font-semibold w-[80px]">Email</TableHead>
                   <TableHead className="font-semibold">Country</TableHead>
                   <TableHead className="font-semibold">Started at</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
@@ -720,17 +721,25 @@ export default function AdminTaskCompletionsDetailPage() {
                     </TableCell>
                     <TableCell className="text-sm align-middle">
                       {completion.participantCountry ? (
-                        <div className="flex items-center gap-2">
-                          {getCountryCode(completion.participantCountry) && (
-                            <div className="inline-flex items-center justify-center w-5 h-5 shrink-0 overflow-hidden rounded-full">
-                              <CircleFlag
-                                countryCode={getCountryCode(completion.participantCountry)!}
-                                height={20}
-                              />
-                            </div>
-                          )}
-                          <span className="text-muted-foreground">{completion.participantCountry}</span>
-                        </div>
+                        getCountryCode(completion.participantCountry) ? (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="inline-flex items-center justify-center w-5 h-5 shrink-0 overflow-hidden rounded-full cursor-help">
+                                  <CircleFlag
+                                    countryCode={getCountryCode(completion.participantCountry)!}
+                                    height={20}
+                                  />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {completion.participantCountry}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       )}
@@ -753,9 +762,9 @@ export default function AdminTaskCompletionsDetailPage() {
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-sm">
+                    <TableCell className="text-muted-foreground text-sm">
                       {isExpired(completion.screeningTimeCreated) ? (
-                        <span className="text-muted-foreground">N/A</span>
+                        <span>N/A</span>
                       ) : completion.invalidatedAt ? (
                         formatTimestamp(completion.invalidatedAt)
                       ) : completion.reward?.txnHash ? (
@@ -763,7 +772,7 @@ export default function AdminTaskCompletionsDetailPage() {
                           Not Invalidated
                         </Badge>
                       ) : (
-                        <span className="text-muted-foreground">N/A</span>
+                        <span>N/A</span>
                       )}
                     </TableCell>
                     <TableCell className="text-sm">
@@ -832,7 +841,7 @@ export default function AdminTaskCompletionsDetailPage() {
                         <span className="text-muted-foreground">N/A</span>
                       ) : completion.reward?.txnHash ? (
                         <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
-                          Already claimed
+                          Done
                         </Badge>
                       ) : !completion.timeCompleted ? (
                         <span className="text-muted-foreground">N/A</span>
