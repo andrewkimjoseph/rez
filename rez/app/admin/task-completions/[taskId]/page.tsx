@@ -648,6 +648,7 @@ export default function AdminTaskCompletionsDetailPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
+                  <TableHead className="w-[50px] font-semibold">#</TableHead>
                   <TableHead className="font-semibold">Participant ID</TableHead>
                   <TableHead className="font-semibold">Email</TableHead>
                   <TableHead className="font-semibold">Country</TableHead>
@@ -662,8 +663,9 @@ export default function AdminTaskCompletionsDetailPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCompletions.map((completion) => (
+                {filteredCompletions.map((completion, index) => (
                   <TableRow key={completion.id || completion.participantId || completion.screeningId || Math.random()} className="hover:bg-muted/20">
+                    <TableCell className="text-muted-foreground text-center">{index + 1}</TableCell>
                     <TableCell className="font-mono text-sm align-middle">
                       <button
                         type="button"
