@@ -767,7 +767,9 @@ export default function AdminTaskCompletionsDetailPage() {
                       })()}
                     </TableCell>
                     <TableCell>
-                      {completion.reward?.txnHash ? (
+                      {completion.invalidatedAt ? (
+                        <span className="text-muted-foreground">N/A</span>
+                      ) : completion.reward?.txnHash ? (
                         <a
                           href={`https://celoscan.io/tx/${completion.reward.txnHash}`}
                           target="_blank"
