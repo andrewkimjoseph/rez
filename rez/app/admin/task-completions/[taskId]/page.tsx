@@ -735,8 +735,16 @@ export default function AdminTaskCompletionsDetailPage() {
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      {completion.invalidatedAt ? formatTimestamp(completion.invalidatedAt) : "—"}
+                    <TableCell className="text-sm">
+                      {completion.invalidatedAt ? (
+                        formatTimestamp(completion.invalidatedAt)
+                      ) : completion.reward?.txnHash ? (
+                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
+                          Not Invalidated
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-sm">
                       {completion.isValid && completion.timeCompleted != null ? (
