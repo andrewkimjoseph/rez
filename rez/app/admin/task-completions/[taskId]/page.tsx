@@ -648,6 +648,8 @@ export default function AdminTaskCompletionsDetailPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
+                  <TableHead className="w-[50px] font-semibold">#</TableHead>
+                  <TableHead className="font-semibold">Completion ID</TableHead>
                   <TableHead className="font-semibold">Participant ID</TableHead>
                   <TableHead className="font-semibold w-[200px]">Email</TableHead>
                   <TableHead className="font-semibold">Country</TableHead>
@@ -662,8 +664,26 @@ export default function AdminTaskCompletionsDetailPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCompletions.map((completion) => (
+                {filteredCompletions.map((completion, index) => (
                   <TableRow key={completion.id || completion.participantId || completion.screeningId || Math.random()} className="hover:bg-muted/20">
+                    <TableCell className="text-muted-foreground text-center">{index + 1}</TableCell>
+                    <TableCell className="font-mono text-sm align-middle">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyToClipboard(completion.id || "", "Completion ID");
+                        }}
+                        className="group/copy inline-flex items-center gap-2 rounded px-1.5 -mx-1.5 py-1 hover:bg-muted/80 transition-colors text-left w-full disabled:pointer-events-none disabled:opacity-100"
+                        title={completion.id ? String(completion.id) : undefined}
+                        disabled={!completion.id}
+                      >
+                        <span className="truncate min-w-0 flex-1">{truncateDisplay(completion.id, 12, "N/A")}</span>
+                        {completion.id && (
+                          <ClipboardDocumentIcon className="h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover/copy:opacity-100" aria-hidden />
+                        )}
+                      </button>
+                    </TableCell>
                     <TableCell className="font-mono text-sm align-middle">
                       <button
                         type="button"
@@ -783,6 +803,23 @@ export default function AdminTaskCompletionsDetailPage() {
                             {completion.reward.txnHash.slice(0, 10)}…
                           </span>
                         </a>
+                      ) : completion.isValid && completion.timeCompleted ? (
+                        (() => {
+                          const timeUntilCanClaim = getTimeUntilCanClaim(completion.timeCompleted, task?.numberOfCooldownHours ?? null);
+                          if (timeUntilCanClaim) {
+                            // Still in cooldown, show countdown
+                            return (
+                              <span className="text-muted-foreground text-sm">{timeUntilCanClaim}</span>
+                            );
+                          } else {
+                            // Cooldown passed but not claimed, show "Not yet" in orange
+                            return (
+                              <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100/80 border-0">
+                                Not yet
+                              </Badge>
+                            );
+                          }
+                        })()
                       ) : (
                         <span className="text-muted-foreground">N/A</span>
                       )}
