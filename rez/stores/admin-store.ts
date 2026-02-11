@@ -41,7 +41,6 @@ export interface AdminParticipant {
   id: string;
   emailAddress: string | null;
   displayName: string | null;
-  country: string | null;
   disabled: boolean;
 }
 

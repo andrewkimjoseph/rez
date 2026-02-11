@@ -648,11 +648,10 @@ export default function AdminTaskCompletionsDetailPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
-                  <TableHead className="w-[50px] font-semibold">#</TableHead>
                   <TableHead className="font-semibold">Participant ID</TableHead>
-                  <TableHead className="font-semibold">Email</TableHead>
+                  <TableHead className="font-semibold w-[200px]">Email</TableHead>
                   <TableHead className="font-semibold">Country</TableHead>
-                  <TableHead className="font-semibold">Screened at</TableHead>
+                  <TableHead className="font-semibold">Started at</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
                   <TableHead className="font-semibold">Invalidated at</TableHead>
                   <TableHead className="font-semibold">Expired</TableHead>
@@ -663,9 +662,8 @@ export default function AdminTaskCompletionsDetailPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCompletions.map((completion, index) => (
+                {filteredCompletions.map((completion) => (
                   <TableRow key={completion.id || completion.participantId || completion.screeningId || Math.random()} className="hover:bg-muted/20">
-                    <TableCell className="text-muted-foreground text-center">{index + 1}</TableCell>
                     <TableCell className="font-mono text-sm align-middle">
                       <button
                         type="button"
@@ -745,7 +743,7 @@ export default function AdminTaskCompletionsDetailPage() {
                           Not Invalidated
                         </Badge>
                       ) : (
-                        <span className="text-muted-foreground">—</span>
+                        <span className="text-muted-foreground">N/A</span>
                       )}
                     </TableCell>
                     <TableCell className="text-sm">
@@ -779,22 +777,28 @@ export default function AdminTaskCompletionsDetailPage() {
                           className="inline-flex items-center gap-1 text-primary hover:underline"
                         >
                           <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100/80 border-0">
-                            Claimed
+                            Yes
                           </Badge>
                           <span className="text-xs font-mono truncate max-w-[80px]">
                             {completion.reward.txnHash.slice(0, 10)}…
                           </span>
                         </a>
                       ) : (
-                        <span className="text-muted-foreground">—</span>
+                        <span className="text-muted-foreground">N/A</span>
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {formatTimestamp(completion.timeCompleted)}
                     </TableCell>
                     <TableCell className="text-sm">
-                      {!completion.timeCompleted ? (
-                        <span className="text-muted-foreground">—</span>
+                      {completion.invalidatedAt ? (
+                        <span className="text-muted-foreground">N/A</span>
+                      ) : completion.reward?.txnHash ? (
+                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
+                          Already claimed
+                        </Badge>
+                      ) : !completion.timeCompleted ? (
+                        <span className="text-muted-foreground">N/A</span>
                       ) : (() => {
                         const timeUntilCanClaim = getTimeUntilCanClaim(completion.timeCompleted, task?.numberOfCooldownHours ?? null);
                         if (timeUntilCanClaim === null) {
@@ -805,9 +809,11 @@ export default function AdminTaskCompletionsDetailPage() {
                             </Badge>
                           );
                         } else {
-                          // Still in cooldown, show countdown
+                          // Still in cooldown, can't claim
                           return (
-                            <span className="text-muted-foreground text-sm">{timeUntilCanClaim}</span>
+                            <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">
+                              No
+                            </Badge>
                           );
                         }
                       })()}

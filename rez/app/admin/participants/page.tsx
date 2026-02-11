@@ -228,7 +228,6 @@ export default function AdminParticipantsPage() {
                   <TableHead className="font-semibold">Participant ID</TableHead>
                   <TableHead className="font-semibold">Email</TableHead>
                   <TableHead className="font-semibold">Display name</TableHead>
-                  <TableHead className="font-semibold">Country</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
                   <TableHead className="text-right font-semibold w-[100px]">Actions</TableHead>
                 </TableRow>
@@ -269,9 +268,6 @@ export default function AdminParticipantsPage() {
                       <span className="truncate max-w-[200px] block" title={participant.displayName || ""}>
                         {participant.displayName || "—"}
                       </span>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {participant.country || "—"}
                     </TableCell>
                     <TableCell>
                       {participant.disabled ? (
