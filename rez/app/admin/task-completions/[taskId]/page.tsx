@@ -464,12 +464,12 @@ export default function AdminTaskCompletionsDetailPage() {
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
                   <TableHead className="font-semibold">Participant ID</TableHead>
                   <TableHead className="font-semibold">Email</TableHead>
-                  <TableHead className="font-semibold">Screening time</TableHead>
+                  <TableHead className="font-semibold">Screened at</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
                   <TableHead className="font-semibold">Invalidated at</TableHead>
                   <TableHead className="font-semibold">Expired</TableHead>
                   <TableHead className="font-semibold">Claimed</TableHead>
-                  <TableHead className="font-semibold">Completed</TableHead>
+                  <TableHead className="font-semibold">Completed at</TableHead>
                   <TableHead className="text-right font-semibold">Actions</TableHead>
                 </TableRow>
               </TableHeader>
