@@ -10,6 +10,7 @@ import { TaskCompletion } from "@/firebase/firestore/models/TaskCompletion";
 type TaskCompletionWithReward = TaskCompletion & {
   reward?: { txnHash: string };
   participantEmailAddress?: string | null;
+  participantCountry?: string | null;
   screeningTimeCreated?: unknown | null;
 };
 import {
@@ -54,6 +55,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { ChevronDownIcon } from "lucide-react";
+import { CircleFlag } from "react-circle-flags";
+import { countries } from "country-data-list";
 
 export default function AdminTaskCompletionsDetailPage() {
   const router = useRouter();
@@ -161,6 +164,7 @@ export default function AdminTaskCompletionsDetailPage() {
             isValid: c.isValid === true,
             participantId: c.participantId ?? null,
             participantEmailAddress: c.participantEmailAddress ?? null,
+            participantCountry: c.participantCountry ?? null,
             screeningId: c.screeningId ?? null,
             screeningTimeCreated: c.screeningTimeCreated ?? null,
             invalidatedAt: c.invalidatedAt ?? null,
@@ -302,6 +306,14 @@ export default function AdminTaskCompletionsDetailPage() {
     );
   };
 
+  const getCountryCode = (countryName: string | null | undefined): string | null => {
+    if (!countryName) return null;
+    const country = countries.all.find(
+      (c) => c.name === countryName || c.name.toLowerCase() === countryName.toLowerCase()
+    );
+    return country?.alpha2?.toLowerCase() ?? null;
+  };
+
   const truncateDisplay = (value: string | null | undefined, maxLen: number, fallback: string) => {
     if (value == null || value === "") return fallback;
     return value.length <= maxLen ? value : `${value.slice(0, maxLen)}…`;
@@ -391,6 +403,7 @@ export default function AdminTaskCompletionsDetailPage() {
             isValid: c.isValid === true,
             participantId: c.participantId ?? null,
             participantEmailAddress: c.participantEmailAddress ?? null,
+            participantCountry: c.participantCountry ?? null,
             screeningId: c.screeningId ?? null,
             screeningTimeCreated: c.screeningTimeCreated ?? null,
             invalidatedAt: c.invalidatedAt ?? null,
@@ -597,6 +610,7 @@ export default function AdminTaskCompletionsDetailPage() {
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
                   <TableHead className="font-semibold">Participant ID</TableHead>
                   <TableHead className="font-semibold">Email</TableHead>
+                  <TableHead className="font-semibold">Country</TableHead>
                   <TableHead className="font-semibold">Screened at</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
                   <TableHead className="font-semibold">Invalidated at</TableHead>
@@ -643,11 +657,32 @@ export default function AdminTaskCompletionsDetailPage() {
                         )}
                       </button>
                     </TableCell>
+                    <TableCell className="text-sm align-middle">
+                      {completion.participantCountry ? (
+                        <div className="flex items-center gap-2">
+                          {getCountryCode(completion.participantCountry) && (
+                            <div className="inline-flex items-center justify-center w-5 h-5 shrink-0 overflow-hidden rounded-full">
+                              <CircleFlag
+                                countryCode={getCountryCode(completion.participantCountry)!}
+                                height={20}
+                              />
+                            </div>
+                          )}
+                          <span className="text-muted-foreground">{completion.participantCountry}</span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {formatTimestamp(completion.screeningTimeCreated)}
                     </TableCell>
                     <TableCell>
-                      {completion.isValid ? (
+                      {completion.invalidatedAt != null ? (
+                        <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">
+                          Invalidated
+                        </Badge>
+                      ) : completion.isValid ? (
                         <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
                           Valid
                         </Badge>

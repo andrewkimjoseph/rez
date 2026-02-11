@@ -111,6 +111,7 @@ export async function GET(request: NextRequest) {
     const participantsRef = paxDB.collection(COLLECTIONS.PARTICIPANTS);
     const BATCH_SIZE = 10;
     const emailByParticipantId = new Map<string, string | null>();
+    const countryByParticipantId = new Map<string, string | null>();
 
     for (let i = 0; i < uniqueParticipantIds.length; i += BATCH_SIZE) {
       const batch = uniqueParticipantIds.slice(i, i + BATCH_SIZE);
@@ -118,9 +119,12 @@ export async function GET(request: NextRequest) {
       const participantSnaps = await paxDB.getAll(...docRefs);
       participantSnaps.forEach((snap, idx) => {
         const participantId = batch[idx];
-        const email = snap.exists ? (snap.data()?.emailAddress ?? null) : null;
-        if (participantId) {
+        if (snap.exists && participantId) {
+          const data = snap.data();
+          const email = data?.emailAddress ?? null;
+          const country = data?.country ?? null;
           emailByParticipantId.set(participantId, typeof email === 'string' ? email : null);
+          countryByParticipantId.set(participantId, typeof country === 'string' ? country : null);
         }
       });
     }
@@ -156,6 +160,10 @@ export async function GET(request: NextRequest) {
         participantId != null && participantId !== ''
           ? (emailByParticipantId.get(participantId) ?? null)
           : null;
+      const participantCountry =
+        participantId != null && participantId !== ''
+          ? (countryByParticipantId.get(participantId) ?? null)
+          : null;
       const screeningId = c.screeningId;
       const screeningTimeCreated =
         screeningId != null && screeningId !== ''
@@ -164,6 +172,7 @@ export async function GET(request: NextRequest) {
       return {
         ...c,
         participantEmailAddress,
+        participantCountry,
         screeningTimeCreated,
       };
     });
