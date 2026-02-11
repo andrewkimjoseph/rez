@@ -736,7 +736,9 @@ export default function AdminTaskCompletionsDetailPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-sm">
-                      {completion.invalidatedAt ? (
+                      {isExpired(completion.screeningTimeCreated) ? (
+                        <span className="text-muted-foreground">N/A</span>
+                      ) : completion.invalidatedAt ? (
                         formatTimestamp(completion.invalidatedAt)
                       ) : completion.reward?.txnHash ? (
                         <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
