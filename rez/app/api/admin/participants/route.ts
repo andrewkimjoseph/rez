@@ -75,6 +75,7 @@ export async function GET(request: NextRequest) {
           id: doc.id,
           emailAddress: data?.emailAddress ?? null,
           displayName: data?.displayName ?? null,
+          country: data?.country ?? null,
           disabled,
         };
       })
