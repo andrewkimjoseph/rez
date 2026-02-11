@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { paxDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { requireSuperAdmin } from '@/lib/api-auth';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 
 /**
  * Updates isValid on a task completion (admin only).
@@ -15,7 +15,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { completionId, isValid } = body;
+    const { completionId, isValid, timeCompleted } = body;
 
     if (completionId == null || typeof completionId !== 'string') {
       return NextResponse.json(
@@ -42,7 +42,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    await docRef.update({
+    const updateData: any = {
       isValid,
       timeUpdated: FieldValue.serverTimestamp(),
       ...(isValid === false
@@ -55,7 +55,25 @@ export async function PATCH(request: NextRequest) {
             invalidatedBy: null
           }
       ),
-    });
+    };
+
+    // If validating and timeCompleted is provided, set it
+    if (isValid === true && timeCompleted != null) {
+      // timeCompleted can be a timestamp in milliseconds or ISO string
+      let timestamp;
+      if (typeof timeCompleted === 'number') {
+        timestamp = new Date(timeCompleted);
+      } else if (typeof timeCompleted === 'string') {
+        timestamp = new Date(timeCompleted);
+      } else {
+        timestamp = new Date();
+      }
+      
+      // Convert to Firestore Timestamp
+      updateData.timeCompleted = Timestamp.fromDate(timestamp);
+    }
+
+    await docRef.update(updateData);
 
     return NextResponse.json({ success: true });
   } catch (error) {

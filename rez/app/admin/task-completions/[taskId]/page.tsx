@@ -48,6 +48,12 @@ import {
 import { toast } from "sonner";
 import { fetchWithAuthRetry } from "@/lib/api-fetch";
 import AdminAccessDenied from "@/components/admin/AdminAccessDenied";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { format } from "date-fns";
+import { ChevronDownIcon } from "lucide-react";
 
 export default function AdminTaskCompletionsDetailPage() {
   const router = useRouter();
@@ -64,6 +70,10 @@ export default function AdminTaskCompletionsDetailPage() {
   const [updatingCompletionId, setUpdatingCompletionId] = useState<string | null>(null);
   const [invalidateDialogOpen, setInvalidateDialogOpen] = useState(false);
   const [completionToInvalidate, setCompletionToInvalidate] = useState<TaskCompletionWithReward | null>(null);
+  const [validateDialogOpen, setValidateDialogOpen] = useState(false);
+  const [completionToValidate, setCompletionToValidate] = useState<TaskCompletionWithReward | null>(null);
+  const [validationDate, setValidationDate] = useState<Date | undefined>(undefined);
+  const [validationTime, setValidationTime] = useState<string>("");
   const [hasMoreCompletions, setHasMoreCompletions] = useState(false);
   const [lastDocIdForCursor, setLastDocIdForCursor] = useState<string | null>(null);
   const [isLoadingMoreCompletions, setIsLoadingMoreCompletions] = useState(false);
@@ -178,15 +188,52 @@ export default function AdminTaskCompletionsDetailPage() {
     }
   }, [taskCompletions]);
 
-  const handleValidate = async (completion: TaskCompletionWithReward) => {
-    if (!completion.id) return;
-    setUpdatingCompletionId(completion.id);
+  const openValidateDialog = (completion: TaskCompletionWithReward) => {
+    setCompletionToValidate(completion);
+    // Set default date/time to now
+    setValidationDate(new Date());
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    setValidationTime(`${hours}:${minutes}:${seconds}`);
+    setValidateDialogOpen(true);
+  };
+
+  const handleValidate = async () => {
+    if (!completionToValidate?.id) return;
+    
+    if (!validationDate) {
+      toast.error("Please select a date");
+      return;
+    }
+
+    if (!validationTime) {
+      toast.error("Please select a time");
+      return;
+    }
+
+    setUpdatingCompletionId(completionToValidate.id);
+    
+    // Combine date and time
+    const [hours, minutes, seconds] = validationTime.split(':').map(Number);
+    const completionDateTime = new Date(validationDate);
+    completionDateTime.setHours(hours || 0, minutes || 0, seconds || 0, 0);
+
     try {
       const res = await fetchWithAuthRetry("/api/admin/updateTaskCompletion", {
         method: "PATCH",
-        body: JSON.stringify({ completionId: completion.id, isValid: true }),
+        body: JSON.stringify({ 
+          completionId: completionToValidate.id, 
+          isValid: true,
+          timeCompleted: completionDateTime.getTime()
+        }),
       });
       if (res.ok) {
+        setValidateDialogOpen(false);
+        setCompletionToValidate(null);
+        setValidationDate(undefined);
+        setValidationTime("");
         await loadCompletions();
         toast.success("Completion validated");
       } else {
@@ -596,7 +643,7 @@ export default function AdminTaskCompletionsDetailPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
-                            onClick={() => handleValidate(completion)}
+                            onClick={() => openValidateDialog(completion)}
                             className="cursor-pointer text-green-700"
                             disabled={completion.isValid}
                           >
@@ -640,6 +687,89 @@ export default function AdminTaskCompletionsDetailPage() {
             )}
           </div>
         )}
+
+        <Dialog open={validateDialogOpen} onOpenChange={setValidateDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Validate completion</DialogTitle>
+              <DialogDescription>
+                Select the date and time when this completion was completed.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="flex flex-row gap-4 items-end">
+                <div className="flex-1">
+                  <Label htmlFor="validation-date" className="text-sm font-medium mb-2 block">
+                    Date
+                  </Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        id="validation-date"
+                        className="w-full justify-between font-normal"
+                      >
+                        {validationDate ? format(validationDate, "PPP") : "Select date"}
+                        <ChevronDownIcon className="h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={validationDate}
+                        captionLayout="dropdown"
+                        defaultMonth={validationDate}
+                        onSelect={(date) => {
+                          setValidationDate(date);
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="w-32">
+                  <Label htmlFor="validation-time" className="text-sm font-medium mb-2 block">
+                    Time
+                  </Label>
+                  <Input
+                    type="time"
+                    id="validation-time"
+                    step="1"
+                    value={validationTime}
+                    onChange={(e) => setValidationTime(e.target.value)}
+                    className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setValidateDialogOpen(false);
+                  setCompletionToValidate(null);
+                  setValidationDate(undefined);
+                  setValidationTime("");
+                }}
+                disabled={!!updatingCompletionId}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleValidate}
+                disabled={!validationDate || !validationTime || !!updatingCompletionId}
+              >
+                {updatingCompletionId ? (
+                  <>
+                    <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
+                    Validating...
+                  </>
+                ) : (
+                  "Validate"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={invalidateDialogOpen} onOpenChange={setInvalidateDialogOpen}>
           <DialogContent>
