@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
@@ -88,6 +88,23 @@ export default function AdminTaskCompletionsDetailPage() {
   const task = tasks.find((t) => t.id === taskId);
   const isTaskActive = task?.isAvailable === true;
 
+  const isExpired = (screeningTimeCreated: unknown) => {
+    if (!screeningTimeCreated) return false;
+    try {
+      const ts = screeningTimeCreated as { seconds?: number; _seconds?: number };
+      const seconds = ts.seconds ?? ts._seconds;
+      if (seconds != null) {
+        const screeningTime = seconds * 1000;
+        const now = Date.now();
+        const twoHoursInMs = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+        return (now - screeningTime) > twoHoursInMs;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
   const stats = useMemo(() => {
     const completed = taskCompletions.filter(c => c.timeCompleted != null).length;
     const invalidated = taskCompletions.filter(c => c.invalidatedAt != null).length;
@@ -115,7 +132,7 @@ export default function AdminTaskCompletionsDetailPage() {
     }).length;
     const totalInvalid = invalid + expired;
     return { completed, invalid, invalidated, claimed, expired, totalInvalid, valid };
-  }, [taskCompletions, countdownTick]);
+  }, [taskCompletions]);
 
   const filteredCompletions = useMemo(() => {
     if (statusFilter === 'all') return taskCompletions;
@@ -131,6 +148,8 @@ export default function AdminTaskCompletionsDetailPage() {
         case 'invalidated':
           return completion.invalidatedAt != null;
         case 'expired':
+          // Only show invalid completions that have expired
+          if (completion.isValid) return false;
           return isExpired(completion.screeningTimeCreated);
         case 'claimed':
           return completion.reward?.txnHash != null;
@@ -157,7 +176,7 @@ export default function AdminTaskCompletionsDetailPage() {
     }
   }, [isHydrated, user, router, fetchAllTasks]);
 
-  const loadCompletions = async () => {
+  const loadCompletions = useCallback(async () => {
     if (!taskId) return;
     setIsLoadingCompletions(true);
     try {
@@ -202,12 +221,12 @@ export default function AdminTaskCompletionsDetailPage() {
     } finally {
       setIsLoadingCompletions(false);
     }
-  };
+  }, [taskId]);
 
   useEffect(() => {
     if (!taskId || !isAuthorized || !task || !isTaskActive) return;
     loadCompletions();
-  }, [taskId, isAuthorized, task, isTaskActive]);
+  }, [taskId, isAuthorized, task, isTaskActive, loadCompletions]);
 
   useEffect(() => {
     // Set up interval if there are non-expired completions or completions waiting for cooldown
@@ -351,23 +370,6 @@ export default function AdminTaskCompletionsDetailPage() {
       return "N/A";
     } catch {
       return "N/A";
-    }
-  };
-
-  const isExpired = (screeningTimeCreated: unknown) => {
-    if (!screeningTimeCreated) return false;
-    try {
-      const ts = screeningTimeCreated as { seconds?: number; _seconds?: number };
-      const seconds = ts.seconds ?? ts._seconds;
-      if (seconds != null) {
-        const screeningTime = seconds * 1000;
-        const now = Date.now();
-        const twoHoursInMs = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
-        return (now - screeningTime) > twoHoursInMs;
-      }
-      return false;
-    } catch {
-      return false;
     }
   };
 
@@ -936,11 +938,17 @@ export default function AdminTaskCompletionsDetailPage() {
                         </Tooltip>
                       </TooltipProvider>
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
+                    <TableCell className="text-sm">
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className="cursor-help">{formatTimestamp(completion.timeCompleted)}</span>
+                            {completion.timeCompleted ? (
+                              <span className="text-muted-foreground cursor-help">{formatTimestamp(completion.timeCompleted)}</span>
+                            ) : (
+                              <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">
+                                Incomplete
+                              </Badge>
+                            )}
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>Completed at</p>
