@@ -811,7 +811,9 @@ export default function AdminTaskCompletionsDetailPage() {
                     </TableCell>
                     <TableCell>
                       {completion.invalidatedAt ? (
-                        <span className="text-muted-foreground">N/A</span>
+                        <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">
+                          Cannot
+                        </Badge>
                       ) : completion.reward?.txnHash ? (
                         <a
                           href={`https://celoscan.io/tx/${completion.reward.txnHash}`}
