@@ -81,6 +81,7 @@ export default function AdminTaskCompletionsDetailPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'complete' | 'valid' | 'invalid' | 'invalidated' | 'expired' | 'claimed'>('all');
   const [hasMoreCompletions, setHasMoreCompletions] = useState(false);
   const [lastDocIdForCursor, setLastDocIdForCursor] = useState<string | null>(null);
+  const [totalCompletionsCount, setTotalCompletionsCount] = useState<number | null>(null);
   const [isLoadingMoreCompletions, setIsLoadingMoreCompletions] = useState(false);
   const [countdownTick, setCountdownTick] = useState(0);
 
@@ -186,10 +187,12 @@ export default function AdminTaskCompletionsDetailPage() {
         setLastDocIdForCursor(
           data.nextCursor?.startAfterDocId ?? null
         );
+        setTotalCompletionsCount(data.totalCount ?? null);
       } else {
         setTaskCompletions([]);
         setHasMoreCompletions(false);
         setLastDocIdForCursor(null);
+        setTotalCompletionsCount(null);
       }
     } catch {
       toast.error("Failed to load completions");
@@ -557,7 +560,7 @@ export default function AdminTaskCompletionsDetailPage() {
               <p className="text-muted-foreground">
                 Validate or invalidate participant completions
                 {hasMoreCompletions
-                  ? ` (${taskCompletions.length} shown, load more for more - ${stats.completed} completed, ${stats.valid} valid, ${stats.totalInvalid} invalid, ${stats.invalidated} invalidated, ${stats.expired} expired, ${stats.claimed} claimed)`
+                  ? ` (${taskCompletions.length} shown, load more for more - ${stats.completed} completed, ${stats.valid} valid, ${stats.totalInvalid} invalid, ${stats.invalidated} invalidated, ${stats.expired} expired, ${stats.claimed} claimed) {${totalCompletionsCount ?? taskCompletions.length} total}`
                   : ` (${taskCompletions.length} total, ${stats.completed} completed, ${stats.valid} valid, ${stats.totalInvalid} invalid, ${stats.invalidated} invalidated, ${stats.expired} expired, ${stats.claimed} claimed)`}
               </p>
             </div>

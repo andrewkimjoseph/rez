@@ -54,6 +54,13 @@ export async function GET(request: NextRequest) {
     const completionsRef = paxDB.collection(COLLECTIONS.TASK_COMPLETIONS);
     const rewardsRef = paxDB.collection(COLLECTIONS.REWARDS);
 
+    // Get total count of completions for this task
+    const totalCountSnapshot = await completionsRef
+      .where('taskId', '==', taskId)
+      .count()
+      .get();
+    const totalCount = totalCountSnapshot.data().count;
+
     let completionsQuery = completionsRef
       .where('taskId', '==', taskId)
       .orderBy('timeCreated', 'desc')
@@ -181,7 +188,7 @@ export async function GET(request: NextRequest) {
     const hasMore = completionsSnapshot.docs.length === limit;
     const nextCursor = hasMore && lastDoc ? { startAfterDocId: lastDoc.id } : null;
 
-    return NextResponse.json({ taskCompletions, hasMore, nextCursor });
+    return NextResponse.json({ taskCompletions, hasMore, nextCursor, totalCount });
   } catch (error) {
     console.error('Error fetching task completions:', error);
     return NextResponse.json(
