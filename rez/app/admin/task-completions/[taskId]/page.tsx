@@ -554,7 +554,7 @@ export default function AdminTaskCompletionsDetailPage() {
               <p className="text-muted-foreground">
                 Validate or invalidate participant completions
                 {hasMoreCompletions
-                  ? ` (${taskCompletions.length} shown, load more for more)`
+                  ? ` (${taskCompletions.length} shown, load more for more - ${stats.completed} completed, ${stats.totalInvalid} invalid, ${stats.invalidated} invalidated, ${stats.claimed} claimed)`
                   : ` (${taskCompletions.length} total, ${stats.completed} completed, ${stats.totalInvalid} invalid, ${stats.invalidated} invalidated, ${stats.claimed} claimed)`}
               </p>
             </div>
@@ -773,10 +773,10 @@ export default function AdminTaskCompletionsDetailPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
-                      {isExpired(completion.screeningTimeCreated) ? (
-                        <span>N/A</span>
-                      ) : completion.invalidatedAt ? (
+                      {completion.invalidatedAt ? (
                         formatTimestamp(completion.invalidatedAt)
+                      ) : isExpired(completion.screeningTimeCreated) ? (
+                        <span>N/A</span>
                       ) : completion.reward?.txnHash ? (
                         <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
                           Not Invalidated
