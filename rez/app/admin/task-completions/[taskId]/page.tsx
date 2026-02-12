@@ -554,8 +554,8 @@ export default function AdminTaskCompletionsDetailPage() {
               <p className="text-muted-foreground">
                 Validate or invalidate participant completions
                 {hasMoreCompletions
-                  ? ` (${taskCompletions.length} shown, load more for more - ${stats.completed} completed, ${stats.totalInvalid} invalid, ${stats.invalidated} invalidated, ${stats.claimed} claimed)`
-                  : ` (${taskCompletions.length} total, ${stats.completed} completed, ${stats.totalInvalid} invalid, ${stats.invalidated} invalidated, ${stats.claimed} claimed)`}
+                  ? ` (${taskCompletions.length} shown, load more for more - ${stats.completed} completed, ${stats.totalInvalid} invalid, ${stats.invalidated} invalidated, ${stats.expired} expired, ${stats.claimed} claimed)`
+                  : ` (${taskCompletions.length} total, ${stats.completed} completed, ${stats.totalInvalid} invalid, ${stats.invalidated} invalidated, ${stats.expired} expired, ${stats.claimed} claimed)`}
               </p>
             </div>
             <Button
