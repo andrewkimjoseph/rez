@@ -91,6 +91,7 @@ export default function AdminTaskCompletionsDetailPage() {
     const completed = taskCompletions.filter(c => c.timeCompleted != null).length;
     const invalidated = taskCompletions.filter(c => c.invalidatedAt != null).length;
     const claimed = taskCompletions.filter(c => c.reward?.txnHash != null).length;
+    const valid = taskCompletions.filter(c => c.isValid === true && c.invalidatedAt == null).length;
     const twoHoursInMs = 2 * 60 * 60 * 1000;
     const now = Date.now();
     const expired = taskCompletions.filter(c => {
@@ -112,7 +113,7 @@ export default function AdminTaskCompletionsDetailPage() {
       return (now - sec * 1000) <= twoHoursInMs;
     }).length;
     const totalInvalid = invalid + expired;
-    return { completed, invalid, invalidated, claimed, expired, totalInvalid };
+    return { completed, invalid, invalidated, claimed, expired, totalInvalid, valid };
   }, [taskCompletions, countdownTick]);
 
   const filteredCompletions = useMemo(() => {
@@ -556,8 +557,8 @@ export default function AdminTaskCompletionsDetailPage() {
               <p className="text-muted-foreground">
                 Validate or invalidate participant completions
                 {hasMoreCompletions
-                  ? ` (${taskCompletions.length} shown, load more for more - ${stats.completed} completed, ${stats.totalInvalid} invalid, ${stats.invalidated} invalidated, ${stats.expired} expired, ${stats.claimed} claimed)`
-                  : ` (${taskCompletions.length} total, ${stats.completed} completed, ${stats.totalInvalid} invalid, ${stats.invalidated} invalidated, ${stats.expired} expired, ${stats.claimed} claimed)`}
+                  ? ` (${taskCompletions.length} shown, load more for more - ${stats.completed} completed, ${stats.valid} valid, ${stats.totalInvalid} invalid, ${stats.invalidated} invalidated, ${stats.expired} expired, ${stats.claimed} claimed)`
+                  : ` (${taskCompletions.length} total, ${stats.completed} completed, ${stats.valid} valid, ${stats.totalInvalid} invalid, ${stats.invalidated} invalidated, ${stats.expired} expired, ${stats.claimed} claimed)`}
               </p>
             </div>
             <Button
