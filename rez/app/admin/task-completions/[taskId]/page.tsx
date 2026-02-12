@@ -78,7 +78,7 @@ export default function AdminTaskCompletionsDetailPage() {
   const [completionToValidate, setCompletionToValidate] = useState<TaskCompletionWithReward | null>(null);
   const [validationDate, setValidationDate] = useState<Date | undefined>(undefined);
   const [validationTime, setValidationTime] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<'all' | 'complete' | 'valid' | 'invalid' | 'invalidated' | 'claimed'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'complete' | 'valid' | 'invalid' | 'invalidated' | 'expired' | 'claimed'>('all');
   const [hasMoreCompletions, setHasMoreCompletions] = useState(false);
   const [lastDocIdForCursor, setLastDocIdForCursor] = useState<string | null>(null);
   const [isLoadingMoreCompletions, setIsLoadingMoreCompletions] = useState(false);
@@ -128,6 +128,8 @@ export default function AdminTaskCompletionsDetailPage() {
           return !completion.isValid && completion.invalidatedAt == null;
         case 'invalidated':
           return completion.invalidatedAt != null;
+        case 'expired':
+          return isExpired(completion.screeningTimeCreated);
         case 'claimed':
           return completion.reward?.txnHash != null;
         default:
@@ -618,6 +620,14 @@ export default function AdminTaskCompletionsDetailPage() {
               className={statusFilter === 'invalidated' ? '' : 'text-orange-700 border-orange-300 hover:bg-orange-50'}
             >
               Invalidated
+            </Button>
+            <Button
+              variant={statusFilter === 'expired' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setStatusFilter('expired')}
+              className={statusFilter === 'expired' ? '' : 'text-red-700 border-red-300 hover:bg-red-50'}
+            >
+              Expired
             </Button>
             <Button
               variant={statusFilter === 'claimed' ? 'default' : 'outline'}
