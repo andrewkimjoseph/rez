@@ -32,6 +32,7 @@ export interface FormattedTaskData {
   numberOfCooldownHours: number;
   isAvailable: boolean;
   isTest: boolean;
+  deadline: string;
 
   // Metadata
   taskMasterId: string;
@@ -118,6 +119,7 @@ const formatTaskData = (task: Task): FormattedTaskData => {
     numberOfCooldownHours: task.numberOfCooldownHours || 0,
     isAvailable: task.isAvailable || false,
     isTest: task.isTest || false,
+    deadline: formatTimestamp(task.deadline),
 
     // Metadata
     taskMasterId: task.taskMasterId || '',

@@ -506,10 +506,10 @@ export default function AdminTaskDetailsPage() {
             </dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">Estimated Time</dt>
+            <dt className="text-xs text-muted-foreground">Deadline</dt>
             <dd className="flex items-center gap-1.5 font-medium text-sm mt-0.5">
               <ClockIcon className="h-3.5 w-3.5 text-muted-foreground" />
-              {formattedData.estimatedTimeOfCompletionInMinutes} min
+              {formattedData.deadline}
             </dd>
           </div>
           <div>
