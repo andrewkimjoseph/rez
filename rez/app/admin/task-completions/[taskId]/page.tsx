@@ -695,54 +695,84 @@ export default function AdminTaskCompletionsDetailPage() {
                   <TableRow key={completion.id || completion.participantId || completion.screeningId || Math.random()} className="hover:bg-muted/20">
                     <TableCell className="text-muted-foreground text-center">{index + 1}</TableCell>
                     <TableCell className="font-mono text-sm align-middle w-[40px]">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          copyToClipboard(completion.id || "", "Completion ID");
-                        }}
-                        className="group/copy inline-flex items-center justify-center rounded px-1.5 py-1 hover:bg-muted/80 transition-colors disabled:pointer-events-none disabled:opacity-100"
-                        title={completion.id ? String(completion.id) : undefined}
-                        disabled={!completion.id}
-                      >
-                        {completion.id && (
-                          <ClipboardDocumentIcon className="h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover/copy:opacity-100" aria-hidden />
-                        )}
-                      </button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyToClipboard(completion.id || "", "Completion ID");
+                              }}
+                              className="group/copy inline-flex items-center justify-center rounded px-1.5 py-1 hover:bg-muted/80 transition-colors disabled:pointer-events-none disabled:opacity-100"
+                              disabled={!completion.id}
+                            >
+                              {completion.id && (
+                                <ClipboardDocumentIcon className="h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover/copy:opacity-100" aria-hidden />
+                              )}
+                            </button>
+                          </TooltipTrigger>
+                          {completion.id && (
+                            <TooltipContent>
+                              <p>ID</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                     <TableCell className="font-mono text-sm align-middle">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          copyToClipboard(completion.participantId || "", "Participant ID");
-                        }}
-                        className="group/copy inline-flex items-center gap-2 rounded px-1.5 -mx-1.5 py-1 hover:bg-muted/80 transition-colors text-left w-full disabled:pointer-events-none disabled:opacity-100"
-                        title={completion.participantId ? String(completion.participantId) : undefined}
-                        disabled={!completion.participantId}
-                      >
-                        <span className="truncate min-w-0 flex-1">{truncateDisplay(completion.participantId, 12, "N/A")}</span>
-                        {completion.participantId && (
-                          <ClipboardDocumentIcon className="h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover/copy:opacity-100" aria-hidden />
-                        )}
-                      </button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyToClipboard(completion.participantId || "", "Participant ID");
+                              }}
+                              className="group/copy inline-flex items-center gap-2 rounded px-1.5 -mx-1.5 py-1 hover:bg-muted/80 transition-colors text-left w-full disabled:pointer-events-none disabled:opacity-100"
+                              disabled={!completion.participantId}
+                            >
+                              <span className="truncate min-w-0 flex-1">{truncateDisplay(completion.participantId, 12, "N/A")}</span>
+                              {completion.participantId && (
+                                <ClipboardDocumentIcon className="h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover/copy:opacity-100" aria-hidden />
+                              )}
+                            </button>
+                          </TooltipTrigger>
+                          {completion.participantId && (
+                            <TooltipContent>
+                              <p>Participant ID</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground align-middle">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          copyToClipboard(completion.participantEmailAddress || "", "Email");
-                        }}
-                        className="group/copy inline-flex items-center gap-2 rounded px-1.5 -mx-1.5 py-1 hover:bg-muted/80 transition-colors text-left w-full disabled:pointer-events-none disabled:opacity-100"
-                        title={completion.participantEmailAddress ? String(completion.participantEmailAddress) : undefined}
-                        disabled={!completion.participantEmailAddress}
-                      >
-                        <span className="truncate min-w-0 flex-1">{truncateDisplay(completion.participantEmailAddress, 20, "—")}</span>
-                        {completion.participantEmailAddress && (
-                          <ClipboardDocumentIcon className="h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover/copy:opacity-100" aria-hidden />
-                        )}
-                      </button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyToClipboard(completion.participantEmailAddress || "", "Email");
+                              }}
+                              className="group/copy inline-flex items-center gap-2 rounded px-1.5 -mx-1.5 py-1 hover:bg-muted/80 transition-colors text-left w-full disabled:pointer-events-none disabled:opacity-100"
+                              disabled={!completion.participantEmailAddress}
+                            >
+                              <span className="truncate min-w-0 flex-1">{truncateDisplay(completion.participantEmailAddress, 20, "—")}</span>
+                              {completion.participantEmailAddress && (
+                                <ClipboardDocumentIcon className="h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover/copy:opacity-100" aria-hidden />
+                              )}
+                            </button>
+                          </TooltipTrigger>
+                          {completion.participantEmailAddress && (
+                            <TooltipContent>
+                              <p>Email</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                     <TableCell className="text-sm align-middle">
                       {completion.participantCountry ? (
@@ -770,22 +800,42 @@ export default function AdminTaskCompletionsDetailPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
-                      {formatTimestamp(completion.screeningTimeCreated)}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="cursor-help">{formatTimestamp(completion.screeningTimeCreated)}</span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Started at</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                     <TableCell>
-                      {completion.invalidatedAt != null ? (
-                        <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">
-                          Invalidated
-                        </Badge>
-                      ) : completion.isValid ? (
-                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
-                          Valid
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">
-                          Invalid
-                        </Badge>
-                      )}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div>
+                              {completion.invalidatedAt != null ? (
+                                <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">
+                                  Invalidated
+                                </Badge>
+                              ) : completion.isValid ? (
+                                <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
+                                  Valid
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">
+                                  Invalid
+                                </Badge>
+                              )}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Status</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                     {/* <TableCell className="text-muted-foreground text-sm">
                       {completion.invalidatedAt ? (
@@ -801,99 +851,141 @@ export default function AdminTaskCompletionsDetailPage() {
                       )}
                     </TableCell> */}
                     <TableCell className="text-sm">
-                      {completion.invalidatedAt != null ? (
-                        <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">
-                          Yes
-                        </Badge>
-                      ) : completion.isValid && completion.timeCompleted != null ? (
-                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
-                          No
-                        </Badge>
-                      ) : isExpired(completion.screeningTimeCreated) ? (
-                        <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">
-                          Yes
-                        </Badge>
-                      ) : (() => {
-                        const timeRemaining = getTimeUntilExpiration(completion.screeningTimeCreated);
-                        return timeRemaining ? (
-                          <span className="text-muted-foreground text-sm">{timeRemaining}</span>
-                        ) : (
-                          <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
-                            No
-                          </Badge>
-                        );
-                      })()}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div>
+                              {completion.invalidatedAt != null ? (
+                                <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">
+                                  Yes
+                                </Badge>
+                              ) : completion.isValid && completion.timeCompleted != null ? (
+                                <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
+                                  No
+                                </Badge>
+                              ) : isExpired(completion.screeningTimeCreated) ? (
+                                <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">
+                                  Yes
+                                </Badge>
+                              ) : (() => {
+                                const timeRemaining = getTimeUntilExpiration(completion.screeningTimeCreated);
+                                return timeRemaining ? (
+                                  <span className="text-muted-foreground text-sm">{timeRemaining}</span>
+                                ) : (
+                                  <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
+                                    No
+                                  </Badge>
+                                );
+                              })()}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Expired</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                     <TableCell>
-                      {completion.invalidatedAt ? (
-                        <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">
-                          Cannot
-                        </Badge>
-                      ) : completion.reward?.txnHash ? (
-                        <a
-                          href={`https://celoscan.io/tx/${completion.reward.txnHash}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-primary hover:underline"
-                        >
-                          <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100/80 border-0">
-                            Yes
-                          </Badge>
-                          <span className="text-xs font-mono truncate max-w-[80px]">
-                            {completion.reward.txnHash.slice(0, 10)}…
-                          </span>
-                        </a>
-                      ) : completion.isValid && completion.timeCompleted ? (
-                        (() => {
-                          const timeUntilCanClaim = getTimeUntilCanClaim(completion.timeCompleted, task?.numberOfCooldownHours ?? null);
-                          if (timeUntilCanClaim) {
-                            // Still in cooldown, show countdown
-                            return (
-                              <span className="text-muted-foreground text-sm">{timeUntilCanClaim}</span>
-                            );
-                          } else {
-                            // Cooldown passed but not claimed, show "Not yet" in orange
-                            return (
-                              <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100/80 border-0">
-                                Not yet
-                              </Badge>
-                            );
-                          }
-                        })()
-                      ) : (
-                        <span className="text-muted-foreground">N/A</span>
-                      )}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div>
+                              {completion.invalidatedAt ? (
+                                <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">
+                                  Cannot
+                                </Badge>
+                              ) : completion.reward?.txnHash ? (
+                                <a
+                                  href={`https://celoscan.io/tx/${completion.reward.txnHash}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-primary hover:underline"
+                                >
+                                  <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100/80 border-0">
+                                    Yes
+                                  </Badge>
+                                  <span className="text-xs font-mono truncate max-w-[80px]">
+                                    {completion.reward.txnHash.slice(0, 10)}…
+                                  </span>
+                                </a>
+                              ) : completion.isValid && completion.timeCompleted ? (
+                                (() => {
+                                  const timeUntilCanClaim = getTimeUntilCanClaim(completion.timeCompleted, task?.numberOfCooldownHours ?? null);
+                                  if (timeUntilCanClaim) {
+                                    // Still in cooldown, show countdown
+                                    return (
+                                      <span className="text-muted-foreground text-sm">{timeUntilCanClaim}</span>
+                                    );
+                                  } else {
+                                    // Cooldown passed but not claimed, show "Not yet" in orange
+                                    return (
+                                      <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100/80 border-0">
+                                        Not yet
+                                      </Badge>
+                                    );
+                                  }
+                                })()
+                              ) : (
+                                <span className="text-muted-foreground">N/A</span>
+                              )}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Claimed</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
-                      {formatTimestamp(completion.timeCompleted)}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="cursor-help">{formatTimestamp(completion.timeCompleted)}</span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Completed at</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                     <TableCell className="text-sm">
-                      {completion.invalidatedAt ? (
-                        <span className="text-muted-foreground">N/A</span>
-                      ) : completion.reward?.txnHash ? (
-                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
-                          Done
-                        </Badge>
-                      ) : !completion.timeCompleted ? (
-                        <span className="text-muted-foreground">N/A</span>
-                      ) : (() => {
-                        const timeUntilCanClaim = getTimeUntilCanClaim(completion.timeCompleted, task?.numberOfCooldownHours ?? null);
-                        if (timeUntilCanClaim === null) {
-                          // Cooldown passed or no cooldown, can claim
-                          return (
-                            <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
-                              Yes
-                            </Badge>
-                          );
-                        } else {
-                          // Still in cooldown, can't claim
-                          return (
-                            <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">
-                              No
-                            </Badge>
-                          );
-                        }
-                      })()}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div>
+                              {completion.invalidatedAt ? (
+                                <span className="text-muted-foreground">N/A</span>
+                              ) : completion.reward?.txnHash ? (
+                                <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
+                                  Done
+                                </Badge>
+                              ) : !completion.timeCompleted ? (
+                                <span className="text-muted-foreground">N/A</span>
+                              ) : (() => {
+                                const timeUntilCanClaim = getTimeUntilCanClaim(completion.timeCompleted, task?.numberOfCooldownHours ?? null);
+                                if (timeUntilCanClaim === null) {
+                                  // Cooldown passed or no cooldown, can claim
+                                  return (
+                                    <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
+                                      Yes
+                                    </Badge>
+                                  );
+                                } else {
+                                  // Still in cooldown, can't claim
+                                  return (
+                                    <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">
+                                      No
+                                    </Badge>
+                                  );
+                                }
+                              })()}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Can Claim</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
