@@ -48,11 +48,11 @@ export default function RootLayout({
         <AmplitudeProvider>
           <SidebarProvider>
             {!shouldHideNavAndSidebar && <AppSidebar />}
-            <main className="flex flex-col w-full min-h-screen">
+            <main className="flex flex-col w-full min-h-screen overflow-x-hidden">
               {!shouldHideNavAndSidebar && <AppNavbar />}
-              <div className="flex-1 enterprise-gradient relative">
+              <div className="flex-1 enterprise-gradient relative overflow-x-hidden">
                 <div className="absolute inset-0 rez-gradient-subtle pointer-events-none" />
-                <div className="relative">{children}</div>
+                <div className="relative overflow-x-hidden">{children}</div>
               </div>
             </main>
           </SidebarProvider>

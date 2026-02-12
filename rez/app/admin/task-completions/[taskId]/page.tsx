@@ -670,17 +670,19 @@ export default function AdminTaskCompletionsDetailPage() {
 
         {!isLoadingCompletions && taskCompletions.length > 0 && filteredCompletions.length > 0 && (
           <div className="bg-white rounded-lg border border-border/50 overflow-hidden shadow-sm">
-            <Table>
+            <div className="overflow-x-auto" style={{ scrollbarGutter: 'stable' }}>
+              <div className="min-w-max">
+                <Table className="w-full">
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
                   <TableHead className="w-[50px] font-semibold">#</TableHead>
-                  <TableHead className="font-semibold">Completion ID</TableHead>
+                  <TableHead className="w-[40px] font-semibold">ID</TableHead>
                   <TableHead className="font-semibold">Participant ID</TableHead>
                   <TableHead className="font-semibold w-[80px]">Email</TableHead>
                   <TableHead className="font-semibold">Country</TableHead>
                   <TableHead className="font-semibold">Started at</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
-                  <TableHead className="font-semibold">Invalidated at</TableHead>
+                  {/* <TableHead className="font-semibold">Invalidated at</TableHead> */}
                   <TableHead className="font-semibold">Expired</TableHead>
                   <TableHead className="font-semibold">Claimed</TableHead>
                   <TableHead className="font-semibold">Completed at</TableHead>
@@ -692,18 +694,17 @@ export default function AdminTaskCompletionsDetailPage() {
                 {filteredCompletions.map((completion, index) => (
                   <TableRow key={completion.id || completion.participantId || completion.screeningId || Math.random()} className="hover:bg-muted/20">
                     <TableCell className="text-muted-foreground text-center">{index + 1}</TableCell>
-                    <TableCell className="font-mono text-sm align-middle">
+                    <TableCell className="font-mono text-sm align-middle w-[40px]">
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           copyToClipboard(completion.id || "", "Completion ID");
                         }}
-                        className="group/copy inline-flex items-center gap-2 rounded px-1.5 -mx-1.5 py-1 hover:bg-muted/80 transition-colors text-left w-full disabled:pointer-events-none disabled:opacity-100"
+                        className="group/copy inline-flex items-center justify-center rounded px-1.5 py-1 hover:bg-muted/80 transition-colors disabled:pointer-events-none disabled:opacity-100"
                         title={completion.id ? String(completion.id) : undefined}
                         disabled={!completion.id}
                       >
-                        <span className="truncate min-w-0 flex-1">{truncateDisplay(completion.id, 12, "N/A")}</span>
                         {completion.id && (
                           <ClipboardDocumentIcon className="h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover/copy:opacity-100" aria-hidden />
                         )}
@@ -786,7 +787,7 @@ export default function AdminTaskCompletionsDetailPage() {
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
+                    {/* <TableCell className="text-muted-foreground text-sm">
                       {completion.invalidatedAt ? (
                         formatTimestamp(completion.invalidatedAt)
                       ) : isExpired(completion.screeningTimeCreated) ? (
@@ -798,7 +799,7 @@ export default function AdminTaskCompletionsDetailPage() {
                       ) : (
                         <span>N/A</span>
                       )}
-                    </TableCell>
+                    </TableCell> */}
                     <TableCell className="text-sm">
                       {completion.invalidatedAt != null ? (
                         <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">
@@ -935,6 +936,8 @@ export default function AdminTaskCompletionsDetailPage() {
                 ))}
               </TableBody>
             </Table>
+              </div>
+            </div>
             {hasMoreCompletions && (
               <div className="flex justify-center py-4 border-t border-border/50">
                 <Button
