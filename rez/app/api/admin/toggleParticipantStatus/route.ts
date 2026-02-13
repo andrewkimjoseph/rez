@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { getApp } from 'firebase-admin/app';
 import { requireSuperAdmin } from '@/lib/api-auth';
+import { paxDB } from '@/firebase/serverConfig';
+import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
+import { FieldValue } from 'firebase-admin/firestore';
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -31,9 +34,22 @@ export async function PATCH(request: NextRequest) {
     }
 
     const auth = getAuth(getApp('paxApp'));
+    
+    // Update Firebase Auth
     await auth.updateUser(participantId, {
       disabled,
     });
+
+    // Update Firestore
+    const participantsRef = paxDB.collection(COLLECTIONS.PARTICIPANTS);
+    const participantDoc = await participantsRef.doc(participantId).get();
+    
+    if (participantDoc.exists) {
+      await participantsRef.doc(participantId).update({
+        isDisabled: disabled,
+        timeUpdated: FieldValue.serverTimestamp(),
+      });
+    }
 
     return NextResponse.json({
       success: true,

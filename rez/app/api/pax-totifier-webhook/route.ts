@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { getApp } from 'firebase-admin/app';
+import { paxDB } from '@/firebase/serverConfig';
+import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
+import { FieldValue } from 'firebase-admin/firestore';
 import '@/firebase/serverConfig';
 
 /** Telegram Update object (minimal shape we use) */
@@ -73,6 +76,17 @@ export async function POST(request: NextRequest) {
 
     try {
       await auth.updateUser(participantId, { disabled: true });
+      
+      // Update Firestore
+      const participantsRef = paxDB.collection(COLLECTIONS.PARTICIPANTS);
+      const participantDoc = await participantsRef.doc(participantId).get();
+      if (participantDoc.exists) {
+        await participantsRef.doc(participantId).update({
+          isDisabled: true,
+          timeUpdated: FieldValue.serverTimestamp(),
+        });
+      }
+      
       await sendTelegramReply(
         chatId,
         `✅ Participant disabled successfully.\nParticipant ID: ${participantId}`
@@ -114,6 +128,17 @@ export async function POST(request: NextRequest) {
 
     try {
       await auth.updateUser(participantId, { disabled: false });
+      
+      // Update Firestore
+      const participantsRef = paxDB.collection(COLLECTIONS.PARTICIPANTS);
+      const participantDoc = await participantsRef.doc(participantId).get();
+      if (participantDoc.exists) {
+        await participantsRef.doc(participantId).update({
+          isDisabled: false,
+          timeUpdated: FieldValue.serverTimestamp(),
+        });
+      }
+      
       await sendTelegramReply(
         chatId,
         `✅ Participant enabled successfully.\nParticipant ID: ${participantId}`

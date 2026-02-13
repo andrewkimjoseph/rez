@@ -58,6 +58,7 @@ import { ChevronDownIcon } from "lucide-react";
 import { CircleFlag } from "react-circle-flags";
 import { countries } from "country-data-list";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import ParticipantDetailPanel from "@/components/admin/ParticipantDetailPanel";
 
 export default function AdminTaskCompletionsDetailPage() {
   const router = useRouter();
@@ -84,6 +85,8 @@ export default function AdminTaskCompletionsDetailPage() {
   const [totalCompletionsCount, setTotalCompletionsCount] = useState<number | null>(null);
   const [isLoadingMoreCompletions, setIsLoadingMoreCompletions] = useState(false);
   const [countdownTick, setCountdownTick] = useState(0);
+  const [selectedParticipantId, setSelectedParticipantId] = useState<string | null>(null);
+  const [participantPanelOpen, setParticipantPanelOpen] = useState(false);
 
   const task = tasks.find((t) => t.id === taskId);
   const isTaskActive = task?.isAvailable === true;
@@ -750,31 +753,21 @@ export default function AdminTaskCompletionsDetailPage() {
                       </TooltipProvider>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground align-middle">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                copyToClipboard(completion.participantEmailAddress || "", "Email");
-                              }}
-                              className="group/copy inline-flex items-center gap-2 rounded px-1.5 -mx-1.5 py-1 hover:bg-muted/80 transition-colors text-left w-full disabled:pointer-events-none disabled:opacity-100"
-                              disabled={!completion.participantEmailAddress}
-                            >
-                              <span className="truncate min-w-0 flex-1">{truncateDisplay(completion.participantEmailAddress, 20, "—")}</span>
-                              {completion.participantEmailAddress && (
-                                <ClipboardDocumentIcon className="h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover/copy:opacity-100" aria-hidden />
-                              )}
-                            </button>
-                          </TooltipTrigger>
-                          {completion.participantEmailAddress && (
-                            <TooltipContent>
-                              <p>Email</p>
-                            </TooltipContent>
-                          )}
-                        </Tooltip>
-                      </TooltipProvider>
+                      {completion.participantId && completion.participantEmailAddress ? (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedParticipantId(completion.participantId);
+                            setParticipantPanelOpen(true);
+                          }}
+                          className="inline-flex items-center gap-2 rounded px-1.5 -mx-1.5 py-1 hover:bg-muted/80 transition-colors text-left w-full cursor-pointer"
+                        >
+                          <span className="truncate min-w-0 flex-1">{truncateDisplay(completion.participantEmailAddress, 20, "—")}</span>
+                        </button>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-sm align-middle">
                       {completion.participantCountry ? (
@@ -1171,6 +1164,13 @@ export default function AdminTaskCompletionsDetailPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <ParticipantDetailPanel
+          participantId={selectedParticipantId}
+          open={participantPanelOpen}
+          onOpenChange={setParticipantPanelOpen}
+          onUpdate={loadCompletions}
+        />
       </div>
     </div>
   );
