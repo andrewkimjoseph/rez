@@ -246,7 +246,7 @@ export default function ParticipantDetailPanel({
                     Status
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    {disabled ? "Disable participant account" : "Enable participant account"}
+                    Allow participant to sign in
                   </p>
                 </div>
                 <Switch
