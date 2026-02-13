@@ -231,14 +231,16 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
   fetchAllParticipants: async (forceRefresh = false, search?: string) => {
     const { participants, lastParticipantsFetch, isLoadingParticipants, participantsSearchQuery } = get();
     const now = Date.now();
-    const searchTerm = search ?? participantsSearchQuery;
+    // If search is explicitly provided, use it (empty string means clear search); otherwise use stored query
+    const searchTerm = search !== undefined ? (search.trim() || undefined) : (participantsSearchQuery?.trim() || undefined);
+    const searchQueryToStore = search !== undefined ? search : participantsSearchQuery;
 
     if (isLoadingParticipants) return;
 
     const cacheOk = !forceRefresh && participants.length > 0 && lastParticipantsFetch && now - lastParticipantsFetch < CACHE_DURATION && !searchTerm;
     if (cacheOk) return;
 
-    set({ isLoadingParticipants: true, error: null, participantsSearchQuery: searchTerm });
+    set({ isLoadingParticipants: true, error: null, participantsSearchQuery: searchQueryToStore });
 
     try {
       let url = '/api/admin/participants?limit=50';

@@ -93,14 +93,14 @@ export default function AdminParticipantsPage() {
     }
     const term = searchInput.trim();
     const timeoutId = setTimeout(() => {
-      fetchAllParticipants(true, term || undefined);
+      fetchAllParticipants(true, term || "");
     }, SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(timeoutId);
   }, [searchInput, isAuthorized, fetchAllParticipants]);
 
   const handleRefresh = useCallback(async () => {
     try {
-      await fetchAllParticipants(true, searchInput.trim() || undefined);
+      await fetchAllParticipants(true, searchInput.trim() || "");
       toast.success("Participants refreshed!");
     } catch {
       toast.error("Failed to refresh participants");
@@ -122,7 +122,7 @@ export default function AdminParticipantsPage() {
       setDisableDialogOpen(false);
       setParticipantToToggle(null);
       toast.success(`Participant ${newDisabledStatus ? "disabled" : "enabled"} successfully`);
-      await fetchAllParticipants(true, searchInput.trim() || undefined);
+      await fetchAllParticipants(true, searchInput.trim() || "");
     } else {
       toast.error("Failed to update participant status");
     }
