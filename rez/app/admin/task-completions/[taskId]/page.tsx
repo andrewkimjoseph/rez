@@ -719,7 +719,7 @@ export default function AdminTaskCompletionsDetailPage() {
                           </TooltipTrigger>
                           {completion.id && (
                             <TooltipContent>
-                              <p>ID</p>
+                              <p className="font-mono text-sm break-all max-w-[280px]">{completion.id}</p>
                             </TooltipContent>
                           )}
                         </Tooltip>
@@ -746,7 +746,7 @@ export default function AdminTaskCompletionsDetailPage() {
                           </TooltipTrigger>
                           {completion.participantId && (
                             <TooltipContent>
-                              <p>Participant ID</p>
+                              <p className="font-mono text-sm break-all max-w-[280px]">{completion.participantId}</p>
                             </TooltipContent>
                           )}
                         </Tooltip>
