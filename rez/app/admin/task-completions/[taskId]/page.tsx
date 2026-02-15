@@ -955,7 +955,9 @@ export default function AdminTaskCompletionsDetailPage() {
                           <TooltipTrigger asChild>
                             <div>
                               {completion.invalidatedAt ? (
-                                <span className="text-muted-foreground">N/A</span>
+                                <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">
+                                  No
+                                </Badge>
                               ) : completion.reward?.txnHash ? (
                                 <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">
                                   Done
