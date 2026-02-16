@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
     let completed = 0;
     let invalidated = 0;
     let validated = 0;
-    let invalid = 0;
+    let expired = 0;
     let claimed = 0;
 
     allCompletionsSnapshot.docs.forEach((doc) => {
@@ -147,7 +147,7 @@ export async function GET(request: NextRequest) {
         claimed++;
       }
 
-      // Invalid: invalid expired completions (not invalidated)
+      // Expired: invalid expired completions (not invalidated)
       if (!isValid && invalidatedAt == null && typeof screeningId === 'string' && screeningId.length > 0) {
         const screeningTimeCreated = screeningTimeById.get(screeningId);
         if (screeningTimeCreated) {
@@ -158,7 +158,7 @@ export async function GET(request: NextRequest) {
               const screeningTime = seconds * 1000;
               const timeSinceScreening = now - screeningTime;
               if (timeSinceScreening > twoHoursInMs) {
-                invalid++;
+                expired++;
               }
             }
           } catch {
@@ -173,7 +173,7 @@ export async function GET(request: NextRequest) {
       completed,
       validated,
       invalidated,
-      invalid,
+      expired,
       claimed,
     });
   } catch (error) {
