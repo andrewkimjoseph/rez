@@ -115,8 +115,7 @@ export async function GET(request: NextRequest) {
     const now = Date.now();
     let completed = 0;
     let invalidated = 0;
-    let valid = 0;
-    let expired = 0;
+    let validated = 0;
     let invalid = 0;
     let claimed = 0;
 
@@ -138,9 +137,9 @@ export async function GET(request: NextRequest) {
         invalidated++;
       }
 
-      // Valid: isValid === true AND invalidatedAt == null
+      // Validated: isValid === true AND invalidatedAt == null
       if (isValid && invalidatedAt == null) {
-        valid++;
+        validated++;
       }
 
       // Claimed: has reward with txnHash
@@ -148,8 +147,8 @@ export async function GET(request: NextRequest) {
         claimed++;
       }
 
-      // Expired/Invalid: only for invalid completions
-      if (!isValid && typeof screeningId === 'string' && screeningId.length > 0) {
+      // Invalid: invalid expired completions (not invalidated)
+      if (!isValid && invalidatedAt == null && typeof screeningId === 'string' && screeningId.length > 0) {
         const screeningTimeCreated = screeningTimeById.get(screeningId);
         if (screeningTimeCreated) {
           try {
@@ -159,8 +158,6 @@ export async function GET(request: NextRequest) {
               const screeningTime = seconds * 1000;
               const timeSinceScreening = now - screeningTime;
               if (timeSinceScreening > twoHoursInMs) {
-                expired++;
-              } else {
                 invalid++;
               }
             }
@@ -171,16 +168,12 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    const totalInvalid = invalid + expired;
-
     return NextResponse.json({
       totalCount,
       completed,
-      valid,
-      invalid,
+      validated,
       invalidated,
-      expired,
-      totalInvalid,
+      invalid,
       claimed,
     });
   } catch (error) {
