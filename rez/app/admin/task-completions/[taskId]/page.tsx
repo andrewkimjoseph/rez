@@ -87,6 +87,17 @@ export default function AdminTaskCompletionsDetailPage() {
   const [countdownTick, setCountdownTick] = useState(0);
   const [selectedParticipantId, setSelectedParticipantId] = useState<string | null>(null);
   const [participantPanelOpen, setParticipantPanelOpen] = useState(false);
+  const [totalStats, setTotalStats] = useState<{
+    totalCount: number;
+    completed: number;
+    valid: number;
+    invalid: number;
+    invalidated: number;
+    expired: number;
+    totalInvalid: number;
+    claimed: number;
+  } | null>(null);
+  const [isLoadingTotalStats, setIsLoadingTotalStats] = useState(false);
 
   const task = tasks.find((t) => t.id === taskId);
   const isTaskActive = task?.isAvailable === true;
@@ -226,10 +237,29 @@ export default function AdminTaskCompletionsDetailPage() {
     }
   }, [taskId]);
 
+  const loadTotalStats = useCallback(async () => {
+    if (!taskId) return;
+    setIsLoadingTotalStats(true);
+    try {
+      const res = await fetchWithAuthRetry(`/api/admin/taskCompletionStats?taskId=${encodeURIComponent(taskId)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTotalStats(data);
+      } else {
+        console.error('Failed to load total stats');
+      }
+    } catch (error) {
+      console.error('Error loading total stats:', error);
+    } finally {
+      setIsLoadingTotalStats(false);
+    }
+  }, [taskId]);
+
   useEffect(() => {
     if (!taskId || !isAuthorized || !task || !isTaskActive) return;
     loadCompletions();
-  }, [taskId, isAuthorized, task, isTaskActive, loadCompletions]);
+    loadTotalStats();
+  }, [taskId, isAuthorized, task, isTaskActive, loadCompletions, loadTotalStats]);
 
   useEffect(() => {
     // Set up interval if there are non-expired completions or completions waiting for cooldown
@@ -295,7 +325,7 @@ export default function AdminTaskCompletionsDetailPage() {
         setCompletionToValidate(null);
         setValidationDate(undefined);
         setValidationTime("");
-        await loadCompletions();
+        await Promise.all([loadCompletions(), loadTotalStats()]);
         toast.success("Completion validated");
       } else {
         toast.error("Failed to validate completion");
@@ -318,7 +348,7 @@ export default function AdminTaskCompletionsDetailPage() {
         body: JSON.stringify({ completionId: completion.id, isValid: false }),
       });
       if (res.ok) {
-        await loadCompletions();
+        await Promise.all([loadCompletions(), loadTotalStats()]);
         toast.success("Completion invalidated");
       } else {
         toast.error("Failed to invalidate completion");
@@ -596,7 +626,7 @@ export default function AdminTaskCompletionsDetailPage() {
               size="sm"
               onClick={() => setStatusFilter('all')}
             >
-              All ({totalCompletionsCount ?? taskCompletions.length})
+              All ({totalStats?.totalCount ?? totalCompletionsCount ?? taskCompletions.length})
             </Button>
             <Button
               variant={statusFilter === 'complete' ? 'default' : 'outline'}
@@ -604,7 +634,7 @@ export default function AdminTaskCompletionsDetailPage() {
               onClick={() => setStatusFilter('complete')}
               className={statusFilter === 'complete' ? '' : 'text-green-700 border-green-300 hover:bg-green-50'}
             >
-              Complete ({stats.completed})
+              Complete ({totalStats?.completed ?? stats.completed})
             </Button>
             <Button
               variant={statusFilter === 'valid' ? 'default' : 'outline'}
@@ -612,7 +642,7 @@ export default function AdminTaskCompletionsDetailPage() {
               onClick={() => setStatusFilter('valid')}
               className={statusFilter === 'valid' ? '' : 'text-green-700 border-green-300 hover:bg-green-50'}
             >
-              Valid ({stats.valid})
+              Valid ({totalStats?.valid ?? stats.valid})
             </Button>
             <Button
               variant={statusFilter === 'invalid' ? 'default' : 'outline'}
@@ -620,7 +650,7 @@ export default function AdminTaskCompletionsDetailPage() {
               onClick={() => setStatusFilter('invalid')}
               className={statusFilter === 'invalid' ? '' : 'text-red-700 border-red-300 hover:bg-red-50'}
             >
-              Invalid ({stats.totalInvalid})
+              Invalid ({totalStats?.totalInvalid ?? stats.totalInvalid})
             </Button>
             <Button
               variant={statusFilter === 'invalidated' ? 'default' : 'outline'}
@@ -628,7 +658,7 @@ export default function AdminTaskCompletionsDetailPage() {
               onClick={() => setStatusFilter('invalidated')}
               className={statusFilter === 'invalidated' ? '' : 'text-orange-700 border-orange-300 hover:bg-orange-50'}
             >
-              Invalidated ({stats.invalidated})
+              Invalidated ({totalStats?.invalidated ?? stats.invalidated})
             </Button>
             <Button
               variant={statusFilter === 'expired' ? 'default' : 'outline'}
@@ -636,7 +666,7 @@ export default function AdminTaskCompletionsDetailPage() {
               onClick={() => setStatusFilter('expired')}
               className={statusFilter === 'expired' ? '' : 'text-red-700 border-red-300 hover:bg-red-50'}
             >
-              Expired ({stats.expired})
+              Expired ({totalStats?.expired ?? stats.expired})
             </Button>
             <Button
               variant={statusFilter === 'claimed' ? 'default' : 'outline'}
@@ -644,7 +674,7 @@ export default function AdminTaskCompletionsDetailPage() {
               onClick={() => setStatusFilter('claimed')}
               className={statusFilter === 'claimed' ? '' : 'text-emerald-700 border-emerald-300 hover:bg-emerald-50'}
             >
-              Claimed ({stats.claimed})
+              Claimed ({totalStats?.claimed ?? stats.claimed})
             </Button>
           </div>
         )}
