@@ -32,6 +32,7 @@ import {
   EllipsisVerticalIcon,
   ClipboardDocumentIcon,
   MagnifyingGlassIcon,
+  ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
 import {
   DropdownMenu,
@@ -86,6 +87,7 @@ export default function AdminTaskCompletionsDetailPage() {
   const [lastDocIdForCursor, setLastDocIdForCursor] = useState<string | null>(null);
   const [totalCompletionsCount, setTotalCompletionsCount] = useState<number | null>(null);
   const [isLoadingMoreCompletions, setIsLoadingMoreCompletions] = useState(false);
+  const [isLoadingAllCompletions, setIsLoadingAllCompletions] = useState(false);
   const [countdownTick, setCountdownTick] = useState(0);
   const [selectedParticipantId, setSelectedParticipantId] = useState<string | null>(null);
   const [participantPanelOpen, setParticipantPanelOpen] = useState(false);
@@ -514,6 +516,67 @@ export default function AdminTaskCompletionsDetailPage() {
       .finally(() => setIsLoadingMoreCompletions(false));
   };
 
+  const loadAllCompletions = useCallback(async () => {
+    if (!taskId || isLoadingAllCompletions || isLoadingCompletions || isLoadingMoreCompletions) return;
+    
+    setIsLoadingAllCompletions(true);
+    let currentCursor = lastDocIdForCursor;
+    let allCompletions = [...taskCompletions];
+    let hasMore = hasMoreCompletions;
+    let totalLoaded = taskCompletions.length;
+
+    try {
+      while (hasMore) {
+        const url = currentCursor
+          ? `/api/admin/taskCompletions?taskId=${encodeURIComponent(taskId)}&startAfterDocId=${encodeURIComponent(currentCursor)}`
+          : `/api/admin/taskCompletions?taskId=${encodeURIComponent(taskId)}`;
+        
+        const res = await fetchWithAuthRetry(url);
+        const data = await res.json();
+        
+        if (data.taskCompletions?.length) {
+          const mapped = data.taskCompletions.map((c: any) => ({
+            ...c,
+            id: c.id ?? null,
+            isValid: c.isValid === true,
+            participantId: c.participantId ?? null,
+            participantEmailAddress: c.participantEmailAddress ?? null,
+            participantCountry: c.participantCountry ?? null,
+            screeningId: c.screeningId ?? null,
+            screeningTimeCreated: c.screeningTimeCreated ?? null,
+            invalidatedAt: c.invalidatedAt ?? null,
+            invalidatedBy: c.invalidatedBy ?? null,
+            taskId: c.taskId ?? null,
+            timeCompleted: c.timeCompleted ?? null,
+            timeCreated: c.timeCreated ?? null,
+            timeUpdated: c.timeUpdated ?? null,
+            reward: c.reward ?? undefined,
+          }));
+          
+          allCompletions = [...allCompletions, ...mapped];
+          totalLoaded = allCompletions.length;
+          hasMore = data.hasMore === true;
+          currentCursor = data.nextCursor?.startAfterDocId ?? null;
+        } else {
+          hasMore = false;
+          currentCursor = null;
+        }
+      }
+
+      // Update state with all completions
+      setTaskCompletions(allCompletions);
+      setHasMoreCompletions(false);
+      setLastDocIdForCursor(null);
+      
+      toast.success(`Loaded all ${totalLoaded} completions`);
+    } catch (error) {
+      console.error("Error loading all completions:", error);
+      toast.error("Failed to load all completions");
+    } finally {
+      setIsLoadingAllCompletions(false);
+    }
+  }, [taskId, lastDocIdForCursor, hasMoreCompletions, taskCompletions, isLoadingAllCompletions, isLoadingCompletions, isLoadingMoreCompletions]);
+
   if (!isHydrated || isAuthorized === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -603,15 +666,28 @@ export default function AdminTaskCompletionsDetailPage() {
                 )}
               </p>
             </div>
-            <Button
-              onClick={loadCompletions}
-              disabled={isLoadingCompletions}
-              variant="outline"
-              size="sm"
-            >
-              <ArrowPathIcon className={`h-4 w-4 mr-2 ${isLoadingCompletions ? "animate-spin" : ""}`} />
-              Refresh
-            </Button>
+            <div className="flex gap-2">
+              {hasMoreCompletions && (
+                <Button
+                  onClick={loadAllCompletions}
+                  disabled={isLoadingAllCompletions || isLoadingCompletions || isLoadingMoreCompletions}
+                  variant="outline"
+                  size="sm"
+                >
+                  <ArrowDownTrayIcon className={`h-4 w-4 mr-2 ${isLoadingAllCompletions ? "animate-spin" : ""}`} />
+                  {isLoadingAllCompletions ? "Loading All..." : "Load All"}
+                </Button>
+              )}
+              <Button
+                onClick={loadCompletions}
+                disabled={isLoadingCompletions || isLoadingAllCompletions}
+                variant="outline"
+                size="sm"
+              >
+                <ArrowPathIcon className={`h-4 w-4 mr-2 ${isLoadingCompletions ? "animate-spin" : ""}`} />
+                Refresh
+              </Button>
+            </div>
           </div>
         </div>
 
