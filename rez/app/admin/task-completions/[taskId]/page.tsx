@@ -142,11 +142,12 @@ export default function AdminTaskCompletionsDetailPage() {
   const filteredCompletions = useMemo(() => {
     let filtered = taskCompletions;
     
-    // Filter by participant ID search
+    // Filter by participant ID or email search
     if (participantIdSearch.trim()) {
       const searchLower = participantIdSearch.trim().toLowerCase();
       filtered = filtered.filter((completion) => 
-        completion.participantId?.toLowerCase().includes(searchLower)
+        completion.participantId?.toLowerCase().includes(searchLower) ||
+        completion.participantEmailAddress?.toLowerCase().includes(searchLower)
       );
     }
     
@@ -621,12 +622,12 @@ export default function AdminTaskCompletionsDetailPage() {
           </div>
         )}
 
-        {/* Search by Participant ID */}
+        {/* Search by Participant ID or Email */}
         {!isLoadingCompletions && taskCompletions.length > 0 && (
           <div className="relative max-w-md">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by participant ID..."
+              placeholder="Search by participant ID or email..."
               value={participantIdSearch}
               onChange={(e) => setParticipantIdSearch(e.target.value)}
               className="pl-10"
@@ -711,7 +712,7 @@ export default function AdminTaskCompletionsDetailPage() {
             </p>
             <p className="text-sm text-muted-foreground mt-1">
               {participantIdSearch.trim() 
-                ? "Try a different participant ID or clear the search" 
+                ? "Try a different participant ID or email, or clear the search" 
                 : "Try selecting a different filter"}
             </p>
           </div>
