@@ -31,6 +31,7 @@ import {
   NoSymbolIcon,
   EllipsisVerticalIcon,
   ClipboardDocumentIcon,
+  MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import {
   DropdownMenu,
@@ -80,6 +81,7 @@ export default function AdminTaskCompletionsDetailPage() {
   const [validationDate, setValidationDate] = useState<Date | undefined>(undefined);
   const [validationTime, setValidationTime] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<'all' | 'complete' | 'validated' | 'invalidated' | 'expired' | 'claimed'>('all');
+  const [participantIdSearch, setParticipantIdSearch] = useState("");
   const [hasMoreCompletions, setHasMoreCompletions] = useState(false);
   const [lastDocIdForCursor, setLastDocIdForCursor] = useState<string | null>(null);
   const [totalCompletionsCount, setTotalCompletionsCount] = useState<number | null>(null);
@@ -138,28 +140,41 @@ export default function AdminTaskCompletionsDetailPage() {
   }, [taskCompletions]);
 
   const filteredCompletions = useMemo(() => {
-    if (statusFilter === 'all') return taskCompletions;
+    let filtered = taskCompletions;
     
-    return taskCompletions.filter((completion) => {
-      switch (statusFilter) {
-        case 'complete':
-          return completion.timeCompleted != null && completion.isValid === true;
-        case 'validated':
-          return completion.isValid === true && completion.invalidatedAt == null;
-        case 'invalidated':
-          return completion.invalidatedAt != null;
-        case 'expired':
-          // Invalid expired completions (not invalidated)
-          if (completion.isValid) return false;
-          if (completion.invalidatedAt != null) return false; // Exclude invalidated
-          return isExpired(completion.screeningTimeCreated);
-        case 'claimed':
-          return completion.reward?.txnHash != null;
-        default:
-          return true;
-      }
-    });
-  }, [taskCompletions, statusFilter]);
+    // Filter by participant ID search
+    if (participantIdSearch.trim()) {
+      const searchLower = participantIdSearch.trim().toLowerCase();
+      filtered = filtered.filter((completion) => 
+        completion.participantId?.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Filter by status
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter((completion) => {
+        switch (statusFilter) {
+          case 'complete':
+            return completion.timeCompleted != null && completion.isValid === true;
+          case 'validated':
+            return completion.isValid === true && completion.invalidatedAt == null;
+          case 'invalidated':
+            return completion.invalidatedAt != null;
+          case 'expired':
+            // Invalid expired completions (not invalidated)
+            if (completion.isValid) return false;
+            if (completion.invalidatedAt != null) return false; // Exclude invalidated
+            return isExpired(completion.screeningTimeCreated);
+          case 'claimed':
+            return completion.reward?.txnHash != null;
+          default:
+            return true;
+        }
+      });
+    }
+    
+    return filtered;
+  }, [taskCompletions, statusFilter, participantIdSearch]);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -606,6 +621,19 @@ export default function AdminTaskCompletionsDetailPage() {
           </div>
         )}
 
+        {/* Search by Participant ID */}
+        {!isLoadingCompletions && taskCompletions.length > 0 && (
+          <div className="relative max-w-md">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by participant ID..."
+              value={participantIdSearch}
+              onChange={(e) => setParticipantIdSearch(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        )}
+
         {/* Filter Buttons */}
         {!isLoadingCompletions && taskCompletions.length > 0 && (
           <div className="flex gap-2 flex-wrap">
@@ -676,9 +704,15 @@ export default function AdminTaskCompletionsDetailPage() {
             <div className="p-3 rounded-full bg-muted mb-3">
               <XCircleIcon className="h-6 w-6 text-muted-foreground" />
             </div>
-            <p className="font-medium text-foreground">No completions match the selected filter</p>
+            <p className="font-medium text-foreground">
+              {participantIdSearch.trim() 
+                ? "No completions match your search" 
+                : "No completions match the selected filter"}
+            </p>
             <p className="text-sm text-muted-foreground mt-1">
-              Try selecting a different filter
+              {participantIdSearch.trim() 
+                ? "Try a different participant ID or clear the search" 
+                : "Try selecting a different filter"}
             </p>
           </div>
         )}
