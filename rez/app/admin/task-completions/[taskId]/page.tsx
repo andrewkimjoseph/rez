@@ -112,8 +112,8 @@ export default function AdminTaskCompletionsDetailPage() {
       if (seconds != null) {
         const screeningTime = seconds * 1000;
         const now = Date.now();
-        const twoHoursInMs = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
-        return (now - screeningTime) > twoHoursInMs;
+        const sixHoursInMs = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+        return (now - screeningTime) > sixHoursInMs;
       }
       return false;
     } catch {
@@ -126,7 +126,7 @@ export default function AdminTaskCompletionsDetailPage() {
     const invalidated = taskCompletions.filter(c => c.invalidatedAt != null).length;
     const claimed = taskCompletions.filter(c => c.reward?.txnHash != null).length;
     const validated = taskCompletions.filter(c => c.isValid === true && c.invalidatedAt == null).length;
-    const twoHoursInMs = 2 * 60 * 60 * 1000;
+    const sixHoursInMs = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
     const now = Date.now();
     const expired = taskCompletions.filter(c => {
       // Invalid expired completions (not invalidated)
@@ -136,7 +136,7 @@ export default function AdminTaskCompletionsDetailPage() {
       if (ts == null) return false;
       const sec = ts.seconds ?? ts._seconds;
       if (sec == null) return false;
-      return (now - sec * 1000) > twoHoursInMs;
+      return (now - sec * 1000) > sixHoursInMs;
     }).length;
     return { completed, invalidated, claimed, validated, expired };
   }, [taskCompletions]);
@@ -420,8 +420,8 @@ export default function AdminTaskCompletionsDetailPage() {
       if (seconds != null) {
         const screeningTime = seconds * 1000;
         const now = Date.now();
-        const twoHoursInMs = 2 * 60 * 60 * 1000;
-        const timeRemainingMs = twoHoursInMs - (now - screeningTime);
+        const sixHoursInMs = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+        const timeRemainingMs = sixHoursInMs - (now - screeningTime);
         
         if (timeRemainingMs <= 0) return null; // Expired
         

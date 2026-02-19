@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate all stats in memory
-    const twoHoursInMs = 2 * 60 * 60 * 1000;
+    const sixHoursInMs = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
     const now = Date.now();
     let completed = 0;
     let invalidated = 0;
@@ -157,7 +157,7 @@ export async function GET(request: NextRequest) {
             if (seconds != null) {
               const screeningTime = seconds * 1000;
               const timeSinceScreening = now - screeningTime;
-              if (timeSinceScreening > twoHoursInMs) {
+              if (timeSinceScreening > sixHoursInMs) {
                 expired++;
               }
             }
