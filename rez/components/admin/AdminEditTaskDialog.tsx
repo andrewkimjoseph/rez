@@ -38,6 +38,9 @@ import { CheckCircleIcon as CheckCircleSolidIcon } from "@heroicons/react/24/sol
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { ChevronDownIcon } from "lucide-react";
 import { supportedTokens } from "@/utils/currencies";
 import Image from "next/image";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
@@ -722,49 +725,69 @@ export default function AdminEditTaskDialog({
                       </Button>
                     )}
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Calendar
-                      mode="single"
-                      selected={deadline}
-                      onSelect={(date) => {
-                        if (!date) {
-                          setDeadline(undefined);
-                          return;
-                        }
-                        // Preserve existing time when changing date
-                        if (deadline && !isNaN(deadline.getTime())) {
-                          const d = new Date(date);
-                          d.setHours(deadline.getHours(), deadline.getMinutes(), deadline.getSeconds(), 0);
-                          setDeadline(d);
-                        } else {
-                          // Default to end of day for new date
-                          const d = new Date(date);
-                          d.setHours(23, 59, 0, 0);
-                          setDeadline(d);
-                        }
-                      }}
-                      className="rounded-lg border"
-                      captionLayout="dropdown"
-                    />
-                    {deadline && (
-                      <div className="flex items-center gap-2 sm:self-end">
-                        <Label htmlFor="edit-deadline-time" className="text-xs font-medium text-gray-500 shrink-0">Time</Label>
-                        <Input
-                          type="time"
-                          id="edit-deadline-time"
-                          value={deadline ? `${String(deadline.getHours()).padStart(2, "0")}:${String(deadline.getMinutes()).padStart(2, "0")}` : ""}
-                          onChange={(e) => {
-                            const [h, m] = e.target.value.split(":").map(Number);
-                            if (deadline && !isNaN(deadline.getTime()) && typeof h === "number" && typeof m === "number") {
-                              const d = new Date(deadline);
-                              d.setHours(h, m, 0, 0);
-                              setDeadline(d);
-                            }
-                          }}
-                          className="h-9 w-32 [&::-webkit-calendar-picker-indicator]:opacity-50"
-                        />
-                      </div>
-                    )}
+                  <div className="flex flex-row gap-4 items-end">
+                    <div className="flex-1">
+                      <Label htmlFor="edit-deadline-date" className="text-sm font-medium mb-2 block">
+                        Date
+                      </Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            id="edit-deadline-date"
+                            className="w-full justify-between font-normal h-9 text-sm"
+                          >
+                            {deadline ? format(deadline, "PPP") : "Select date"}
+                            <ChevronDownIcon className="h-4 w-4 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={deadline}
+                            captionLayout="dropdown"
+                            defaultMonth={deadline}
+                            onSelect={(date) => {
+                              if (!date) {
+                                setDeadline(undefined);
+                                return;
+                              }
+                              if (deadline && !isNaN(deadline.getTime())) {
+                                const d = new Date(date);
+                                d.setHours(deadline.getHours(), deadline.getMinutes(), deadline.getSeconds(), 0);
+                                setDeadline(d);
+                              } else {
+                                const d = new Date(date);
+                                d.setHours(23, 59, 0, 0);
+                                setDeadline(d);
+                              }
+                            }}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div className="w-32">
+                      <Label htmlFor="edit-deadline-time" className="text-sm font-medium mb-2 block">
+                        Time
+                      </Label>
+                      <Input
+                        type="time"
+                        id="edit-deadline-time"
+                        step="1"
+                        value={deadline ? `${String(deadline.getHours()).padStart(2, "0")}:${String(deadline.getMinutes()).padStart(2, "0")}:${String(deadline.getSeconds()).padStart(2, "0")}` : ""}
+                        onChange={(e) => {
+                          const parts = e.target.value.split(":");
+                          const [h, m, s] = parts.map(Number);
+                          if (deadline && !isNaN(deadline.getTime()) && typeof h === "number" && typeof m === "number") {
+                            const d = new Date(deadline);
+                            d.setHours(h, m, s || 0, 0);
+                            setDeadline(d);
+                          }
+                        }}
+                        disabled={!deadline}
+                        className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                      />
+                    </div>
                   </div>
                 </div>
 
