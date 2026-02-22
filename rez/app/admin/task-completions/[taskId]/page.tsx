@@ -81,7 +81,7 @@ export default function AdminTaskCompletionsDetailPage() {
   const [completionToValidate, setCompletionToValidate] = useState<TaskCompletionWithReward | null>(null);
   const [validationDate, setValidationDate] = useState<Date | undefined>(undefined);
   const [validationTime, setValidationTime] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<'all' | 'complete' | 'validated' | 'invalidated' | 'expired' | 'claimed'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'complete' | 'validated' | 'invalidated' | 'expired' | 'pending' | 'claimed'>('all');
   const [participantIdSearch, setParticipantIdSearch] = useState("");
   const [hasMoreCompletions, setHasMoreCompletions] = useState(false);
   const [lastDocIdForCursor, setLastDocIdForCursor] = useState<string | null>(null);
@@ -93,10 +93,10 @@ export default function AdminTaskCompletionsDetailPage() {
   const [participantPanelOpen, setParticipantPanelOpen] = useState(false);
   const [totalStats, setTotalStats] = useState<{
     totalCount: number;
-    completed: number;
     validated: number;
     invalidated: number;
     expired: number;
+    pending: number;
     claimed: number;
   } | null>(null);
   const [isLoadingTotalStats, setIsLoadingTotalStats] = useState(false);
@@ -122,23 +122,29 @@ export default function AdminTaskCompletionsDetailPage() {
   };
 
   const stats = useMemo(() => {
-    const completed = taskCompletions.filter(c => c.timeCompleted != null).length;
     const invalidated = taskCompletions.filter(c => c.invalidatedAt != null).length;
     const claimed = taskCompletions.filter(c => c.reward?.txnHash != null).length;
     const validated = taskCompletions.filter(c => c.isValid === true && c.invalidatedAt == null).length;
-    const sixHoursInMs = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+    const sixHoursInMs = 6 * 60 * 60 * 1000;
     const now = Date.now();
-    const expired = taskCompletions.filter(c => {
-      // Invalid expired completions (not invalidated)
-      if (c.isValid) return false;
-      if (c.invalidatedAt != null) return false; // Exclude invalidated
+    let expired = 0;
+    let pending = 0;
+    taskCompletions.forEach(c => {
+      if (c.isValid || c.invalidatedAt != null) return;
       const ts = c.screeningTimeCreated as { seconds?: number; _seconds?: number } | null | undefined;
-      if (ts == null) return false;
+      if (ts == null) {
+        pending++;
+        return;
+      }
       const sec = ts.seconds ?? ts._seconds;
-      if (sec == null) return false;
-      return (now - sec * 1000) > sixHoursInMs;
-    }).length;
-    return { completed, invalidated, claimed, validated, expired };
+      if (sec == null) {
+        pending++;
+        return;
+      }
+      if ((now - sec * 1000) > sixHoursInMs) expired++;
+      else pending++;
+    });
+    return { invalidated, claimed, validated, expired, pending };
   }, [taskCompletions]);
 
   const filteredCompletions = useMemo(() => {
@@ -153,21 +159,21 @@ export default function AdminTaskCompletionsDetailPage() {
       );
     }
     
-    // Filter by status
+    // Filter by status (complete = validated; buckets are mutually exclusive)
     if (statusFilter !== 'all') {
       filtered = filtered.filter((completion) => {
         switch (statusFilter) {
           case 'complete':
-            return completion.timeCompleted != null && completion.isValid === true;
           case 'validated':
             return completion.isValid === true && completion.invalidatedAt == null;
           case 'invalidated':
             return completion.invalidatedAt != null;
           case 'expired':
-            // Invalid expired completions (not invalidated)
-            if (completion.isValid) return false;
-            if (completion.invalidatedAt != null) return false; // Exclude invalidated
+            if (completion.isValid || completion.invalidatedAt != null) return false;
             return isExpired(completion.screeningTimeCreated);
+          case 'pending':
+            if (completion.isValid || completion.invalidatedAt != null) return false;
+            return !isExpired(completion.screeningTimeCreated);
           case 'claimed':
             return completion.reward?.txnHash != null;
           default:
@@ -711,7 +717,7 @@ export default function AdminTaskCompletionsDetailPage() {
           </div>
         )}
 
-        {/* Filter Buttons */}
+        {/* Filter Buttons - validated + invalidated + expired + pending = all */}
         {!isLoadingCompletions && taskCompletions.length > 0 && (
           <div className="flex gap-2 flex-wrap">
             <Button
@@ -722,20 +728,12 @@ export default function AdminTaskCompletionsDetailPage() {
               All ({totalStats?.totalCount ?? totalCompletionsCount ?? taskCompletions.length})
             </Button>
             <Button
-              variant={statusFilter === 'complete' ? 'default' : 'outline'}
+              variant={statusFilter === 'complete' || statusFilter === 'validated' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setStatusFilter('complete')}
-              className={statusFilter === 'complete' ? '' : 'text-green-700 border-green-300 hover:bg-green-50'}
+              className={statusFilter === 'complete' || statusFilter === 'validated' ? '' : 'text-green-700 border-green-300 hover:bg-green-50'}
             >
-              Complete ({totalStats?.completed ?? stats.completed})
-            </Button>
-            <Button
-              variant={statusFilter === 'validated' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setStatusFilter('validated')}
-              className={statusFilter === 'validated' ? '' : 'text-green-700 border-green-300 hover:bg-green-50'}
-            >
-              Validated ({totalStats?.validated ?? stats.validated})
+              Complete ({totalStats?.validated ?? stats.validated})
             </Button>
             <Button
               variant={statusFilter === 'invalidated' ? 'default' : 'outline'}
@@ -752,6 +750,14 @@ export default function AdminTaskCompletionsDetailPage() {
               className={statusFilter === 'expired' ? '' : 'text-red-700 border-red-300 hover:bg-red-50'}
             >
               Expired ({totalStats?.expired ?? stats.expired})
+            </Button>
+            <Button
+              variant={statusFilter === 'pending' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setStatusFilter('pending')}
+              className={statusFilter === 'pending' ? '' : 'text-amber-700 border-amber-300 hover:bg-amber-50'}
+            >
+              Pending ({totalStats?.pending ?? stats.pending})
             </Button>
             <Button
               variant={statusFilter === 'claimed' ? 'default' : 'outline'}

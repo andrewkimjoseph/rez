@@ -110,45 +110,34 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Calculate all stats in memory
+    // Calculate all stats in memory.
+    // Buckets are mutually exclusive and exhaustive: validated + invalidated + expired + pending = totalCount
     const sixHoursInMs = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
     const now = Date.now();
-    let completed = 0;
     let invalidated = 0;
     let validated = 0;
     let expired = 0;
+    let pending = 0;
     let claimed = 0;
 
     allCompletionsSnapshot.docs.forEach((doc) => {
       const data = doc.data();
       const isValid = data.isValid === true;
-      const timeCompleted = data.timeCompleted;
       const invalidatedAt = data.invalidatedAt;
       const screeningId = data.screeningId;
       const completionId = doc.id;
 
-      // Completed: has timeCompleted
-      if (timeCompleted != null) {
-        completed++;
-      }
-
-      // Invalidated: has invalidatedAt
-      if (invalidatedAt != null) {
-        invalidated++;
-      }
-
-      // Validated: isValid === true AND invalidatedAt == null
-      if (isValid && invalidatedAt == null) {
-        validated++;
-      }
-
-      // Claimed: has reward with txnHash
+      // Claimed: has reward with txnHash (overlay, not mutually exclusive with status)
       if (rewardsByCompletionId.has(completionId)) {
         claimed++;
       }
 
-      // Expired: invalid expired completions (not invalidated)
-      if (!isValid && invalidatedAt == null && typeof screeningId === 'string' && screeningId.length > 0) {
+      // Mutually exclusive buckets (each completion lands in exactly one)
+      if (invalidatedAt != null) {
+        invalidated++;
+      } else if (isValid) {
+        validated++;
+      } else if (typeof screeningId === 'string' && screeningId.length > 0) {
         const screeningTimeCreated = screeningTimeById.get(screeningId);
         if (screeningTimeCreated) {
           try {
@@ -159,21 +148,29 @@ export async function GET(request: NextRequest) {
               const timeSinceScreening = now - screeningTime;
               if (timeSinceScreening > sixHoursInMs) {
                 expired++;
+              } else {
+                pending++;
               }
+            } else {
+              pending++;
             }
           } catch {
-            // Skip if timestamp parsing fails
+            pending++;
           }
+        } else {
+          pending++;
         }
+      } else {
+        pending++;
       }
     });
 
     return NextResponse.json({
       totalCount,
-      completed,
       validated,
       invalidated,
       expired,
+      pending,
       claimed,
     });
   } catch (error) {
