@@ -722,7 +722,50 @@ export default function AdminEditTaskDialog({
                       </Button>
                     )}
                   </div>
-                  <Calendar mode="single" selected={deadline} onSelect={setDeadline} className="rounded-lg border" captionLayout="dropdown" />
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Calendar
+                      mode="single"
+                      selected={deadline}
+                      onSelect={(date) => {
+                        if (!date) {
+                          setDeadline(undefined);
+                          return;
+                        }
+                        // Preserve existing time when changing date
+                        if (deadline && !isNaN(deadline.getTime())) {
+                          const d = new Date(date);
+                          d.setHours(deadline.getHours(), deadline.getMinutes(), deadline.getSeconds(), 0);
+                          setDeadline(d);
+                        } else {
+                          // Default to end of day for new date
+                          const d = new Date(date);
+                          d.setHours(23, 59, 0, 0);
+                          setDeadline(d);
+                        }
+                      }}
+                      className="rounded-lg border"
+                      captionLayout="dropdown"
+                    />
+                    {deadline && (
+                      <div className="flex items-center gap-2 sm:self-end">
+                        <Label htmlFor="edit-deadline-time" className="text-xs font-medium text-gray-500 shrink-0">Time</Label>
+                        <Input
+                          type="time"
+                          id="edit-deadline-time"
+                          value={deadline ? `${String(deadline.getHours()).padStart(2, "0")}:${String(deadline.getMinutes()).padStart(2, "0")}` : ""}
+                          onChange={(e) => {
+                            const [h, m] = e.target.value.split(":").map(Number);
+                            if (deadline && !isNaN(deadline.getTime()) && typeof h === "number" && typeof m === "number") {
+                              const d = new Date(deadline);
+                              d.setHours(h, m, 0, 0);
+                              setDeadline(d);
+                            }
+                          }}
+                          className="h-9 w-32 [&::-webkit-calendar-picker-indicator]:opacity-50"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
