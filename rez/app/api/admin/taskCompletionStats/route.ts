@@ -2,10 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { paxDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { requireSuperAdmin } from '@/lib/api-auth';
+import { getAlgoliaClient, isAlgoliaConfigured } from '@/lib/algolia-server';
+
+const HITS_PER_PAGE = 1000;
+
+function escapeAlgoliaFilterValue(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+type CompletionRecord = { id: string; isValid?: boolean; invalidatedAt?: unknown; screeningId?: string | null };
 
 /**
  * Returns total completion statistics for a specific task (admin only).
- * Uses efficient count queries and minimal document reads to minimize Firestore costs.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -42,20 +50,64 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const completionsRef = paxDB.collection(COLLECTIONS.TASK_COMPLETIONS);
     const rewardsRef = paxDB.collection(COLLECTIONS.REWARDS);
+    let completionRecords: CompletionRecord[] = [];
 
-    // Fetch all completions with only the fields we need for stats calculation
-    // Using select() reduces read size (but still counts as 1 read per document)
-    const allCompletionsSnapshot = await completionsRef
-      .where('taskId', '==', taskId)
-      .select('isValid', 'screeningId', 'timeCompleted', 'invalidatedAt')
-      .get();
+    if (isAlgoliaConfigured()) {
+      try {
+        const client = getAlgoliaClient();
+        const filter = `taskId:"${escapeAlgoliaFilterValue(taskId)}"`;
+        let page = 0;
+        let hasMore = true;
+        while (hasMore) {
+          const response = await client.searchSingleIndex({
+            indexName: COLLECTIONS.TASK_COMPLETIONS,
+            searchParams: {
+              query: '',
+              filters: filter,
+              hitsPerPage: HITS_PER_PAGE,
+              page,
+              attributesToRetrieve: ['objectID', 'isValid', 'screeningId', 'invalidatedAt'],
+            },
+          });
+          const hits = (response.hits ?? []) as Record<string, unknown>[];
+          for (const hit of hits) {
+            const id = (hit.objectID ?? hit.id) as string;
+            completionRecords.push({
+              id,
+              isValid: hit.isValid === true,
+              invalidatedAt: hit.invalidatedAt ?? undefined,
+              screeningId: typeof hit.screeningId === 'string' ? hit.screeningId : null,
+            });
+          }
+          const nbPages = response.nbPages ?? 0;
+          hasMore = page + 1 < nbPages;
+          page += 1;
+        }
+      } catch (algoliaError) {
+        console.warn('Algolia task completion stats failed, falling back to Firestore:', algoliaError);
+      }
+    }
 
-    const totalCount = allCompletionsSnapshot.size;
+    if (completionRecords.length === 0) {
+      const completionsRef = paxDB.collection(COLLECTIONS.TASK_COMPLETIONS);
+      const allCompletionsSnapshot = await completionsRef
+        .where('taskId', '==', taskId)
+        .select('isValid', 'screeningId', 'timeCompleted', 'invalidatedAt')
+        .get();
+      completionRecords = allCompletionsSnapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          isValid: data.isValid === true,
+          invalidatedAt: data.invalidatedAt,
+          screeningId: typeof data.screeningId === 'string' ? data.screeningId : null,
+        };
+      });
+    }
 
-    // Get completion IDs for claimed check
-    const completionIds = allCompletionsSnapshot.docs.map((doc) => doc.id);
+    const totalCount = completionRecords.length;
+    const completionIds = completionRecords.map((c) => c.id);
 
     // Fetch rewards to determine claimed status
     // Batch rewards query (Firestore 'in' query limit is 10, so we need to chunk)
@@ -77,16 +129,10 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Get unique screening IDs for expired/invalid calculation
     const screeningIds = [
       ...new Set(
-        allCompletionsSnapshot.docs
-          .map((doc) => {
-            const data = doc.data();
-            return typeof data.screeningId === 'string' && data.screeningId.length > 0
-              ? data.screeningId
-              : null;
-          })
+        completionRecords
+          .map((c) => (c.screeningId && c.screeningId.length > 0 ? c.screeningId : null))
           .filter((id): id is string => id !== null)
       ),
     ];
@@ -110,9 +156,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Calculate all stats in memory.
-    // Buckets are mutually exclusive and exhaustive: validated + invalidated + expired + pending = totalCount
-    const sixHoursInMs = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+    const sixHoursInMs = 6 * 60 * 60 * 1000;
     const now = Date.now();
     let invalidated = 0;
     let validated = 0;
@@ -120,24 +164,18 @@ export async function GET(request: NextRequest) {
     let pending = 0;
     let claimed = 0;
 
-    allCompletionsSnapshot.docs.forEach((doc) => {
-      const data = doc.data();
-      const isValid = data.isValid === true;
-      const invalidatedAt = data.invalidatedAt;
-      const screeningId = data.screeningId;
-      const completionId = doc.id;
+    completionRecords.forEach((rec) => {
+      const { id: completionId, isValid, invalidatedAt, screeningId } = rec;
 
-      // Claimed: has reward with txnHash (overlay, not mutually exclusive with status)
       if (rewardsByCompletionId.has(completionId)) {
         claimed++;
       }
 
-      // Mutually exclusive buckets (each completion lands in exactly one)
       if (invalidatedAt != null) {
         invalidated++;
       } else if (isValid) {
         validated++;
-      } else if (typeof screeningId === 'string' && screeningId.length > 0) {
+      } else if (screeningId && screeningId.length > 0) {
         const screeningTimeCreated = screeningTimeById.get(screeningId);
         if (screeningTimeCreated) {
           try {

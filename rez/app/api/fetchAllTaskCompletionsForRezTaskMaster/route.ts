@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { paxDB } from '@/firebase/serverConfig';
+import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { requireAuth } from '@/lib/api-auth';
+import { getAlgoliaClient, isAlgoliaConfigured } from '@/lib/algolia-server';
+
+function escapeAlgoliaFilterValue(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify authentication
     const authResult = await requireAuth(request);
     if (authResult instanceof NextResponse) {
       return authResult;
@@ -17,35 +22,44 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // First, get all tasks for the authenticated user's email
-    const tasksRef = paxDB.collection('tasks');
-    const tasksSnapshot = await tasksRef.where('rezTaskMasterEmailAddress', '==', authResult.email).get();
-    
-    const taskIds: string[] = [];
-    tasksSnapshot.forEach((doc) => {
-      taskIds.push(doc.id);
-    });
+    let taskIds: string[] = [];
+
+    if (isAlgoliaConfigured()) {
+      try {
+        const client = getAlgoliaClient();
+        const filter = `rezTaskMasterEmailAddress:"${escapeAlgoliaFilterValue(authResult.email)}"`;
+        const response = await client.searchSingleIndex({
+          indexName: COLLECTIONS.TASKS,
+          searchParams: { query: '', filters: filter, hitsPerPage: 1000 },
+        });
+        taskIds = (response.hits ?? [])
+          .map((h: Record<string, unknown>) => (h.objectID ?? h.id) as string)
+          .filter(Boolean);
+      } catch (algoliaError) {
+        console.warn('Algolia fetch tasks for task master failed, falling back to Firestore:', algoliaError);
+      }
+    }
+
+    if (taskIds.length === 0) {
+      const tasksRef = paxDB.collection(COLLECTIONS.TASKS);
+      const tasksSnapshot = await tasksRef
+        .where('rezTaskMasterEmailAddress', '==', authResult.email)
+        .get();
+      tasksSnapshot.forEach((doc) => taskIds.push(doc.id));
+    }
 
     if (taskIds.length === 0) {
       return NextResponse.json({ taskCompletions: [] });
     }
 
-    // Then, get all task completions where taskId matches any of the task IDs
-    // Firestore 'in' operator supports up to 30 values, so we need to batch the queries
-    const taskCompletionsRef = paxDB.collection('task_completions');
-    const taskCompletions: any[] = [];
-    
-    // Split taskIds into chunks of 30
+    const taskCompletionsRef = paxDB.collection(COLLECTIONS.TASK_COMPLETIONS);
+    const taskCompletions: unknown[] = [];
     const chunkSize = 30;
     for (let i = 0; i < taskIds.length; i += chunkSize) {
       const chunk = taskIds.slice(i, i + chunkSize);
-      const taskCompletionsSnapshot = await taskCompletionsRef.where('taskId', 'in', chunk).get();
-      
-      taskCompletionsSnapshot.forEach((doc) => {
-        taskCompletions.push({
-          id: doc.id,
-          ...doc.data(),
-        });
+      const snapshot = await taskCompletionsRef.where('taskId', 'in', chunk).get();
+      snapshot.forEach((doc) => {
+        taskCompletions.push({ id: doc.id, ...doc.data() });
       });
     }
 
