@@ -545,6 +545,7 @@ export default function AdminTasksPage() {
                   <TableHead className="text-right font-semibold">Target</TableHead>
                   <TableHead className="text-right font-semibold">Reward</TableHead>
                   <TableHead className="font-semibold w-[100px]">Created</TableHead>
+                  <TableHead className="font-semibold w-[100px]">Expires on</TableHead>
                   <TableHead className="w-[100px] text-center font-semibold">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -615,6 +616,9 @@ export default function AdminTasksPage() {
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatTimestamp(task.timeCreated)}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {task.deadline != null ? formatTimestamp(task.deadline) : '—'}
                     </TableCell>
                     <TableCell className="text-center">
                       <DropdownMenu>
