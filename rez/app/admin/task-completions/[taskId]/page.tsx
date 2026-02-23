@@ -11,6 +11,7 @@ type TaskCompletionWithReward = TaskCompletion & {
   reward?: { txnHash: string };
   participantEmailAddress?: string | null;
   participantCountry?: string | null;
+  participantAccountType?: string | null;
   screeningTimeCreated?: unknown | null;
 };
 import {
@@ -217,6 +218,7 @@ export default function AdminTaskCompletionsDetailPage() {
             participantId: c.participantId ?? null,
             participantEmailAddress: c.participantEmailAddress ?? null,
             participantCountry: c.participantCountry ?? null,
+            participantAccountType: c.participantAccountType ?? null,
             screeningId: c.screeningId ?? null,
             screeningTimeCreated: c.screeningTimeCreated ?? null,
             invalidatedAt: c.invalidatedAt ?? null,
@@ -500,6 +502,7 @@ export default function AdminTaskCompletionsDetailPage() {
             participantId: c.participantId ?? null,
             participantEmailAddress: c.participantEmailAddress ?? null,
             participantCountry: c.participantCountry ?? null,
+            participantAccountType: c.participantAccountType ?? null,
             screeningId: c.screeningId ?? null,
             screeningTimeCreated: c.screeningTimeCreated ?? null,
             invalidatedAt: c.invalidatedAt ?? null,
@@ -548,6 +551,7 @@ export default function AdminTaskCompletionsDetailPage() {
             participantId: c.participantId ?? null,
             participantEmailAddress: c.participantEmailAddress ?? null,
             participantCountry: c.participantCountry ?? null,
+            participantAccountType: c.participantAccountType ?? null,
             screeningId: c.screeningId ?? null,
             screeningTimeCreated: c.screeningTimeCreated ?? null,
             invalidatedAt: c.invalidatedAt ?? null,
