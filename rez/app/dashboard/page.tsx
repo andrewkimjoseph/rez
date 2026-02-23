@@ -31,17 +31,17 @@ import { downloadResourceBySlug } from "@/lib/client-storage";
 
 export default function Dashboard() {
   const router = useRouter();
-  const { tasks, taskCompletions, isLoading, error, refetch } = useTasksData({ autoFetch: false });
+  const { tasks, taskCompletions, completionStats, isLoading, error, refetch } = useTasksData({ autoFetch: false });
   const { checkCanRefresh, updateRefreshTime } = useRefreshStore();
   const [, forceUpdate] = useState({});
   const [isHydrated, setIsHydrated] = useState(false);
   const [resourceLoading, setResourceLoading] = useState<string | null>(null);
   const { refreshClicked, playbookDownloadClicked, guideDownloadClicked } = useAmplitudeEvents();
 
-  // Calculate counts
+  // Calculate counts (Total Completions uses same definition as admin task-completions filter "All")
   const totalTasks = tasks.length;
   const activeTasks = tasks.filter(task => task.isAvailable === true).length;
-  const totalTaskCompletions = taskCompletions.length;
+  const totalTaskCompletions = completionStats?.totalCount ?? taskCompletions.length;
 
   // Check if refresh is available (updated every second)
   const dashboardRefreshStatus = checkCanRefresh();

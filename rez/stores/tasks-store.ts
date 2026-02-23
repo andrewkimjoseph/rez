@@ -22,9 +22,19 @@ export interface EditTaskData {
 // Increased to 15 minutes to reduce Firestore reads while keeping data reasonably fresh.
 const FETCH_TTL_MS = 15 * 60 * 1000; // 15 minutes
 
+export interface CompletionStats {
+  totalCount: number;
+  validated: number;
+  invalidated: number;
+  expired: number;
+  pending: number;
+  claimed: number;
+}
+
 interface TasksStore {
   tasks: Task[];
   taskCompletions: TaskCompletion[];
+  completionStats: CompletionStats | null;
   isLoading: boolean;
   isDeleting: boolean;
   isUpdatingStatus: boolean;
@@ -45,6 +55,7 @@ export const useTasksStore = create<TasksStore>()(
     (set, get) => ({
       tasks: [],
       taskCompletions: [],
+      completionStats: null,
       isLoading: false,
       isDeleting: false,
       isUpdatingStatus: false,
@@ -59,6 +70,7 @@ export const useTasksStore = create<TasksStore>()(
           set({ 
             tasks: [], 
             taskCompletions: [], 
+            completionStats: null,
             error: 'No valid taskMaster email address found' 
           });
           return;
@@ -79,10 +91,12 @@ export const useTasksStore = create<TasksStore>()(
 
           const tasks: Task[] = data.tasks || [];
           const taskCompletions: TaskCompletion[] = data.taskCompletions || [];
+          const completionStats: CompletionStats | null = data.completionStats ?? null;
 
           set({
             tasks,
             taskCompletions,
+            completionStats,
             isLoading: false,
             error: null,
             lastTasksFetchedAt: Date.now(),
@@ -231,6 +245,7 @@ export const useTasksStore = create<TasksStore>()(
       clearTasksAndCompletions: () => set({ 
         tasks: [], 
         taskCompletions: [], 
+        completionStats: null,
         error: null 
       }),
     }),
@@ -239,6 +254,7 @@ export const useTasksStore = create<TasksStore>()(
       partialize: (state) => ({ 
         tasks: state.tasks, 
         taskCompletions: state.taskCompletions,
+        completionStats: state.completionStats,
         lastTasksFetchedAt: state.lastTasksFetchedAt,
       }),
     }

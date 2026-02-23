@@ -186,6 +186,17 @@ export default function AdminTaskCompletionsDetailPage() {
     return filtered;
   }, [taskCompletions, statusFilter, participantIdSearch]);
 
+  const countryTotals = useMemo(() => {
+    const byCountry = new Map<string, number>();
+    for (const c of filteredCompletions) {
+      const key = c.participantCountry ?? "—";
+      byCountry.set(key, (byCountry.get(key) ?? 0) + 1);
+    }
+    return Array.from(byCountry.entries())
+      .map(([country, count]) => ({ country, count }))
+      .sort((a, b) => b.count - a.count);
+  }, [filteredCompletions]);
+
   useEffect(() => {
     setIsHydrated(true);
   }, []);
@@ -771,6 +782,47 @@ export default function AdminTaskCompletionsDetailPage() {
             >
               Claimed ({totalStats?.claimed ?? stats.claimed})
             </Button>
+          </div>
+        )}
+
+        {/* Country totals - matches current filter + search */}
+        {!isLoadingCompletions && taskCompletions.length > 0 && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+            <span className="text-muted-foreground font-medium">By country:</span>
+            {countryTotals.length === 0 ? (
+              <span className="text-muted-foreground">No completions for current filter</span>
+            ) : (
+              <span className="flex flex-wrap items-center gap-x-1 gap-y-1">
+                {countryTotals.map(({ country, count }, i) => (
+                  <span key={country} className="inline-flex items-center gap-1.5">
+                    {i > 0 && <span className="text-muted-foreground px-1">·</span>}
+                    {country !== "—" && getCountryCode(country) ? (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="inline-flex items-center gap-1.5">
+                              <CircleFlag
+                                countryCode={getCountryCode(country)!}
+                                height={16}
+                                className="shrink-0"
+                              />
+                              <span>{country}</span>
+                              <span className="text-muted-foreground">({count})</span>
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>{country}</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : (
+                      <span>
+                        <span className="text-muted-foreground">{country}</span>
+                        <span className="text-muted-foreground"> ({count})</span>
+                      </span>
+                    )}
+                  </span>
+                ))}
+              </span>
+            )}
           </div>
         )}
 
