@@ -43,6 +43,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import AdminAccessDenied from "@/components/admin/AdminAccessDenied";
+import ParticipantDetailPanel from "@/components/admin/ParticipantDetailPanel";
 
 const SEARCH_DEBOUNCE_MS = 400;
 
@@ -66,6 +67,8 @@ export default function AdminParticipantsPage() {
   const [searchInput, setSearchInput] = useState("");
   const [disableDialogOpen, setDisableDialogOpen] = useState(false);
   const [participantToToggle, setParticipantToToggle] = useState<AdminParticipant | null>(null);
+  const [selectedParticipantId, setSelectedParticipantId] = useState<string | null>(null);
+  const [participantPanelOpen, setParticipantPanelOpen] = useState(false);
   const searchEffectSkippedInitial = useRef(false);
 
   useEffect(() => {
@@ -251,18 +254,21 @@ export default function AdminParticipantsPage() {
                       </button>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground align-middle">
-                      <button
-                        type="button"
-                        onClick={() => copyToClipboard(participant.emailAddress || "", "Email")}
-                        className="group/copy inline-flex items-center gap-2 rounded px-1.5 -mx-1.5 py-1 hover:bg-muted/80 transition-colors text-left w-full disabled:pointer-events-none disabled:opacity-100"
-                        title={participant.emailAddress ? "Copy email" : undefined}
-                        disabled={!participant.emailAddress}
-                      >
-                        <span className="truncate min-w-0 flex-1">{participant.emailAddress || "—"}</span>
-                        {participant.emailAddress && (
-                          <ClipboardDocumentIcon className="h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover/copy:opacity-100" aria-hidden />
-                        )}
-                      </button>
+                      {participant.emailAddress ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedParticipantId(participant.id);
+                            setParticipantPanelOpen(true);
+                          }}
+                          className="inline-flex rounded px-1.5 -mx-1.5 py-1 hover:bg-muted/80 transition-colors text-left w-full cursor-pointer"
+                          title="View participant details"
+                        >
+                          <span className="truncate min-w-0 flex-1">{participant.emailAddress}</span>
+                        </button>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-sm">
                       <span className="truncate max-w-[200px] block" title={participant.displayName || ""}>
@@ -396,6 +402,13 @@ export default function AdminParticipantsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <ParticipantDetailPanel
+          participantId={selectedParticipantId}
+          open={participantPanelOpen}
+          onOpenChange={setParticipantPanelOpen}
+          onUpdate={() => fetchAllParticipants(true, searchInput.trim() || "")}
+        />
       </div>
     </div>
   );

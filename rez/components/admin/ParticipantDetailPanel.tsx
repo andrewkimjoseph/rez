@@ -42,9 +42,11 @@ interface ParticipantData {
   emailAddress: string | null;
   displayName: string | null;
   country: string | null;
+  accountType: string | null;
   disabled: boolean;
   timeCreated: any | null;
   timeUpdated: any | null;
+  verifiedWalletAddresses?: string[];
 }
 
 export default function ParticipantDetailPanel({
@@ -226,16 +228,41 @@ export default function ParticipantDetailPanel({
               )}
             </div>
 
-            {/* Display Name */}
-            <div className="space-y-2">
-              <Label>Display Name</Label>
-              <p className="text-sm">{participant.displayName || "—"}</p>
-            </div>
-
             {/* Country */}
             <div className="space-y-2">
               <Label>Country</Label>
               <p className="text-sm">{participant.country || "—"}</p>
+            </div>
+
+            {/* Account Type */}
+            <div className="space-y-2">
+              <Label>Account Type</Label>
+              <p className="text-sm">{participant.accountType || "—"}</p>
+            </div>
+
+            {/* Verified Wallet Address(es) */}
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+                Verified Wallet
+              </Label>
+              {participant.verifiedWalletAddresses?.length ? (
+                <ul className="space-y-1.5 text-xs">
+                  {participant.verifiedWalletAddresses.map((addr) => (
+                    <li key={addr}>
+                      <a
+                        href={`https://celoscan.io/address/${addr}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline break-all font-mono text-xs"
+                      >
+                        {addr}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-red-600 font-medium">NONE</p>
+              )}
             </div>
 
             {/* Disabled Status */}
