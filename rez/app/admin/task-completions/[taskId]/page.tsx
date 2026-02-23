@@ -99,6 +99,7 @@ export default function AdminTaskCompletionsDetailPage() {
     expired: number;
     pending: number;
     claimed: number;
+    countryTotalsByStatus?: Record<string, Record<string, number>>;
   } | null>(null);
   const [isLoadingTotalStats, setIsLoadingTotalStats] = useState(false);
 
@@ -187,6 +188,20 @@ export default function AdminTaskCompletionsDetailPage() {
   }, [taskCompletions, statusFilter, participantIdSearch]);
 
   const countryTotals = useMemo(() => {
+    const bucketMap = totalStats?.countryTotalsByStatus;
+    const filterKey = statusFilter === 'complete' ? 'validated' : statusFilter;
+
+    // Use API totals when available and no search is active
+    if (bucketMap && !participantIdSearch.trim()) {
+      const bucket = bucketMap[filterKey];
+      if (bucket && Object.keys(bucket).length > 0) {
+        return Object.entries(bucket)
+          .map(([country, count]) => ({ country, count }))
+          .sort((a, b) => b.count - a.count);
+      }
+    }
+
+    // Fallback: compute from loaded filteredCompletions (search active or API not ready)
     const byCountry = new Map<string, number>();
     for (const c of filteredCompletions) {
       const key = c.participantCountry ?? "—";
@@ -195,7 +210,7 @@ export default function AdminTaskCompletionsDetailPage() {
     return Array.from(byCountry.entries())
       .map(([country, count]) => ({ country, count }))
       .sort((a, b) => b.count - a.count);
-  }, [filteredCompletions]);
+  }, [totalStats?.countryTotalsByStatus, statusFilter, participantIdSearch, filteredCompletions]);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -785,40 +800,19 @@ export default function AdminTaskCompletionsDetailPage() {
           </div>
         )}
 
-        {/* Country totals - matches current filter + search */}
+        {/* Country totals - matches current filter + search (text only for compact row) */}
         {!isLoadingCompletions && taskCompletions.length > 0 && (
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
             <span className="text-muted-foreground font-medium">By country:</span>
             {countryTotals.length === 0 ? (
               <span className="text-muted-foreground">No completions for current filter</span>
             ) : (
-              <span className="flex flex-wrap items-center gap-x-1 gap-y-1">
+              <span className="flex flex-wrap items-center gap-x-1 gap-y-0.5">
                 {countryTotals.map(({ country, count }, i) => (
-                  <span key={country} className="inline-flex items-center gap-1.5">
-                    {i > 0 && <span className="text-muted-foreground px-1">·</span>}
-                    {country !== "—" && getCountryCode(country) ? (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="inline-flex items-center gap-1.5">
-                              <CircleFlag
-                                countryCode={getCountryCode(country)!}
-                                height={16}
-                                className="shrink-0"
-                              />
-                              <span>{country}</span>
-                              <span className="text-muted-foreground">({count})</span>
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>{country}</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ) : (
-                      <span>
-                        <span className="text-muted-foreground">{country}</span>
-                        <span className="text-muted-foreground"> ({count})</span>
-                      </span>
-                    )}
+                  <span key={country} className="inline-flex items-center">
+                    {i > 0 && <span className="text-muted-foreground px-0.5">·</span>}
+                    <span>{country}</span>
+                    <span className="text-muted-foreground">{' '}({count})</span>
                   </span>
                 ))}
               </span>

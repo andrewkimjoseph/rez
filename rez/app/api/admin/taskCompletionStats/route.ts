@@ -10,7 +10,7 @@ function escapeAlgoliaFilterValue(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 }
 
-type CompletionRecord = { id: string; isValid?: boolean; invalidatedAt?: unknown; screeningId?: string | null };
+type CompletionRecord = { id: string; participantId?: string | null; isValid?: boolean; invalidatedAt?: unknown; screeningId?: string | null };
 
 /**
  * Returns total completion statistics for a specific task (admin only).
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
               filters: filter,
               hitsPerPage: HITS_PER_PAGE,
               page,
-              attributesToRetrieve: ['objectID', 'isValid', 'screeningId', 'invalidatedAt'],
+              attributesToRetrieve: ['objectID', 'participantId', 'isValid', 'screeningId', 'invalidatedAt'],
             },
           });
           const hits = (response.hits ?? []) as Record<string, unknown>[];
@@ -75,6 +75,7 @@ export async function GET(request: NextRequest) {
             const id = (hit.objectID ?? hit.id) as string;
             completionRecords.push({
               id,
+              participantId: typeof hit.participantId === 'string' ? hit.participantId : null,
               isValid: hit.isValid === true,
               invalidatedAt: hit.invalidatedAt ?? undefined,
               screeningId: typeof hit.screeningId === 'string' ? hit.screeningId : null,
@@ -93,16 +94,40 @@ export async function GET(request: NextRequest) {
       const completionsRef = paxDB.collection(COLLECTIONS.TASK_COMPLETIONS);
       const allCompletionsSnapshot = await completionsRef
         .where('taskId', '==', taskId)
-        .select('isValid', 'screeningId', 'timeCompleted', 'invalidatedAt')
+        .select('participantId', 'isValid', 'screeningId', 'timeCompleted', 'invalidatedAt')
         .get();
       completionRecords = allCompletionsSnapshot.docs.map((doc) => {
         const data = doc.data();
         return {
           id: doc.id,
+          participantId: typeof data.participantId === 'string' ? data.participantId : null,
           isValid: data.isValid === true,
           invalidatedAt: data.invalidatedAt,
           screeningId: typeof data.screeningId === 'string' ? data.screeningId : null,
         };
+      });
+    }
+
+    const uniqueParticipantIds = [
+      ...new Set(
+        completionRecords
+          .map((c) => c.participantId)
+          .filter((id): id is string => typeof id === 'string' && id.length > 0)
+      ),
+    ];
+    const countryByParticipantId = new Map<string, string | null>();
+    const participantsRef = paxDB.collection(COLLECTIONS.PARTICIPANTS);
+    const PARTICIPANT_BATCH_SIZE = 30;
+    for (let i = 0; i < uniqueParticipantIds.length; i += PARTICIPANT_BATCH_SIZE) {
+      const batch = uniqueParticipantIds.slice(i, i + PARTICIPANT_BATCH_SIZE);
+      const docRefs = batch.map((id) => participantsRef.doc(id));
+      const snaps = await paxDB.getAll(...docRefs);
+      snaps.forEach((snap, idx) => {
+        const participantId = batch[idx];
+        if (participantId) {
+          const country = snap.exists ? (snap.data()?.country ?? null) : null;
+          countryByParticipantId.set(participantId, typeof country === 'string' ? country : null);
+        }
       });
     }
 
@@ -164,17 +189,33 @@ export async function GET(request: NextRequest) {
     let pending = 0;
     let claimed = 0;
 
+    type StatusBucket = 'all' | 'validated' | 'invalidated' | 'expired' | 'pending' | 'claimed';
+    const countryByBucket: Record<StatusBucket, Record<string, number>> = {
+      all: {}, validated: {}, invalidated: {}, expired: {}, pending: {}, claimed: {},
+    };
+
+    const addCountry = (bucket: StatusBucket, countryKey: string) => {
+      countryByBucket[bucket][countryKey] = (countryByBucket[bucket][countryKey] ?? 0) + 1;
+    };
+
     completionRecords.forEach((rec) => {
-      const { id: completionId, isValid, invalidatedAt, screeningId } = rec;
+      const { id: completionId, isValid, invalidatedAt, screeningId, participantId } = rec;
+      const rawCountry = participantId != null ? (countryByParticipantId.get(participantId) ?? null) : null;
+      const countryKey = typeof rawCountry === 'string' && rawCountry.length > 0 ? rawCountry : '—';
+
+      addCountry('all', countryKey);
 
       if (rewardsByCompletionId.has(completionId)) {
         claimed++;
+        addCountry('claimed', countryKey);
       }
 
       if (invalidatedAt != null) {
         invalidated++;
+        addCountry('invalidated', countryKey);
       } else if (isValid) {
         validated++;
+        addCountry('validated', countryKey);
       } else if (screeningId && screeningId.length > 0) {
         const screeningTimeCreated = screeningTimeById.get(screeningId);
         if (screeningTimeCreated) {
@@ -186,20 +227,26 @@ export async function GET(request: NextRequest) {
               const timeSinceScreening = now - screeningTime;
               if (timeSinceScreening > sixHoursInMs) {
                 expired++;
+                addCountry('expired', countryKey);
               } else {
                 pending++;
+                addCountry('pending', countryKey);
               }
             } else {
               pending++;
+              addCountry('pending', countryKey);
             }
           } catch {
             pending++;
+            addCountry('pending', countryKey);
           }
         } else {
           pending++;
+          addCountry('pending', countryKey);
         }
       } else {
         pending++;
+        addCountry('pending', countryKey);
       }
     });
 
@@ -210,6 +257,7 @@ export async function GET(request: NextRequest) {
       expired,
       pending,
       claimed,
+      countryTotalsByStatus: countryByBucket,
     });
   } catch (error) {
     console.error('Error fetching task completion stats:', error);
