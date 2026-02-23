@@ -248,15 +248,26 @@ export default function ParticipantDetailPanel({
               {participant.verifiedWalletAddresses?.length ? (
                 <ul className="space-y-1.5 text-xs">
                   {participant.verifiedWalletAddresses.map((addr) => (
-                    <li key={addr}>
+                    <li key={addr} className="flex items-center gap-2">
                       <a
                         href={`https://celoscan.io/address/${addr}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-primary hover:underline break-all font-mono text-xs"
+                        className="text-primary hover:underline break-all font-mono text-xs flex-1 min-w-0"
                       >
                         {addr}
                       </a>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          copyToClipboard(addr, "Wallet address");
+                        }}
+                        className="shrink-0 rounded p-1 hover:bg-muted/80 transition-colors text-muted-foreground hover:text-foreground"
+                        title="Copy address"
+                      >
+                        <ClipboardDocumentIcon className="h-4 w-4" aria-hidden />
+                      </button>
                     </li>
                   ))}
                 </ul>
