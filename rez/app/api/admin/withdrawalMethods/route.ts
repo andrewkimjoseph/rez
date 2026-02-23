@@ -74,6 +74,12 @@ export async function GET(request: NextRequest) {
             .map((h: Record<string, unknown>) => (h.objectID ?? h.id) as string)
             .filter(Boolean);
           if (participantIds.length === 0) {
+            const byIdSnap = await participantsRef.doc(search).get();
+            if (byIdSnap.exists) {
+              participantIds = [search];
+            }
+          }
+          if (participantIds.length === 0) {
             const participantsSnap = await participantsRef
               .where('emailAddress', '>=', search)
               .where('emailAddress', '<=', search + '\uf8ff')
