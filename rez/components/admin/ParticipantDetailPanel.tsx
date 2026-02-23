@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Sheet,
   SheetContent,
@@ -62,25 +62,7 @@ export default function ParticipantDetailPanel({
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [pendingDisabledStatus, setPendingDisabledStatus] = useState<boolean | null>(null);
 
-  // Fetch participant data when panel opens
-  useEffect(() => {
-    if (open && participantId) {
-      fetchParticipant();
-    } else {
-      // Reset state when panel closes
-      setParticipant(null);
-      setDisabled(false);
-    }
-  }, [open, participantId]);
-
-  // Update disabled state when participant data loads
-  useEffect(() => {
-    if (participant) {
-      setDisabled(participant.disabled);
-    }
-  }, [participant]);
-
-  const fetchParticipant = async () => {
+  const fetchParticipant = useCallback(async () => {
     if (!participantId) return;
 
     setIsLoading(true);
@@ -103,7 +85,25 @@ export default function ParticipantDetailPanel({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [participantId, onOpenChange]);
+
+  // Fetch participant data when panel opens
+  useEffect(() => {
+    if (open && participantId) {
+      fetchParticipant();
+    } else {
+      // Reset state when panel closes
+      setParticipant(null);
+      setDisabled(false);
+    }
+  }, [open, participantId, fetchParticipant]);
+
+  // Update disabled state when participant data loads
+  useEffect(() => {
+    if (participant) {
+      setDisabled(participant.disabled);
+    }
+  }, [participant]);
 
   const handleToggleStatusClick = (checked: boolean) => {
     // checked = true means enabled, so disabled = false

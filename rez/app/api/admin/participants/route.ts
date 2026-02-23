@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
         }
 
         const participantIds = hits.map((h) => (h.objectID ?? h.id) as string).filter(Boolean);
-        let disabledSet = new Set<string>();
+        const disabledSet = new Set<string>();
         if (participantIds.length > 0) {
           try {
             const getUsersResult = await paxAuth.getUsers(participantIds.map((id) => ({ uid: id })));

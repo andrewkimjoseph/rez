@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
         });
         const hits = (response.hits ?? []) as Record<string, unknown>[];
         const taskMasterIds = hits.map((h) => (h.objectID ?? h.id) as string).filter(Boolean);
-        let disabledSet = new Set<string>();
+        const disabledSet = new Set<string>();
         if (taskMasterIds.length > 0) {
           try {
             const getUsersResult = await auth.getUsers(taskMasterIds.map((id) => ({ uid: id })));
