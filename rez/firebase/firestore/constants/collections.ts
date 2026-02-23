@@ -5,4 +5,6 @@ export const COLLECTIONS = {
   TASK_COMPLETIONS: 'task_completions',
   REWARDS: 'rewards',
   PARTICIPANTS: 'participants',
+  /** Firestore collection for withdrawal/payment methods (Algolia index: withdrawal_methods) */
+  PAYMENT_METHODS: 'payment_methods',
 }; 
