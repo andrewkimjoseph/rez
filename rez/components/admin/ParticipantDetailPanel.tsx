@@ -159,26 +159,6 @@ export default function ParticipantDetailPanel({
     );
   };
 
-  const formatTimestamp = (timestamp: unknown) => {
-    if (!timestamp) return "N/A";
-    try {
-      const ts = timestamp as { seconds?: number; _seconds?: number };
-      const seconds = ts.seconds ?? ts._seconds;
-      if (seconds != null) {
-        return new Date(seconds * 1000).toLocaleDateString("en-US", {
-          month: "short",
-          day: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-      }
-      return "N/A";
-    } catch {
-      return "N/A";
-    }
-  };
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="overflow-y-auto">
@@ -213,7 +193,9 @@ export default function ParticipantDetailPanel({
 
             {/* Email Address */}
             <div className="space-y-2">
-              <Label>Email Address</Label>
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+                Email Address
+              </Label>
               {participant.emailAddress ? (
                 <button
                   type="button"
@@ -230,30 +212,35 @@ export default function ParticipantDetailPanel({
 
             {/* Country */}
             <div className="space-y-2">
-              <Label>Country</Label>
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+                Country
+              </Label>
               <p className="text-sm">{participant.country || "—"}</p>
             </div>
 
             {/* Account Type */}
             <div className="space-y-2">
-              <Label>Account Type</Label>
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+                Account Type
+              </Label>
               <p className="text-sm">{participant.accountType || "—"}</p>
             </div>
 
             {/* Verified Wallet Address(es) */}
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground uppercase tracking-wider">
-                Verified Wallet
+                GoodDollar Verified Wallet
               </Label>
               {participant.verifiedWalletAddresses?.length ? (
-                <ul className="space-y-1.5 text-xs">
+                <ul className="space-y-1.5 text-sm">
                   {participant.verifiedWalletAddresses.map((addr) => (
-                    <li key={addr} className="flex items-center gap-2">
+                    <li key={addr} className="flex items-center gap-2 min-w-0">
                       <a
                         href={`https://celoscan.io/address/${addr}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-primary hover:underline break-all font-mono text-xs flex-1 min-w-0"
+                        title={addr}
+                        className="text-primary hover:underline font-mono text-sm flex-1 min-w-0 truncate"
                       >
                         {addr}
                       </a>
@@ -306,22 +293,6 @@ export default function ParticipantDetailPanel({
                   </Badge>
                 )}
               </div>
-            </div>
-
-            {/* Created Date */}
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground uppercase tracking-wider">
-                Created
-              </Label>
-              <p className="text-sm">{formatTimestamp(participant.timeCreated)}</p>
-            </div>
-
-            {/* Updated Date */}
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground uppercase tracking-wider">
-                Last Updated
-              </Label>
-              <p className="text-sm">{formatTimestamp(participant.timeUpdated)}</p>
             </div>
           </div>
         ) : (
