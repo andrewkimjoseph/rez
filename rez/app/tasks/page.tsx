@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import NewTask from "@/components/new-task/tab-component/NewTask";
@@ -44,9 +44,16 @@ function TasksContent() {
     refreshClicked,
     rejectionBannerDismissed,
     rejectionBannerViewTasksClicked,
+    rejectedTaskEditClicked,
   } = useAmplitudeEvents();
   const { count: rejectedTasksCount, hasRejectedTasks } = useRejectedTasksCount();
   const [dismissedRejectionBanner, setDismissedRejectionBanner] = useState(false);
+
+  const firstRejectedTaskId = useMemo(() => {
+    if (rejectedTasksCount !== 1) return null;
+    const rejected = tasks.find((t) => t.reviewStatus === "rejected");
+    return rejected?.id ?? null;
+  }, [tasks, rejectedTasksCount]);
 
   // Check localStorage for dismissed state
   useEffect(() => {
@@ -139,11 +146,23 @@ function TasksContent() {
                   You have {rejectedTasksCount} rejected task{rejectedTasksCount !== 1 ? 's' : ''} that need{rejectedTasksCount === 1 ? 's' : ''} to be updated. 
                   Please review the rejection reasons and make the necessary changes.
                 </p>
-                <Link href="/tasks?tab=view-tasks" onClick={() => rejectionBannerViewTasksClicked({ rejected_tasks_count: rejectedTasksCount })}>
-                  <Button variant="outline" size="sm" className="h-8 text-xs border-red-300 text-red-700 hover:bg-red-100">
-                    View Rejected Tasks
-                  </Button>
-                </Link>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Link href="/tasks?tab=view-tasks" onClick={() => rejectionBannerViewTasksClicked({ rejected_tasks_count: rejectedTasksCount })}>
+                    <Button variant="outline" size="sm" className="h-8 text-xs border-red-300 text-red-700 hover:bg-red-100">
+                      View Rejected Tasks
+                    </Button>
+                  </Link>
+                  {firstRejectedTaskId && (
+                    <Link
+                      href={`/tasks/edit/${firstRejectedTaskId}`}
+                      onClick={() => rejectedTaskEditClicked({ task_id: firstRejectedTaskId })}
+                    >
+                      <Button size="sm" className="h-8 text-xs bg-red-600 text-white hover:bg-red-700">
+                        Edit task
+                      </Button>
+                    </Link>
+                  )}
+                </div>
               </div>
               <button
                 onClick={handleDismissRejectionBanner}

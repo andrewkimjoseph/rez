@@ -10,9 +10,11 @@ import {
 } from "@/components/ui/table";
 import { useTasksData } from "@/hooks/use-tasks-data";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import {
   XCircleIcon,
   ArrowPathIcon,
+  PencilSquareIcon,
 } from "@heroicons/react/24/outline";
 import { formatRejectionReasons } from "@/utils/rejection-reasons";
 import {
@@ -23,10 +25,11 @@ import {
 } from "@/components/ui/tooltip";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 import { TOOLTIP_TEXTS } from "@/data/tooltip-texts";
+import { Button } from "@/components/ui/button";
 
 export default function ViewTasks() {
   const { tasks, taskCompletions, isLoading, error } = useTasksData({ autoFetch: false });
-  const { rejectionReasonsTooltipViewed } = useAmplitudeEvents();
+  const { rejectionReasonsTooltipViewed, rejectedTaskEditClicked } = useAmplitudeEvents();
 
   const getTaskTypeLabel = (type: string | null | undefined) => {
     switch (type) {
@@ -186,6 +189,7 @@ export default function ViewTasks() {
               <TableHead className="font-semibold">Status</TableHead>
               <TableHead className="text-right font-semibold">Completions</TableHead>
               <TableHead className="font-semibold">Created</TableHead>
+              <TableHead className="text-right font-semibold">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -250,6 +254,26 @@ export default function ViewTasks() {
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {formatTaskTimestamp(task.timeCreated)}
+                </TableCell>
+                <TableCell className="text-right">
+                  {task.reviewStatus === "rejected" ? (
+                    <Link
+                      href={`/tasks/edit/${task.id}`}
+                      onClick={() => rejectedTaskEditClicked({ task_id: task.id })}
+                      aria-label="Edit task"
+                    >
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-1.5 text-xs"
+                      >
+                        <PencilSquareIcon className="h-3.5 w-3.5" />
+                        Edit
+                      </Button>
+                    </Link>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
