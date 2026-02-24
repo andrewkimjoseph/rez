@@ -6,6 +6,55 @@ import { getApp } from 'firebase-admin/app';
 import { requireSuperAdmin } from '@/lib/api-auth';
 import { FieldValue } from 'firebase-admin/firestore';
 import { getWhitelistedRoot, isWhitelisted } from '@/lib/checkWalletVerification';
+import { getAlgoliaClient, isAlgoliaConfigured } from '@/lib/algolia-server';
+
+async function fetchParticipantDataForGet(participantId: string): Promise<{
+  id: string;
+  emailAddress: string | null;
+  displayName: string | null;
+  country: string | null;
+  accountType: string | null;
+  timeCreated: unknown;
+  timeUpdated: unknown;
+} | null> {
+  if (isAlgoliaConfigured()) {
+    try {
+      const client = getAlgoliaClient();
+      const response = await client.getObjects({
+        requests: [{ objectID: participantId, indexName: COLLECTIONS.PARTICIPANTS }],
+      });
+      const result = response.results?.[0] as Record<string, unknown> | undefined;
+      if (result && (result.objectID ?? result.id)) {
+        const id = (result.objectID ?? result.id) as string;
+        return {
+          id,
+          emailAddress: (result.emailAddress as string) ?? null,
+          displayName: (result.displayName as string) ?? null,
+          country: (result.country as string) ?? null,
+          accountType: (result.accountType as string) ?? null,
+          timeCreated: result.timeCreated ?? null,
+          timeUpdated: result.timeUpdated ?? null,
+        };
+      }
+    } catch (algoliaError) {
+      console.warn('Algolia participant fetch failed, falling back to Firestore:', algoliaError);
+    }
+  }
+
+  const participantsRef = paxDB.collection(COLLECTIONS.PARTICIPANTS);
+  const participantDoc = await participantsRef.doc(participantId).get();
+  if (!participantDoc.exists) return null;
+  const data = participantDoc.data();
+  return {
+    id: participantDoc.id,
+    emailAddress: data?.emailAddress ?? null,
+    displayName: data?.displayName ?? null,
+    country: data?.country ?? null,
+    accountType: data?.accountType ?? null,
+    timeCreated: data?.timeCreated ?? null,
+    timeUpdated: data?.timeUpdated ?? null,
+  };
+}
 
 export async function GET(
   request: NextRequest,
@@ -26,19 +75,16 @@ export async function GET(
       );
     }
 
-    const participantsRef = paxDB.collection(COLLECTIONS.PARTICIPANTS);
-    const participantDoc = await participantsRef.doc(participantId).get();
+    const participantData = await fetchParticipantDataForGet(participantId);
 
-    if (!participantDoc.exists) {
+    if (!participantData) {
       return NextResponse.json(
         { error: 'Participant not found' },
         { status: 404 }
       );
     }
 
-    const data = participantDoc.data();
     const paxAuth = getAuth(getApp('paxApp'));
-    
     let disabled = false;
     try {
       const userRecord = await paxAuth.getUser(participantId);
@@ -72,14 +118,14 @@ export async function GET(
     }
 
     return NextResponse.json({
-      id: participantDoc.id,
-      emailAddress: data?.emailAddress ?? null,
-      displayName: data?.displayName ?? null,
-      country: data?.country ?? null,
-      accountType: data?.accountType ?? null,
+      id: participantData.id,
+      emailAddress: participantData.emailAddress,
+      displayName: participantData.displayName,
+      country: participantData.country,
+      accountType: participantData.accountType,
       disabled,
-      timeCreated: data?.timeCreated ?? null,
-      timeUpdated: data?.timeUpdated ?? null,
+      timeCreated: participantData.timeCreated,
+      timeUpdated: participantData.timeUpdated,
       verifiedWalletAddresses,
     });
   } catch (error) {
@@ -117,15 +163,15 @@ export async function PATCH(
       country?: string;
     };
 
-    const participantsRef = paxDB.collection(COLLECTIONS.PARTICIPANTS);
-    const participantDoc = await participantsRef.doc(participantId).get();
-
-    if (!participantDoc.exists) {
+    const participantExists = await fetchParticipantDataForGet(participantId);
+    if (!participantExists) {
       return NextResponse.json(
         { error: 'Participant not found' },
         { status: 404 }
       );
     }
+
+    const participantsRef = paxDB.collection(COLLECTIONS.PARTICIPANTS);
 
     const updateData: Record<string, unknown> = {};
     
