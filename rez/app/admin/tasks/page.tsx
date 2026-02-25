@@ -54,6 +54,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
+import { AlgoliaAttribution } from "@/components/algolia-attribution";
 
 export default function AdminTasksPage() {
   const router = useRouter();
@@ -717,6 +718,8 @@ export default function AdminTasksPage() {
             </Button>
           )}
         </div>
+
+        <AlgoliaAttribution />
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

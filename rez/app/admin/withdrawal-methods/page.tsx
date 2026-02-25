@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { toast } from "sonner";
 import AdminAccessDenied from "@/components/admin/AdminAccessDenied";
+import { AlgoliaAttribution } from "@/components/algolia-attribution";
 import { fetchWithAuthRetry } from "@/lib/api-fetch";
 
 const LIMIT = 50;
@@ -296,6 +297,7 @@ export default function AdminWithdrawalMethodsPage() {
             )}
           </div>
         )}
+        <AlgoliaAttribution />
       </div>
     </div>
   );

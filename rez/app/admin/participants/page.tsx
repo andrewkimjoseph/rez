@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import AdminAccessDenied from "@/components/admin/AdminAccessDenied";
 import ParticipantDetailPanel from "@/components/admin/ParticipantDetailPanel";
+import { AlgoliaAttribution } from "@/components/algolia-attribution";
 
 const SEARCH_DEBOUNCE_MS = 400;
 
@@ -350,6 +351,8 @@ export default function AdminParticipantsPage() {
             </Button>
           </div>
         )}
+
+        <AlgoliaAttribution />
 
         <Dialog open={disableDialogOpen} onOpenChange={setDisableDialogOpen}>
           <DialogContent>
