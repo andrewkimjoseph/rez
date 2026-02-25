@@ -180,7 +180,7 @@ export default function AdminWithdrawalMethodsPage() {
           </div>
         </div>
 
-        <div className="flex gap-2 max-w-md">
+        <div className="flex gap-2 max-w-md items-center">
           <div className="relative flex-1">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -188,10 +188,17 @@ export default function AdminWithdrawalMethodsPage() {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && fetchInitial()}
-              className="pl-10"
+              className="pl-10 h-9"
             />
           </div>
-          <Button onClick={() => fetchInitial()} disabled={isLoading} variant="secondary">
+          <Button
+            type="button"
+            onClick={() => fetchInitial()}
+            disabled={isLoading}
+            variant="outline"
+            size="sm"
+            className="h-9 shrink-0"
+          >
             Search
           </Button>
         </div>
