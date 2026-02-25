@@ -46,8 +46,6 @@ import AdminAccessDenied from "@/components/admin/AdminAccessDenied";
 import ParticipantDetailPanel from "@/components/admin/ParticipantDetailPanel";
 import { AlgoliaAttribution } from "@/components/algolia-attribution";
 
-const SEARCH_DEBOUNCE_MS = 400;
-
 export default function AdminParticipantsPage() {
   const router = useRouter();
   const { user } = useTaskMasterStore();
@@ -70,7 +68,7 @@ export default function AdminParticipantsPage() {
   const [participantToToggle, setParticipantToToggle] = useState<AdminParticipant | null>(null);
   const [selectedParticipantId, setSelectedParticipantId] = useState<string | null>(null);
   const [participantPanelOpen, setParticipantPanelOpen] = useState(false);
-  const searchEffectSkippedInitial = useRef(false);
+  const didInitialFetch = useRef(false);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -80,27 +78,25 @@ export default function AdminParticipantsPage() {
     if (isHydrated && user) {
       if (user.isSuperAdmin) {
         setIsAuthorized(true);
-        fetchAllParticipants();
       } else {
         setIsAuthorized(false);
       }
     } else if (isHydrated && !user) {
       router.push("/sign-in");
     }
-  }, [isHydrated, user, router, fetchAllParticipants]);
+  }, [isHydrated, user, router]);
 
   useEffect(() => {
     if (!isAuthorized) return;
-    if (!searchEffectSkippedInitial.current) {
-      searchEffectSkippedInitial.current = true;
-      return;
-    }
-    const term = searchInput.trim();
-    const timeoutId = setTimeout(() => {
-      fetchAllParticipants(true, term || "");
-    }, SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(timeoutId);
-  }, [searchInput, isAuthorized, fetchAllParticipants]);
+    if (didInitialFetch.current) return;
+    didInitialFetch.current = true;
+    fetchAllParticipants(true, "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run only once when authorized
+  }, [isAuthorized]);
+
+  const runSearch = useCallback(async () => {
+    await fetchAllParticipants(true, searchInput.trim() || "");
+  }, [fetchAllParticipants, searchInput]);
 
   const handleRefresh = useCallback(async () => {
     try {
@@ -189,14 +185,27 @@ export default function AdminParticipantsPage() {
           </div>
         </div>
 
-        <div className="relative max-w-md">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by email..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex gap-2 max-w-md items-center">
+          <div className="relative flex-1">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by email..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && runSearch()}
+              className="pl-10 h-9"
+            />
+          </div>
+          <Button
+            type="button"
+            onClick={() => runSearch()}
+            disabled={isLoadingParticipants}
+            variant="outline"
+            size="sm"
+            className="h-9 shrink-0"
+          >
+            Search
+          </Button>
         </div>
 
         {error && (
