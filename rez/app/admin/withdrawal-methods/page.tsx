@@ -201,7 +201,7 @@ export default function AdminWithdrawalMethodsPage() {
             className="h-9 shrink-0"
           >
             {isLoading ? (
-              <MagnifyingGlassIcon className="h-4 w-4 animate-pulse" />
+              <ArrowPathIcon className="h-4 w-4 animate-spin" />
             ) : (
               "Search"
             )}

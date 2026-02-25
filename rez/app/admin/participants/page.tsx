@@ -205,7 +205,7 @@ export default function AdminParticipantsPage() {
             className="h-9 shrink-0"
           >
             {isLoadingParticipants ? (
-              <MagnifyingGlassIcon className="h-4 w-4 animate-pulse" />
+              <ArrowPathIcon className="h-4 w-4 animate-spin" />
             ) : (
               "Search"
             )}
