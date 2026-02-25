@@ -111,7 +111,7 @@ export function AppSidebar() {
   const { isMobile, setOpenMobile, state } = useSidebar();
   const { sidebarCreateTaskClicked, adminDashboardClicked } = useAmplitudeEvents();
   const { count: rejectedTasksCount } = useRejectedTasksCount();
-  const { count: pendingTasksCount } = usePendingTasksCount();
+  const { count: pendingTasksCount, refetch: refetchPendingCount } = usePendingTasksCount();
 
   const isActive = (url: string) => {
     return pathname === url || pathname.startsWith(url + "/");
@@ -123,6 +123,13 @@ export function AppSidebar() {
       setOpenMobile(false);
     }
   }, [pathname, isMobile, setOpenMobile]);
+
+  // Refetch pending tasks count when visiting admin dashboard so the badge is fresh
+  useEffect(() => {
+    if (isSuperAdmin && (pathname === '/admin' || pathname.startsWith('/admin/'))) {
+      refetchPendingCount();
+    }
+  }, [pathname, isSuperAdmin, refetchPendingCount]);
 
   return (
     <Sidebar 
