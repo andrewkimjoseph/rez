@@ -200,7 +200,11 @@ export default function AdminWithdrawalMethodsPage() {
             size="sm"
             className="h-9 shrink-0"
           >
-            Search
+            {isLoading ? (
+              <MagnifyingGlassIcon className="h-4 w-4 animate-pulse" />
+            ) : (
+              "Search"
+            )}
           </Button>
         </div>
 
