@@ -26,7 +26,6 @@ import { toast } from "sonner";
 import AdminAccessDenied from "@/components/admin/AdminAccessDenied";
 import { fetchWithAuthRetry } from "@/lib/api-fetch";
 
-const SEARCH_DEBOUNCE_MS = 400;
 const LIMIT = 50;
 
 type WithdrawalMethod = {
@@ -47,7 +46,7 @@ export default function AdminWithdrawalMethodsPage() {
   const [hasMore, setHasMore] = useState(false);
   const [nextCursor, setNextCursor] = useState<{ startAfterDocId: string } | null>(null);
   const [searchInput, setSearchInput] = useState("");
-  const searchEffectSkippedInitial = useRef(false);
+  const didInitialFetch = useRef(false);
 
   const loadPage = useCallback(
     async (cursor: string | null, append: boolean) => {
@@ -98,14 +97,11 @@ export default function AdminWithdrawalMethodsPage() {
 
   useEffect(() => {
     if (!isAuthorized) return;
-    if (!searchEffectSkippedInitial.current) {
-      searchEffectSkippedInitial.current = true;
-      fetchInitial();
-      return;
-    }
-    const t = setTimeout(() => fetchInitial(), SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(t);
-  }, [isAuthorized, searchInput, fetchInitial]);
+    if (didInitialFetch.current) return;
+    didInitialFetch.current = true;
+    fetchInitial();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run only once when authorized
+  }, [isAuthorized]);
 
   const loadMore = async () => {
     if (!nextCursor?.startAfterDocId || isLoadingMore) return;
@@ -184,14 +180,20 @@ export default function AdminWithdrawalMethodsPage() {
           </div>
         </div>
 
-        <div className="relative max-w-md">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by participant email..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex gap-2 max-w-md">
+          <div className="relative flex-1">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by participant email..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && fetchInitial()}
+              className="pl-10"
+            />
+          </div>
+          <Button onClick={() => fetchInitial()} disabled={isLoading} variant="secondary">
+            Search
+          </Button>
         </div>
 
         {isLoading && (
