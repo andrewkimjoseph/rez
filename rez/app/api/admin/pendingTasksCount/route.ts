@@ -6,6 +6,8 @@ import { getAlgoliaClient, isAlgoliaConfigured } from '@/lib/algolia-server';
 
 /**
  * Returns the count of tasks with reviewStatus === 'pending'.
+ * Prefers Algolia; if Algolia returns 0 we also check Firestore and return the max
+ * so the badge is not undercounted when Algolia is temporarily out of sync.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -13,6 +15,8 @@ export async function GET(request: NextRequest) {
     if (authResult instanceof NextResponse) {
       return authResult;
     }
+
+    let algoliaCount: number | null = null;
 
     if (isAlgoliaConfigured()) {
       try {
@@ -25,7 +29,7 @@ export async function GET(request: NextRequest) {
             hitsPerPage: 0,
           },
         });
-        return NextResponse.json({ count: response.nbHits ?? 0 });
+        algoliaCount = response.nbHits ?? 0;
       } catch (algoliaError) {
         console.warn('Algolia pending tasks count failed, falling back to Firestore:', algoliaError);
       }
@@ -34,7 +38,12 @@ export async function GET(request: NextRequest) {
     const tasksRef = paxDB.collection(COLLECTIONS.TASKS);
     const query = tasksRef.where('reviewStatus', '==', 'pending');
     const snapshot = await query.count().get();
-    const count = snapshot.data().count;
+    const firestoreCount = snapshot.data().count;
+
+    const count =
+      typeof algoliaCount === 'number'
+        ? Math.max(algoliaCount, firestoreCount)
+        : firestoreCount;
 
     return NextResponse.json({ count });
   } catch (error) {

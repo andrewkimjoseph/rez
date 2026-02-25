@@ -198,7 +198,17 @@ export function AppSidebar() {
                       className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-sidebar-accent data-[active=true]:rez-gradient data-[active=true]:text-white data-[active=true]:shadow-sm group-data-[collapsible=icon]:justify-center"
                     >
                       <Link href={item.url}>
-                        <item.icon className="w-[18px] h-[18px] shrink-0" />
+                        <span className="relative shrink-0 flex items-center justify-center">
+                          <item.icon className="w-[18px] h-[18px]" />
+                          {showBadge && (
+                            <span
+                              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-4 min-w-4 px-1 flex items-center justify-center bg-red-500 text-white text-[9px] font-semibold rounded-full hidden group-data-[collapsible=icon]:flex"
+                              aria-label={`${rejectedTasksCount} rejected`}
+                            >
+                              {rejectedTasksCount > 9 ? '9+' : rejectedTasksCount}
+                            </span>
+                          )}
+                        </span>
                         <span className="font-medium group-data-[collapsible=icon]:hidden">{item.title}</span>
                         {showBadge && (
                           <Badge className="ml-2 h-5 min-w-5 px-1.5 flex items-center justify-center bg-red-500 text-white text-[10px] font-semibold rounded-full group-data-[collapsible=icon]:hidden">
@@ -263,7 +273,17 @@ export function AppSidebar() {
                           className="h-10 px-3 rounded-lg transition-all duration-200 hover:bg-amber-500/10 data-[active=true]:bg-amber-500/20 data-[active=true]:text-amber-700 group-data-[collapsible=icon]:justify-center"
                         >
                           <Link href={item.url} onClick={() => adminDashboardClicked()}>
-                            <item.icon className="w-[18px] h-[18px] shrink-0 text-amber-600" />
+                            <span className="relative shrink-0 flex items-center justify-center">
+                              <item.icon className="w-[18px] h-[18px] text-amber-600" />
+                              {showBadge && (
+                                <span
+                                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-4 min-w-4 px-1 flex items-center justify-center bg-amber-500 text-white text-[9px] font-semibold rounded-full hidden group-data-[collapsible=icon]:flex"
+                                  aria-label={`${pendingTasksCount} pending review`}
+                                >
+                                  {pendingTasksCount > 9 ? '9+' : pendingTasksCount}
+                                </span>
+                              )}
+                            </span>
                             <span className="font-medium group-data-[collapsible=icon]:hidden">{item.title}</span>
                             {showBadge && (
                               <Badge className="ml-2 h-5 min-w-5 px-1.5 flex items-center justify-center bg-amber-500 text-white text-[10px] font-semibold rounded-full group-data-[collapsible=icon]:hidden">
