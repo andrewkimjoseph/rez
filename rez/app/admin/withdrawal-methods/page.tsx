@@ -18,6 +18,7 @@ import {
   ArrowLeftIcon,
   MagnifyingGlassIcon,
   XCircleIcon,
+  ClipboardDocumentIcon,
 } from "@heroicons/react/24/outline";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -115,6 +116,27 @@ export default function AdminWithdrawalMethodsPage() {
       toast.error("Failed to load more");
     } finally {
       setIsLoadingMore(false);
+    }
+  };
+
+  const copyToClipboard = async (value: string) => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(value);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = value;
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      toast.success("Wallet address copied to clipboard");
+    } catch {
+      toast.error("Failed to copy wallet address");
     }
   };
 
@@ -221,14 +243,26 @@ export default function AdminWithdrawalMethodsPage() {
                     </TableCell>
                     <TableCell className="text-sm">
                       {m.walletAddress ? (
-                        <a
-                          href={`https://celoscan.io/address/${m.walletAddress}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline break-all font-mono text-xs"
-                        >
-                          {m.walletAddress}
-                        </a>
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={`https://celoscan.io/address/${m.walletAddress}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline break-all font-mono text-xs"
+                          >
+                            {m.walletAddress}
+                          </a>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => copyToClipboard(m.walletAddress!)}
+                            aria-label="Copy wallet address"
+                          >
+                            <ClipboardDocumentIcon className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                        </div>
                       ) : (
                         "—"
                       )}
