@@ -181,8 +181,8 @@ export default function AdminWithdrawalMethodsPage() {
           </div>
         </div>
 
-        <div className="flex gap-2 max-w-md items-center flex-wrap">
-          <div className="relative flex-1 min-w-[200px]">
+        <div className="flex gap-2 items-center flex-wrap">
+          <div className="relative flex-1 min-w-[200px] max-w-md">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search by participant email..."
