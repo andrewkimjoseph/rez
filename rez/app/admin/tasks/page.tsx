@@ -454,9 +454,8 @@ export default function AdminTasksPage() {
                 className="pl-10"
               />
             </div>
-            <AlgoliaAttribution />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center flex-wrap">
             <Button
               variant={reviewFilter === 'all' ? 'default' : 'outline'}
               size="sm"
@@ -504,6 +503,7 @@ export default function AdminTasksPage() {
             >
               Rejected
             </Button>
+            <AlgoliaAttribution />
           </div>
         </div>
 

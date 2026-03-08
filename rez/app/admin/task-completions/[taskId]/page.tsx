@@ -747,7 +747,6 @@ export default function AdminTaskCompletionsDetailPage() {
                 className="pl-10"
               />
             </div>
-            <AlgoliaAttribution />
           </div>
         )}
 
@@ -801,6 +800,7 @@ export default function AdminTaskCompletionsDetailPage() {
             >
               Claimed ({totalStats?.claimed ?? stats.claimed})
             </Button>
+            <AlgoliaAttribution />
           </div>
         )}
 
