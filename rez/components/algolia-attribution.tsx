@@ -19,13 +19,11 @@ export function AlgoliaAttribution() {
       <span>Powered by</span>
       <Image
         src="/algolia-logo-blue.svg"
-        alt=""
+        alt="Algolia"
         width={56}
         height={14}
         className="h-3.5 w-auto"
-        aria-hidden
       />
-      <span>Algolia</span>
     </Link>
   );
 }
