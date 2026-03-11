@@ -37,6 +37,7 @@ import {
   EyeIcon,
   CheckCircleIcon,
   XMarkIcon,
+  ArrowTopRightOnSquareIcon,
 } from "@heroicons/react/24/outline";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -543,6 +544,7 @@ export default function AdminTasksPage() {
                   <TableHead className="w-[50px] font-semibold">#</TableHead>
                   <TableHead className="font-semibold min-w-[250px]">Title</TableHead>
                   <TableHead className="font-semibold">Creator</TableHead>
+                  <TableHead className="font-semibold">Task Manager</TableHead>
                   <TableHead className="font-semibold">Type</TableHead>
                   <TableHead className="font-semibold">Review</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
@@ -576,6 +578,24 @@ export default function AdminTasksPage() {
                       <div className="text-sm text-muted-foreground truncate max-w-[150px]" title={task.rezTaskMasterEmailAddress || ''}>
                         {task.rezTaskMasterEmailAddress || 'N/A'}
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {task.managerContractAddress ? (
+                        <a
+                          href={`https://celoscan.io/address/${task.managerContractAddress}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-primary hover:underline font-mono text-xs min-w-0 max-w-[180px]"
+                          title={task.managerContractAddress}
+                        >
+                          <span className="truncate">
+                            {task.managerContractAddress}
+                          </span>
+                          <ArrowTopRightOnSquareIcon className="h-3 w-3 flex-shrink-0" />
+                        </a>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">N/A</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="font-normal">
