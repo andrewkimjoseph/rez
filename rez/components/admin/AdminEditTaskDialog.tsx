@@ -303,7 +303,7 @@ export default function AdminEditTaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 gap-0">
         <DialogHeader className="px-6 pt-5 pb-3 border-b border-gray-100">
           <DialogTitle className="text-lg font-semibold text-gray-900">Edit task</DialogTitle>
           <p className="text-xs text-gray-500 mt-0.5">ID: {task?.id}</p>
