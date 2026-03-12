@@ -296,6 +296,10 @@ export default function AdminTaskCompletionsDetailPage() {
     }
   }, [taskId]);
 
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([loadCompletions(), loadTotalStats()]);
+  }, [loadCompletions, loadTotalStats]);
+
   useEffect(() => {
     if (!taskId || !isAuthorized || !task || !isTaskActive) return;
     loadCompletions();
@@ -759,12 +763,12 @@ export default function AdminTaskCompletionsDetailPage() {
                 </Button>
               )}
               <Button
-                onClick={loadCompletions}
-                disabled={isLoadingCompletions || isLoadingAllCompletions}
+                onClick={handleRefresh}
+                disabled={isLoadingCompletions || isLoadingAllCompletions || isLoadingTotalStats}
                 variant="outline"
                 size="sm"
               >
-                <ArrowPathIcon className={`h-4 w-4 mr-2 ${isLoadingCompletions ? "animate-spin" : ""}`} />
+                <ArrowPathIcon className={`h-4 w-4 mr-2 ${(isLoadingCompletions || isLoadingTotalStats) ? "animate-spin" : ""}`} />
                 Refresh
               </Button>
             </div>
