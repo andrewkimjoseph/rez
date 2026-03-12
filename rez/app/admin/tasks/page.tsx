@@ -388,6 +388,8 @@ export default function AdminTasksPage() {
     return matchesSearch && matchesReviewFilter;
   });
 
+  const pendingCount = tasks.filter(t => t.reviewStatus === 'pending').length;
+
   // Sort by creation date (newest first)
   const sortedTasks = [...filteredTasks].sort((a, b) => {
     const getTime = (ts: unknown) => {
@@ -471,6 +473,11 @@ export default function AdminTasksPage() {
               className={reviewFilter === 'pending' ? '' : 'text-yellow-700 border-yellow-300 hover:bg-yellow-50'}
             >
               Pending
+              {pendingCount > 0 && (
+                <Badge variant="secondary" className="ml-1.5 h-5 min-w-5 px-1.5 text-xs font-medium tabular-nums">
+                  {pendingCount}
+                </Badge>
+              )}
             </Button>
             <Button
               variant={reviewFilter === 'approved' ? 'default' : 'outline'}
