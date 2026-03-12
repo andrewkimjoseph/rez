@@ -33,6 +33,7 @@ import {
   ChartBarIcon,
   ClipboardDocumentIcon,
   PowerIcon,
+  ArchiveBoxIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import AdminEditTaskDialog from "@/components/admin/AdminEditTaskDialog";
@@ -68,6 +69,7 @@ export default function AdminTaskDetailsPage() {
   const [paymentTermsExpanded, setPaymentTermsExpanded] = useState(false);
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const [actionType, setActionType] = useState<'publish' | 'activate' | 'deactivate' | null>(null);
+  const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -253,6 +255,8 @@ export default function AdminTaskDetailsPage() {
       toast.success(successMessage);
       setPublishDialogOpen(false);
       setActionType(null);
+      // Update selected task in store so UI reflects new state immediately (refetched list may be paginated)
+      setTask({ ...task, ...payload });
       await fetchAllTasks(true);
     } else {
       if (actionType === 'publish') {
@@ -279,6 +283,19 @@ export default function AdminTaskDetailsPage() {
   const handleCancelAction = () => {
     setPublishDialogOpen(false);
     setActionType(null);
+  };
+
+  const handleConfirmArchive = async () => {
+    if (!task?.id) return;
+    const success = await updateTask(task.id, { reviewStatus: 'archived' });
+    if (success) {
+      setTask({ ...task, reviewStatus: 'archived' });
+      setArchiveDialogOpen(false);
+      toast.success("Task archived");
+      await fetchAllTasks(true);
+    } else {
+      toast.error("Failed to archive task");
+    }
   };
 
   const copyToClipboard = (text: string, label: string) => {
@@ -454,6 +471,17 @@ export default function AdminTaskDetailsPage() {
                 >
                   <PowerIcon className={`h-4 w-4 mr-2 ${formattedData.isAvailable ? '' : 'text-white'}`} />
                   {formattedData.isAvailable ? 'Deactivate' : 'Activate'}
+                </Button>
+              )}
+              {(task.reviewStatus === 'published' || task.reviewStatus === 'approved') && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setArchiveDialogOpen(true)}
+                  className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                >
+                  <ArchiveBoxIcon className="h-4 w-4 mr-2" />
+                  Archive
                 </Button>
               )}
               <Button
@@ -734,6 +762,45 @@ export default function AdminTaskDetailsPage() {
                     {actionType === 'publish' && 'Publish'}
                     {actionType === 'activate' && 'Activate'}
                     {actionType === 'deactivate' && 'Deactivate'}
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Archive Confirmation Dialog */}
+        <Dialog open={archiveDialogOpen} onOpenChange={setArchiveDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Archive Task</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to archive &quot;{formattedData.title || 'this task'}&quot;?
+                The task will be marked as Archived and no longer appear in active lists.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setArchiveDialogOpen(false)}
+                disabled={isUpdating}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={handleConfirmArchive}
+                disabled={isUpdating}
+              >
+                {isUpdating ? (
+                  <>
+                    <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
+                    Archiving...
+                  </>
+                ) : (
+                  <>
+                    <ArchiveBoxIcon className="h-4 w-4 mr-2" />
+                    Archive
                   </>
                 )}
               </Button>
