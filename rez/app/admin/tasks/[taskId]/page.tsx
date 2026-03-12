@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { useAdminStore } from "@/stores/admin-store";
 import { useSelectedTaskStore } from "@/stores/selected-task-store";
+import { Task } from "@/firebase/firestore/models/Task";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
