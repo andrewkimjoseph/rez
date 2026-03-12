@@ -474,7 +474,7 @@ export default function AdminTasksPage() {
             >
               Pending
               {pendingCount > 0 && (
-                <Badge variant="secondary" className="ml-1.5 h-5 min-w-5 px-1.5 text-xs font-medium tabular-nums">
+                <Badge className="ml-1.5 h-5 min-w-5 px-1.5 text-xs font-semibold tabular-nums bg-amber-500 text-white border-0 rounded-full hover:bg-amber-500">
                   {pendingCount}
                 </Badge>
               )}
