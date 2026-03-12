@@ -111,9 +111,14 @@ export default function AdminTaskDetailsPage() {
     }
   };
 
-  const handleEditSuccess = () => {
+  const handleEditSuccess = (updatedTask?: Task) => {
     toast.success("Task updated successfully");
-    fetchAllTasks(true);
+    if (updatedTask) {
+      setTask(updatedTask);
+    } else {
+      const fromStore = useAdminStore.getState().tasks.find((t) => t.id === taskId);
+      if (fromStore) setTask(fromStore);
+    }
   };
 
   const {
@@ -162,13 +167,13 @@ export default function AdminTaskDetailsPage() {
     const success = await updateTask(task.id, updateData);
     if (success) {
       if (reviewAction === 'approve') {
-        adminTaskApproveComplete({ 
-          task_id: task.id, 
+        adminTaskApproveComplete({
+          task_id: task.id,
           task_title: task.title,
         });
       } else {
-        adminTaskRejectComplete({ 
-          task_id: task.id, 
+        adminTaskRejectComplete({
+          task_id: task.id,
           task_title: task.title,
           rejection_reasons_count: rejectionReasons?.length || 0,
         });
@@ -176,7 +181,9 @@ export default function AdminTaskDetailsPage() {
       setReviewDialogOpen(false);
       setReviewAction(null);
       toast.success(`Task ${reviewAction === 'approve' ? 'approved' : 'rejected'} successfully`);
-      fetchAllTasks(true);
+      // Update selected task so UI reflects new state immediately (refetched list may be paginated)
+      setTask({ ...task, ...updateData });
+      await fetchAllTasks(true);
     } else {
       if (reviewAction === 'approve') {
         adminTaskApproveFailed({ 

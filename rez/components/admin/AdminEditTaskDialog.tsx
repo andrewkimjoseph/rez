@@ -51,7 +51,7 @@ interface AdminEditTaskDialogProps {
   task: Task | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
+  onSuccess?: (updatedTask?: Task) => void;
 }
 
 const taskTypes = [
@@ -260,7 +260,7 @@ export default function AdminEditTaskDialog({
       
       adminTaskEditComplete({ task_id: task.id, changed_fields: Object.keys(updateData) });
       onOpenChange(false);
-      onSuccess?.();
+      onSuccess?.({ ...task, ...updateData } as Task);
     } else {
       // Track failed review status changes
       if (isReviewStatusChange) {
