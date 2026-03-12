@@ -366,6 +366,28 @@ export default function AdminTaskCompletionsDetailPage() {
         setCompletionToValidate(null);
         setValidationDate(undefined);
         setValidationTime("");
+        // Optimistic update: counts and list so UI updates immediately (stats API may use Algolia with indexing delay)
+        const wasPending = completionToValidate.invalidatedAt == null && !isExpired(completionToValidate.screeningTimeCreated);
+        const wasExpired = completionToValidate.invalidatedAt == null && isExpired(completionToValidate.screeningTimeCreated);
+        const wasInvalidated = completionToValidate.invalidatedAt != null;
+        setTotalStats((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            validated: prev.validated + 1,
+            ...(wasPending && { pending: Math.max(0, prev.pending - 1) }),
+            ...(wasExpired && { expired: Math.max(0, prev.expired - 1) }),
+            ...(wasInvalidated && { invalidated: Math.max(0, prev.invalidated - 1) }),
+          };
+        });
+        const timeCompletedTs = { seconds: Math.floor(completionDateTime.getTime() / 1000) };
+        setTaskCompletions((prev) =>
+          prev.map((c) =>
+            c.id === completionToValidate.id
+              ? { ...c, isValid: true, invalidatedAt: null, invalidatedBy: null, timeCompleted: timeCompletedTs }
+              : c
+          )
+        );
         await Promise.all([loadCompletions(), loadTotalStats()]);
         toast.success("Completion validated");
       } else {
@@ -389,6 +411,27 @@ export default function AdminTaskCompletionsDetailPage() {
         body: JSON.stringify({ completionId: completion.id, isValid: false }),
       });
       if (res.ok) {
+        // Optimistic update: counts and list so UI updates immediately (stats API may use Algolia with indexing delay)
+        setTotalStats((prev) => {
+          if (!prev) return prev;
+          const wasValidated = completion.isValid === true && completion.invalidatedAt == null;
+          const wasPending = !wasValidated && completion.invalidatedAt == null && !isExpired(completion.screeningTimeCreated);
+          const wasExpired = !wasValidated && completion.invalidatedAt == null && isExpired(completion.screeningTimeCreated);
+          return {
+            ...prev,
+            invalidated: prev.invalidated + 1,
+            ...(wasValidated && { validated: Math.max(0, prev.validated - 1) }),
+            ...(wasPending && { pending: Math.max(0, prev.pending - 1) }),
+            ...(wasExpired && { expired: Math.max(0, prev.expired - 1) }),
+          };
+        });
+        setTaskCompletions((prev) =>
+          prev.map((c) =>
+            c.id === completion.id
+              ? { ...c, isValid: false, invalidatedAt: { seconds: Math.floor(Date.now() / 1000) }, invalidatedBy: user?.emailAddress ?? null }
+              : c
+          )
+        );
         await Promise.all([loadCompletions(), loadTotalStats()]);
         toast.success("Completion invalidated");
       } else {
