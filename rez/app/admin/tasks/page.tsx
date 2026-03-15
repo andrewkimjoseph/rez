@@ -469,11 +469,11 @@ export default function AdminTasksPage() {
               className={activeFilter === 'active' ? 'bg-[#5C29A3] text-white hover:bg-[#5C29A3]/90' : ''}
             >
               Active
-              {activeFilter === 'active' ? null : activeCount > 0 ? (
-                <Badge className="ml-1.5 h-5 min-w-5 px-1.5 text-xs font-semibold tabular-nums bg-[#5C29A3] text-white border-0 rounded-full">
+              {activeCount > 0 && (
+                <Badge className={`ml-1.5 h-5 min-w-5 px-1.5 text-xs font-semibold tabular-nums border-0 rounded-full ${activeFilter === 'active' ? 'bg-white/25 text-white' : 'bg-[#5C29A3] text-white'}`}>
                   {activeCount}
                 </Badge>
-              ) : null}
+              )}
             </Button>
             <Button
               variant={reviewFilter === 'all' ? 'default' : 'outline'}
