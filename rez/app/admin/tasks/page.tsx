@@ -111,6 +111,7 @@ export default function AdminTasksPage() {
   const [taskToToggle, setTaskToToggle] = useState<Task | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [reviewFilter, setReviewFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'published' | 'archived'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'active'>('all');
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [taskToReview, setTaskToReview] = useState<Task | null>(null);
   const [reviewAction, setReviewAction] = useState<'approve' | 'reject' | null>(null);
@@ -375,7 +376,7 @@ export default function AdminTasksPage() {
     }
   }, [searchQuery, adminTasksSearchPerformed]);
 
-  // Filter tasks based on search query and review status
+  // Filter tasks based on search query, review status, and active filter
   const filteredTasks = tasks.filter(task => {
     const query = searchQuery.toLowerCase();
     const matchesSearch = (
@@ -385,10 +386,12 @@ export default function AdminTasksPage() {
       (task.rezTaskMasterEmailAddress?.toLowerCase().includes(query))
     );
     const matchesReviewFilter = reviewFilter === 'all' || task.reviewStatus === reviewFilter;
-    return matchesSearch && matchesReviewFilter;
+    const matchesActiveFilter = activeFilter === 'all' || task.isAvailable === true;
+    return matchesSearch && matchesReviewFilter && matchesActiveFilter;
   });
 
   const pendingCount = tasks.filter(t => t.reviewStatus === 'pending').length;
+  const activeCount = tasks.filter(t => t.isAvailable === true).length;
 
   // Sort by creation date (newest first)
   const sortedTasks = [...filteredTasks].sort((a, b) => {
@@ -459,6 +462,19 @@ export default function AdminTasksPage() {
             </div>
           </div>
           <div className="flex gap-2 items-center flex-wrap">
+            <Button
+              variant={activeFilter === 'all' ? 'outline' : 'default'}
+              size="sm"
+              onClick={() => setActiveFilter(activeFilter === 'all' ? 'active' : 'all')}
+              className={activeFilter === 'active' ? 'bg-[#5C29A3] text-white hover:bg-[#5C29A3]/90' : ''}
+            >
+              Active
+              {activeFilter === 'active' ? null : activeCount > 0 ? (
+                <Badge className="ml-1.5 h-5 min-w-5 px-1.5 text-xs font-semibold tabular-nums bg-[#5C29A3] text-white border-0 rounded-full">
+                  {activeCount}
+                </Badge>
+              ) : null}
+            </Button>
             <Button
               variant={reviewFilter === 'all' ? 'default' : 'outline'}
               size="sm"
