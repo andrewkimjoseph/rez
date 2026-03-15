@@ -151,15 +151,15 @@ export default function AdminTaskCompletionsDetailPage() {
   }, [taskCompletions]);
 
   const filteredCompletions = useMemo(() => {
-    // Always show newest completions first (by creation time, falling back to completion time)
+    // Sort by "Started at" (screeningTimeCreated) with latest first; fallback to timeCreated/timeCompleted
     const sorted = [...taskCompletions].sort((a, b) => {
       const getTime = (ts: unknown) => {
         const timestamp = ts as { seconds?: number; _seconds?: number };
         return (timestamp?.seconds ?? timestamp?._seconds ?? 0) * 1000;
       };
-      const aCreated = getTime(a.timeCreated ?? a.timeCompleted);
-      const bCreated = getTime(b.timeCreated ?? b.timeCompleted);
-      return bCreated - aCreated;
+      const aStarted = getTime(a.screeningTimeCreated ?? a.timeCreated ?? a.timeCompleted);
+      const bStarted = getTime(b.screeningTimeCreated ?? b.timeCreated ?? b.timeCompleted);
+      return bStarted - aStarted;
     });
 
     let filtered = sorted;
