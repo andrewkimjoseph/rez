@@ -116,6 +116,16 @@ export default function AdminTasksPage() {
   const [taskToReview, setTaskToReview] = useState<Task | null>(null);
   const [reviewAction, setReviewAction] = useState<'approve' | 'reject' | null>(null);
 
+  const selectActiveFilter = (next: 'all' | 'active') => {
+    setActiveFilter(next);
+    if (next === 'active') setReviewFilter('all');
+  };
+
+  const selectReviewFilter = (next: 'all' | 'pending' | 'approved' | 'rejected' | 'published' | 'archived') => {
+    setReviewFilter(next);
+    if (next !== 'all') setActiveFilter('all');
+  };
+
   useEffect(() => {
     setIsHydrated(true);
   }, []);
@@ -465,7 +475,7 @@ export default function AdminTasksPage() {
             <Button
               variant={activeFilter === 'all' ? 'outline' : 'default'}
               size="sm"
-              onClick={() => setActiveFilter(activeFilter === 'all' ? 'active' : 'all')}
+              onClick={() => selectActiveFilter(activeFilter === 'all' ? 'active' : 'all')}
               className={activeFilter === 'active' ? 'bg-[#5C29A3] text-white hover:bg-[#5C29A3]/90' : ''}
             >
               Active
@@ -478,14 +488,14 @@ export default function AdminTasksPage() {
             <Button
               variant={reviewFilter === 'all' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setReviewFilter('all')}
+              onClick={() => selectReviewFilter('all')}
             >
               All
             </Button>
             <Button
               variant={reviewFilter === 'pending' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setReviewFilter('pending')}
+              onClick={() => selectReviewFilter('pending')}
               className={reviewFilter === 'pending' ? '' : 'text-yellow-700 border-yellow-300 hover:bg-yellow-50'}
             >
               Pending
@@ -498,7 +508,7 @@ export default function AdminTasksPage() {
             <Button
               variant={reviewFilter === 'approved' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setReviewFilter('approved')}
+              onClick={() => selectReviewFilter('approved')}
               className={reviewFilter === 'approved' ? '' : 'text-green-700 border-green-300 hover:bg-green-50'}
             >
               Approved
@@ -506,7 +516,7 @@ export default function AdminTasksPage() {
             <Button
               variant={reviewFilter === 'published' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setReviewFilter('published')}
+              onClick={() => selectReviewFilter('published')}
               className={reviewFilter === 'published' ? '' : 'text-[#5C29A3] border-[#5C29A3]/40 hover:bg-[#5C29A3]/5'}
             >
               Published
@@ -514,7 +524,7 @@ export default function AdminTasksPage() {
             <Button
               variant={reviewFilter === 'archived' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setReviewFilter('archived')}
+              onClick={() => selectReviewFilter('archived')}
               className={reviewFilter === 'archived' ? '' : 'text-slate-600 border-slate-300 hover:bg-slate-50'}
             >
               Archived
@@ -522,7 +532,7 @@ export default function AdminTasksPage() {
             <Button
               variant={reviewFilter === 'rejected' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setReviewFilter('rejected')}
+              onClick={() => selectReviewFilter('rejected')}
               className={reviewFilter === 'rejected' ? '' : 'text-red-700 border-red-300 hover:bg-red-50'}
             >
               Rejected
