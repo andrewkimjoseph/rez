@@ -110,6 +110,55 @@ export default function AdminEditTaskDialog({
   const [assignToTaskMaster, setAssignToTaskMaster] = useState(false);
   const [assignedTaskMasterEmailAddress, setAssignedTaskMasterEmailAddress] = useState("");
 
+  const coerceDeadlineToDate = (value: unknown): Date | undefined => {
+    if (value == null) return undefined;
+
+    // Already a Date (unlikely, but safe)
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? undefined : value;
+    }
+
+    // ISO string (common when coming from Algolia) or numeric timestamps
+    if (typeof value === "string" || typeof value === "number") {
+      const d = new Date(value);
+      if (!Number.isNaN(d.getTime())) return d;
+
+      const asNumber = typeof value === "string" ? Number(value) : value;
+      if (Number.isFinite(asNumber)) {
+        // Heuristic: treat values > 1e12 as milliseconds, otherwise seconds
+        const ms = asNumber > 1e12 ? asNumber : asNumber * 1000;
+        const d2 = new Date(ms);
+        return Number.isNaN(d2.getTime()) ? undefined : d2;
+      }
+
+      return undefined;
+    }
+
+    // Firestore Timestamp-like objects
+    const deadlineTs = value as {
+      seconds?: number;
+      _seconds?: number;
+      toDate?: () => Date;
+    };
+
+    if (typeof deadlineTs.toDate === "function") {
+      const d = deadlineTs.toDate();
+      return Number.isNaN(d.getTime()) ? undefined : d;
+    }
+
+    const secondsLike = deadlineTs.seconds ?? deadlineTs._seconds;
+    if (secondsLike == null) return undefined;
+
+    const seconds =
+      typeof secondsLike === "string" ? Number(secondsLike) : (secondsLike as number);
+    if (!Number.isFinite(seconds)) return undefined;
+
+    // Heuristic: treat values > 1e12 as milliseconds, otherwise seconds
+    const ms = seconds > 1e12 ? seconds : seconds * 1000;
+    const d = new Date(ms);
+    return Number.isNaN(d.getTime()) ? undefined : d;
+  };
+
   useEffect(() => {
     if (isSuperAdmin && taskMasters.length === 0) fetchAllTaskMasters();
   }, [isSuperAdmin, taskMasters.length, fetchAllTaskMasters]);
@@ -132,15 +181,7 @@ export default function AdminEditTaskDialog({
       setRewardCurrencyId(task.rewardCurrencyId || 0);
       setEstimatedTimeOfCompletionInMinutes(task.estimatedTimeOfCompletionInMinutes || 0);
       setNumberOfCooldownHours(task.numberOfCooldownHours || 0);
-      const deadlineTs = task.deadline as { seconds?: number; _seconds?: number; toDate?: () => Date } | null | undefined;
-      if (!deadlineTs) {
-        setDeadline(undefined);
-      } else {
-        const d = typeof deadlineTs.toDate === "function"
-          ? deadlineTs.toDate()
-          : new Date((deadlineTs.seconds ?? deadlineTs._seconds ?? 0) * 1000);
-        setDeadline(isNaN(d.getTime()) ? undefined : d);
-      }
+      setDeadline(coerceDeadlineToDate(task.deadline));
       setIsAvailable(task.isAvailable || false);
       setIsTest(task.isTest || false);
       setReviewStatus((task.reviewStatus || 'pending') as 'pending' | 'approved' | 'rejected' | 'published' | 'archived');
@@ -173,12 +214,7 @@ export default function AdminEditTaskDialog({
     if (rewardCurrencyId !== (task.rewardCurrencyId || 0)) updateData.rewardCurrencyId = rewardCurrencyId;
     if (estimatedTimeOfCompletionInMinutes !== (task.estimatedTimeOfCompletionInMinutes || 0)) updateData.estimatedTimeOfCompletionInMinutes = estimatedTimeOfCompletionInMinutes;
     if (numberOfCooldownHours !== (task.numberOfCooldownHours || 0)) updateData.numberOfCooldownHours = numberOfCooldownHours;
-    const taskDeadlineTs = task.deadline as { seconds?: number; _seconds?: number; toDate?: () => Date } | null | undefined;
-    const taskDeadlineDate = taskDeadlineTs
-      ? (typeof taskDeadlineTs.toDate === "function"
-          ? taskDeadlineTs.toDate()
-          : new Date((taskDeadlineTs.seconds ?? taskDeadlineTs._seconds ?? 0) * 1000))
-      : undefined;
+    const taskDeadlineDate = coerceDeadlineToDate(task.deadline);
     const taskDeadlineTime = taskDeadlineDate && !isNaN(taskDeadlineDate.getTime()) ? taskDeadlineDate.getTime() : null;
     const deadlineTime = deadline && !isNaN(deadline.getTime()) ? deadline.getTime() : null;
     if (deadlineTime !== taskDeadlineTime) {
