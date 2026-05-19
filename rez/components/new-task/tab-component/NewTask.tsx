@@ -327,10 +327,11 @@ export default function NewTask() {
             task_difficulty: data.difficulty,
             task_link: data.link,
           });
-          // Refresh the tasks list
-          await fetchTasksAndCompletions(true);
-          // Reset the form after successful update
+          // Stop loading and reset the form immediately after the toast
+          setIsCreating(false);
           reset();
+          // Refresh the tasks list in the background
+          fetchTasksAndCompletions(true);
         } else {
           // Create new task
           // Get the last task creation timestamp to send to API (avoids DB reads)
@@ -383,11 +384,11 @@ export default function NewTask() {
             task_difficulty: data.difficulty,
             task_link: data.link,
           });
-          // Refresh the tasks list to include the newly created task
-          await fetchTasksAndCompletions(true);
-
-          // Reset the form after successful creation
+          // Stop loading and reset the form immediately after the toast
+          setIsCreating(false);
           reset();
+          // Refresh the tasks list in the background
+          fetchTasksAndCompletions(true);
         }
       } catch (error) {
         toast(editMode ? "Error updating task" : "Error creating task", {
