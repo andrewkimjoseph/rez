@@ -330,8 +330,8 @@ Authenticated Task Master routes filter by the signed-in user's email. Admin rou
 
 ## Related documentation
 
-- [`MVP.md`](MVP.md) — full product specification, data models, and UI details
-- [`API_SETUP.md`](API_SETUP.md) — Firebase service account setup for API routes
+- [`rez/MVP.md`](rez/MVP.md) — full product specification, data models, and UI details
+- [`rez/API_SETUP.md`](rez/API_SETUP.md) — Firebase service account setup for API routes
 
 ---
 
