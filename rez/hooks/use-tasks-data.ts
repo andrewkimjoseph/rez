@@ -13,7 +13,8 @@ export const useTasksData = (options: UseTasksDataOptions = {}) => {
     tasks, 
     taskCompletions, 
     completionStats,
-    isLoading, 
+    isLoading,
+    isRefreshing,
     error, 
     fetchTasksAndCompletions
   } = useTasksStore();
@@ -29,6 +30,7 @@ export const useTasksData = (options: UseTasksDataOptions = {}) => {
     taskCompletions,
     completionStats,
     isLoading,
+    isRefreshing,
     error,
     taskMaster,
     refetch: fetchTasksAndCompletions,

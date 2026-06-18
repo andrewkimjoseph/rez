@@ -7,7 +7,7 @@ import { useTaskMasterStore } from './taskmaster-store';
 
 export interface EditTaskData {
   title?: string;
-  type?: 'fillAForm' | 'checkOutApp' | 'doVideoInterview';
+  type?: 'fillAForm' | 'checkOutApp' | 'doVideoInterview' | 'answerPoll';
   category?: string;
   levelOfDifficulty?: string;
   link?: string;
@@ -19,8 +19,31 @@ export interface EditTaskData {
 }
 
 // Skip API call if data was fetched within this window (unless forceRefresh)
-// Increased to 15 minutes to reduce Firestore reads while keeping data reasonably fresh.
 const FETCH_TTL_MS = 15 * 60 * 1000; // 15 minutes
+
+let tasksFetchInFlight: Promise<void> | null = null;
+let tasksListFetchInFlight: Promise<void> | null = null;
+
+async function runDeduped(
+  slot: 'full' | 'list',
+  fn: () => Promise<void>,
+): Promise<void> {
+  const inFlight = slot === 'full' ? tasksFetchInFlight : tasksListFetchInFlight;
+  if (inFlight) {
+    await inFlight;
+    return;
+  }
+
+  const promise = fn().finally(() => {
+    if (slot === 'full') tasksFetchInFlight = null;
+    else tasksListFetchInFlight = null;
+  });
+
+  if (slot === 'full') tasksFetchInFlight = promise;
+  else tasksListFetchInFlight = promise;
+
+  await promise;
+}
 
 export interface CompletionStats {
   totalCount: number;
@@ -36,12 +59,15 @@ interface TasksStore {
   taskCompletions: TaskCompletion[];
   completionStats: CompletionStats | null;
   isLoading: boolean;
+  isRefreshing: boolean;
   isDeleting: boolean;
   isUpdatingStatus: boolean;
   isEditing: boolean;
   error: string | null;
   lastTasksFetchedAt: number | null;
   fetchTasksAndCompletions: (forceRefresh?: boolean) => Promise<void>;
+  fetchTasksForList: (forceRefresh?: boolean) => Promise<void>;
+  prependTask: (task: Task) => void;
   deleteTask: (taskId: string) => Promise<boolean>;
   updateTaskStatus: (taskId: string, isAvailable: boolean) => Promise<boolean>;
   editTask: (taskId: string, data: EditTaskData) => Promise<boolean>;
@@ -57,6 +83,7 @@ export const useTasksStore = create<TasksStore>()(
       taskCompletions: [],
       completionStats: null,
       isLoading: false,
+      isRefreshing: false,
       isDeleting: false,
       isUpdatingStatus: false,
       isEditing: false,
@@ -64,50 +91,112 @@ export const useTasksStore = create<TasksStore>()(
       lastTasksFetchedAt: null,
 
       fetchTasksAndCompletions: async (forceRefresh = false) => {
-        const taskMaster = useTaskMasterStore.getState().user;
-        
-        if (!taskMaster?.emailAddress) {
-          set({ 
-            tasks: [], 
-            taskCompletions: [], 
-            completionStats: null,
-            error: 'No valid taskMaster email address found' 
-          });
-          return;
-        }
+        await runDeduped('full', async () => {
+          const taskMaster = useTaskMasterStore.getState().user;
 
-        const { lastTasksFetchedAt } = get();
-        const now = Date.now();
-        if (!forceRefresh && lastTasksFetchedAt != null && (now - lastTasksFetchedAt) < FETCH_TTL_MS) {
-          return; // Skip - data is still fresh
-        }
+          if (!taskMaster?.emailAddress) {
+            set({
+              tasks: [],
+              taskCompletions: [],
+              completionStats: null,
+              error: 'No valid taskMaster email address found',
+            });
+            return;
+          }
 
-        set({ isLoading: true, error: null });
+          const { lastTasksFetchedAt } = get();
+          const now = Date.now();
+          if (!forceRefresh && lastTasksFetchedAt != null && (now - lastTasksFetchedAt) < FETCH_TTL_MS) {
+            return;
+          }
 
-        try {
-          // Fetch tasks and completions in a single API call to avoid duplicate task reads.
-          const response = await fetchWithAuthRetry('/api/fetchTasksAndCompletionsForRezTaskMaster');
-          const data = await response.json();
-
-          const tasks: Task[] = data.tasks || [];
-          const taskCompletions: TaskCompletion[] = data.taskCompletions || [];
-          const completionStats: CompletionStats | null = data.completionStats ?? null;
-
+          const hasCachedTasks = get().tasks.length > 0;
           set({
-            tasks,
-            taskCompletions,
-            completionStats,
-            isLoading: false,
+            isLoading: !hasCachedTasks,
+            isRefreshing: hasCachedTasks,
             error: null,
-            lastTasksFetchedAt: Date.now(),
           });
-        } catch (error) {
-          console.error('Error fetching tasks and completions:', error);
+
+          try {
+            const response = await fetchWithAuthRetry('/api/fetchTasksAndCompletionsForRezTaskMaster');
+            const data = await response.json();
+
+            set({
+              tasks: data.tasks || [],
+              taskCompletions: data.taskCompletions || [],
+              completionStats: data.completionStats ?? null,
+              isLoading: false,
+              isRefreshing: false,
+              error: null,
+              lastTasksFetchedAt: Date.now(),
+            });
+          } catch (error) {
+            console.error('Error fetching tasks and completions:', error);
+            set({
+              isLoading: false,
+              isRefreshing: false,
+              error: error instanceof Error ? error.message : 'Failed to fetch data',
+            });
+          }
+        });
+      },
+
+      fetchTasksForList: async (forceRefresh = false) => {
+        await runDeduped('list', async () => {
+          const taskMaster = useTaskMasterStore.getState().user;
+
+          if (!taskMaster?.emailAddress) {
+            set({
+              tasks: [],
+              error: 'No valid taskMaster email address found',
+            });
+            return;
+          }
+
+          const { lastTasksFetchedAt } = get();
+          const now = Date.now();
+          if (!forceRefresh && lastTasksFetchedAt != null && (now - lastTasksFetchedAt) < FETCH_TTL_MS) {
+            return;
+          }
+
+          const hasCachedTasks = get().tasks.length > 0;
           set({
-            isLoading: false,
-            error: error instanceof Error ? error.message : 'Failed to fetch data',
+            isLoading: !hasCachedTasks,
+            isRefreshing: hasCachedTasks,
+            error: null,
           });
-        }
+
+          try {
+            const response = await fetchWithAuthRetry(
+              '/api/fetchTasksAndCompletionsForRezTaskMaster?scope=list',
+            );
+            const data = await response.json();
+
+            set({
+              tasks: data.tasks || [],
+              isLoading: false,
+              isRefreshing: false,
+              error: null,
+              lastTasksFetchedAt: Date.now(),
+            });
+          } catch (error) {
+            console.error('Error fetching tasks list:', error);
+            set({
+              isLoading: false,
+              isRefreshing: false,
+              error: error instanceof Error ? error.message : 'Failed to fetch tasks',
+            });
+          }
+        });
+      },
+
+      prependTask: (task: Task) => {
+        set((state) => ({
+          tasks: [
+            task,
+            ...state.tasks.filter((existing) => existing.id !== task.id),
+          ],
+        }));
       },
 
       deleteTask: async (taskId: string): Promise<boolean> => {

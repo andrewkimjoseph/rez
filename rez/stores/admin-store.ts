@@ -6,7 +6,7 @@ import { useTaskMasterStore } from './taskmaster-store';
 
 export interface AdminUpdateTaskData {
   title?: string;
-  type?: 'fillAForm' | 'checkOutApp' | 'doVideoInterview';
+  type?: 'fillAForm' | 'checkOutApp' | 'doVideoInterview' | 'answerPoll';
   category?: string;
   levelOfDifficulty?: string;
   link?: string;
@@ -73,7 +73,7 @@ interface AdminStore {
   lastTaskMastersFetch: number | null;
   lastParticipantsFetch: number | null;
 
-  fetchAllTasks: (forceRefresh?: boolean) => Promise<void>;
+  fetchAllTasks: (forceRefresh?: boolean, preferFirestore?: boolean) => Promise<void>;
   fetchAllTaskMasters: (forceRefresh?: boolean) => Promise<void>;
   fetchAllParticipants: (forceRefresh?: boolean, search?: string) => Promise<void>;
   loadMoreTasks: () => Promise<void>;
@@ -114,7 +114,7 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
   lastTaskMastersFetch: null,
   lastParticipantsFetch: null,
 
-  fetchAllTasks: async (forceRefresh = false) => {
+  fetchAllTasks: async (forceRefresh = false, preferFirestore = false) => {
     const { tasks, lastTasksFetch, isLoadingTasks } = get();
     const now = Date.now();
 
@@ -127,7 +127,9 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
     set({ isLoadingTasks: true, error: null });
 
     try {
-      const response = await fetchWithAuthRetry('/api/admin/fetchAllTasks?limit=50');
+      const params = new URLSearchParams({ limit: '50' });
+      if (preferFirestore) params.set('source', 'firestore');
+      const response = await fetchWithAuthRetry(`/api/admin/fetchAllTasks?${params.toString()}`);
       const { tasks: newTasks, hasMore, nextCursor } = await response.json();
       set({
         tasks: newTasks || [],
@@ -298,14 +300,17 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
     set({ isUpdating: true, error: null });
 
     try {
-      const response = await fetchWithAuthRetry('/api/admin/updateTask', {
+      await fetchWithAuthRetry('/api/admin/updateTask', {
         method: 'PATCH',
         body: JSON.stringify({ taskId, data })
       });
 
-      // Force refresh tasks list
-      set({ isUpdating: false });
-      await get().fetchAllTasks(true);
+      const currentTasks = get().tasks;
+      set({
+        tasks: currentTasks.map((t) => (t.id === taskId ? { ...t, ...data } : t)),
+        isUpdating: false,
+      });
+      await get().fetchAllTasks(true, true);
       
       return true;
     } catch (error) {
