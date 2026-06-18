@@ -47,6 +47,17 @@ import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 import { TOOLTIP_TEXTS } from "@/data/tooltip-texts";
 
+const REVIEW_STATUS_LABELS: Record<
+  "pending" | "approved" | "rejected" | "published" | "archived",
+  string
+> = {
+  pending: "Pending",
+  approved: "Approved",
+  published: "Published",
+  archived: "Archived",
+  rejected: "Rejected",
+};
+
 interface AdminEditTaskDialogProps {
   task: Task | null;
   open: boolean;
@@ -57,6 +68,7 @@ interface AdminEditTaskDialogProps {
 const taskTypes = [
   { value: "fillAForm", label: "Online Survey" },
   { value: "checkOutApp", label: "Product Testing" },
+  { value: "answerPoll", label: "Polls" },
 ];
 const categories = ["Finance", "Climate", "Education", "Health", "Technology", "Social", "Other"];
 const difficulties = ["Easy", "Medium", "Hard"];
@@ -852,13 +864,17 @@ export default function AdminEditTaskDialog({
                       }
                     }}
                   >
-                    <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue placeholder="Select status">
+                        {REVIEW_STATUS_LABELS[reviewStatus]}
+                      </SelectValue>
+                    </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pending"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-yellow-500" /> Pending</span></SelectItem>
-                      <SelectItem value="approved"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500" /> Approved</span></SelectItem>
-                      <SelectItem value="published"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#5C29A3]" /> Published</span></SelectItem>
-                      <SelectItem value="archived"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-slate-500" /> Archived</span></SelectItem>
-                      <SelectItem value="rejected"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500" /> Rejected</span></SelectItem>
+                      <SelectItem value="pending"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-yellow-500 shrink-0" /> Pending</span></SelectItem>
+                      <SelectItem value="approved"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500 shrink-0" /> Approved</span></SelectItem>
+                      <SelectItem value="published"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#5C29A3] shrink-0" /> Published</span></SelectItem>
+                      <SelectItem value="archived"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-slate-500 shrink-0" /> Archived</span></SelectItem>
+                      <SelectItem value="rejected"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500 shrink-0" /> Rejected</span></SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-[11px] text-gray-400 mt-1">
