@@ -11,7 +11,7 @@ const TASK_PUBLICATION_SELECT =
   'id, title, is_published, target_number_of_participants, deadline, review_status, is_active';
 
 const PUBLISHED_POLL_TASK_SELECT =
-  'id, title, is_published, target_number_of_participants, deadline, review_status, is_active, pax_task_id, created_at';
+  'id, title, is_published, target_number_of_participants, deadline, review_status, is_active, pax_task_id, created_at' as const;
 
 type TaskPublicationRow = {
   id: string;
@@ -21,6 +21,11 @@ type TaskPublicationRow = {
   deadline: string | null;
   review_status: string;
   is_active: boolean;
+};
+
+type PublishedPollTaskRow = TaskPublicationRow & {
+  pax_task_id: string;
+  created_at: string;
 };
 
 function mapTaskPublicationFields(task: TaskPublicationRow) {
