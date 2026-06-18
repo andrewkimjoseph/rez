@@ -21,22 +21,25 @@ export default function Step3Cost() {
 
   const isOnlineSurvey = data.type === 'fillAForm';
   const isProductTesting = data.type === 'checkOutApp';
+  const isPoll = data.type === 'answerPoll';
 
-  const questionsLabel = isOnlineSurvey ? 'Questions' : 'Feedback questions';
-  const questionsPlaceholder = isOnlineSurvey ? 'e.g. 10' : 'e.g. 5';
-  const participantsLabel = isOnlineSurvey ? 'Participants' : 'Testers';
-  const participantsPlaceholder = isOnlineSurvey ? 'e.g. 100' : 'e.g. 100';
+  const questionsLabel = isOnlineSurvey ? 'Questions' : isPoll ? 'Poll' : 'Feedback questions';
+  const questionsPlaceholder = isOnlineSurvey ? 'e.g. 10' : isPoll ? '' : 'e.g. 5';
+  const participantsLabel = isOnlineSurvey || isPoll ? 'Participants' : 'Testers';
+  const participantsPlaceholder = isOnlineSurvey || isPoll ? 'e.g. 100' : 'e.g. 100';
 
-  const participantsTooltip = isOnlineSurvey ? TOOLTIP_TEXTS.participantsSurvey : TOOLTIP_TEXTS.participantsProduct;
-  const questionsTooltip = isOnlineSurvey ? TOOLTIP_TEXTS.questionsSurvey : TOOLTIP_TEXTS.questionsProduct;
+  const participantsTooltip = isOnlineSurvey ? TOOLTIP_TEXTS.participantsSurvey : isPoll ? TOOLTIP_TEXTS.participantsSurvey : TOOLTIP_TEXTS.participantsProduct;
+  const questionsTooltip = isOnlineSurvey ? TOOLTIP_TEXTS.questionsSurvey : isPoll ? '' : TOOLTIP_TEXTS.questionsProduct;
 
   const questions = isOnlineSurvey
     ? (data.numberOfQuestions || 0)
-    : (data.numberOfFeedbackQuestions || 0);
+    : isProductTesting
+    ? (data.numberOfFeedbackQuestions || 0)
+    : 0;
   const participants = data.targetNumberOfParticipants || 0;
 
-  const minQuestions = isOnlineSurvey ? 5 : 3;
-  const minParticipants = isOnlineSurvey ? 50 : 10;
+  const minQuestions = isOnlineSurvey ? 5 : isProductTesting ? 3 : 0;
+  const minParticipants = isOnlineSurvey || isPoll ? 50 : 10;
 
   const { cost, agencyCost, savingsPercent } = useMemo(() => {
     let baseCost = 0;
@@ -45,6 +48,9 @@ export default function Step3Cost() {
       baseCost = 50 * (questions / 10) * (participants / 50);
     } else if (isProductTesting) {
       baseCost = 100 * (questions / 5) * (participants / 100);
+    } else if (isPoll) {
+      const questionCount = Math.max(1, data.pollQuestions?.length ?? 1);
+      baseCost = 25 * (participants / 50) * questionCount;
     }
 
     const roundedCost = Math.round(baseCost * 100) / 100;
@@ -52,7 +58,7 @@ export default function Step3Cost() {
     const savingsPercent = roundedAgencyCost > 0 ? Math.round(((roundedAgencyCost - roundedCost) / roundedAgencyCost) * 100) : 0;
 
     return { cost: roundedCost, agencyCost: roundedAgencyCost, savingsPercent };
-  }, [questions, participants, isOnlineSurvey, isProductTesting]);
+  }, [questions, participants, isOnlineSurvey, isProductTesting, isPoll, data.pollQuestions?.length]);
 
   const handleQuestionsChange = (value: string) => {
     const numValue = parseInt(value) || 0;
@@ -84,8 +90,10 @@ export default function Step3Cost() {
     }
   };
 
-  const hasValues = questions > 0 && participants > 0;
-  const meetsMinimums = questions >= minQuestions && participants >= minParticipants;
+  const hasValues = isPoll ? participants > 0 : questions > 0 && participants > 0;
+  const meetsMinimums = isPoll
+    ? participants >= minParticipants
+    : questions >= minQuestions && participants >= minParticipants;
 
   const animatedCost = useCountUp(cost, 500, hasValues);
   const animatedAgencyCost = useCountUp(agencyCost, 500, hasValues);
@@ -103,7 +111,7 @@ export default function Step3Cost() {
       <div className="mb-3">
         <h2 className="text-lg font-semibold text-gray-900">Cost</h2>
         <p className="text-sm text-gray-500 mt-0.5">
-          Scope and estimated price for your {isOnlineSurvey ? 'survey' : 'product test'}
+          Scope and estimated price for your {isOnlineSurvey ? 'survey' : isPoll ? 'poll' : 'product test'}
         </p>
       </div>
 
@@ -140,10 +148,11 @@ export default function Step3Cost() {
               className="h-9 text-sm"
             />
             <p className="text-[11px] text-gray-400 mt-1">
-              {isOnlineSurvey ? 'People who will complete your survey' : 'People who will test your product'}
+              {isOnlineSurvey || isPoll ? 'People who will answer your poll' : 'People who will test your product'}
             </p>
           </div>
 
+          {!isPoll && (
           <div>
             <div className="flex items-center gap-1.5 mb-1">
               <Label htmlFor="questions" className="text-xs font-medium text-gray-500 flex items-center gap-1.5">
@@ -193,6 +202,7 @@ export default function Step3Cost() {
               {isOnlineSurvey ? 'Number of questions in your survey' : 'Questions testers answer about your product'}
             </p>
           </div>
+          )}
         </div>
 
         {hasValues && (
@@ -201,6 +211,8 @@ export default function Step3Cost() {
               <p className="text-xs text-amber-600 mb-2">
                 {isOnlineSurvey
                   ? "Minimum: 5 questions and 50 participants"
+                  : isPoll
+                  ? "Minimum: 50 participants"
                   : "Minimum: 3 feedback questions and 10 testers"}
               </p>
             )}

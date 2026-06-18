@@ -25,12 +25,14 @@ import {
   CurrencyDollarIcon,
   QuestionMarkCircleIcon,
   MapPinIcon,
+  ChartBarIcon,
 } from "@heroicons/react/24/outline";
 
 const taskTypeConfig = {
   fillAForm: { label: "Online Survey", icon: ClipboardDocumentListIcon },
   checkOutApp: { label: "Product Testing", icon: DevicePhoneMobileIcon },
   doVideoInterview: { label: "Video Interview", icon: VideoCameraIcon },
+  answerPoll: { label: "Polls", icon: ChartBarIcon },
 };
 
 const difficultyColors = {
@@ -56,10 +58,13 @@ export default function Step5Review() {
 
   const isOnlineSurvey = data.type === 'fillAForm';
   const isProductTesting = data.type === 'checkOutApp';
+  const isPoll = data.type === 'answerPoll';
   
   const questions = isOnlineSurvey 
     ? (data.numberOfQuestions || 0) 
-    : (data.numberOfFeedbackQuestions || 0);
+    : isProductTesting
+    ? (data.numberOfFeedbackQuestions || 0)
+    : 0;
   const participants = data.targetNumberOfParticipants || 0;
 
   const { cost, agencyCost, savingsPercent } = useMemo(() => {
@@ -69,6 +74,9 @@ export default function Step5Review() {
       baseCost = 50 * (questions / 10) * (participants / 50);
     } else if (isProductTesting) {
       baseCost = 100 * (questions / 5) * (participants / 100);
+    } else if (isPoll) {
+      const questionCount = Math.max(1, data.pollQuestions?.length ?? 1);
+      baseCost = 25 * (participants / 50) * questionCount;
     }
 
     const roundedCost = Math.round(baseCost * 100) / 100;
@@ -76,7 +84,7 @@ export default function Step5Review() {
     const savingsPercent = roundedAgencyCost > 0 ? Math.round(((roundedAgencyCost - roundedCost) / roundedAgencyCost) * 100) : 0;
 
     return { cost: roundedCost, agencyCost: roundedAgencyCost, savingsPercent };
-  }, [questions, participants, isOnlineSurvey, isProductTesting]);
+  }, [questions, participants, isOnlineSurvey, isProductTesting, isPoll, data.pollQuestions?.length]);
 
   const handleEdit = (step: TaskStep) => setStep(step);
 
@@ -153,13 +161,15 @@ export default function Step5Review() {
               </div>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-4 text-sm">
+                  {!isPoll && (
                   <div className="flex items-center gap-1.5">
                     <QuestionMarkCircleIcon className="w-3.5 h-3.5 text-gray-400" />
                     <span className="text-gray-500">{questions} {isOnlineSurvey ? 'questions' : 'feedback questions'}</span>
                   </div>
+                  )}
                   <div className="flex items-center gap-1.5">
                     <UserGroupIcon className="w-3.5 h-3.5 text-gray-400" />
-                    <span className="text-gray-500">{participants} {isOnlineSurvey ? 'participants' : 'testers'}</span>
+                    <span className="text-gray-500">{participants} {isOnlineSurvey || isPoll ? 'participants' : 'testers'}</span>
                   </div>
                 </div>
                 {showCost && (
@@ -178,7 +188,7 @@ export default function Step5Review() {
           </div>
         </div>
 
-        {/* Resources */}
+        {/* Resources / Poll question */}
         <div className="px-4 py-3 bg-white hover:bg-gray-50/50 transition-colors">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3">
@@ -186,6 +196,32 @@ export default function Step5Review() {
                 <LinkIcon className="w-4 h-4 text-amber-600" />
               </div>
               <div className="space-y-1.5 min-w-0 flex-1">
+                {isPoll ? (
+                  <>
+                    <div className="space-y-3">
+                      {(data.pollQuestions || []).map((question, qIndex) => (
+                        <div key={qIndex}>
+                          <p className="text-xs text-gray-400 mb-0.5">
+                            Question {qIndex + 1}
+                          </p>
+                          <p className="text-sm text-gray-900">{question.questionText || "-"}</p>
+                          <ul className="text-sm text-gray-600 list-disc list-inside space-y-0.5 mt-1">
+                            {question.options.filter(Boolean).map((option, index) => (
+                              <li key={index}>{option}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                    {data.instructions && (
+                      <div>
+                        <p className="text-xs text-gray-400 mb-0.5">Instructions</p>
+                        <p className="text-sm text-gray-600 line-clamp-2">{data.instructions}</p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
                 <div>
                   <p className="text-xs text-gray-400 mb-0.5">{isOnlineSurvey ? 'Form URL' : 'Product URL'}</p>
                   <a
@@ -215,6 +251,8 @@ export default function Step5Review() {
                       {data.feedback}
                     </a>
                   </div>
+                )}
+                  </>
                 )}
               </div>
             </div>

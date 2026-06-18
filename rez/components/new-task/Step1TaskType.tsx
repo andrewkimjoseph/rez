@@ -5,6 +5,7 @@ import {
   DevicePhoneMobileIcon,
   VideoCameraIcon,
   CheckCircleIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline';
 
 const taskTypes = [
@@ -20,6 +21,13 @@ const taskTypes = [
     title: 'Product Testing',
     description: 'Users test mobile or web apps',
     icon: DevicePhoneMobileIcon,
+    available: true,
+  },
+  {
+    id: 'answerPoll',
+    title: 'Polls',
+    description: 'Multiple choice questions with live insights',
+    icon: ChartBarIcon,
     available: true,
   },
   {
@@ -77,7 +85,7 @@ export default function Step1TaskType() {
                   ? 'border-[#5C29A3] bg-[#5C29A3]/5'
                   : 'border-gray-200 hover:border-[#5C29A3]/40 bg-white hover:bg-gray-50/50'
               }`}
-              onClick={() => updateData({ type: taskType.id as 'fillAForm' | 'checkOutApp' | 'doVideoInterview' })}
+              onClick={() => updateData({ type: taskType.id as 'fillAForm' | 'checkOutApp' | 'doVideoInterview' | 'answerPoll' })}
             >
               {isSelected && (
                 <div className="absolute top-2 right-2">

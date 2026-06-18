@@ -9,6 +9,7 @@ import Step5Review from "@/components/new-task/Step4Review";
 import { toast } from "sonner";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { useTasksStore } from "@/stores/tasks-store";
+import type { Task } from "@/firebase/firestore/models/Task";
 import { useState } from "react";
 import {
   ArrowPathIcon,
@@ -24,6 +25,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 import Link from "next/link";
+import { validatePollQuestions } from "@/types/poll";
 
 const stepConfig = [
   { title: "Type", description: "Choose task type", icon: Squares2X2Icon },
@@ -140,9 +142,9 @@ function TaskStepContent({ step }: { step: TaskStep }) {
 }
 
 export default function NewTask() {
-  const { step, nextStep, prevStep, data, reset, editMode, editingTaskId } = useNewTaskStore();
+  const { step, nextStep, prevStep, data, reset, editMode, editingTaskId, editingTaskReasons } = useNewTaskStore();
   const { user } = useTaskMasterStore();
-  const { tasks, fetchTasksAndCompletions } = useTasksStore();
+  const { tasks, fetchTasksForList, prependTask } = useTasksStore();
   const [isCreating, setIsCreating] = useState(false);
   const {
     createNewTaskClicked,
@@ -245,15 +247,31 @@ export default function NewTask() {
         } else if (data.type === 'checkOutApp') {
           return !!(data.numberOfFeedbackQuestions && data.numberOfFeedbackQuestions >= 3 &&
                    data.targetNumberOfParticipants && data.targetNumberOfParticipants >= 10);
+        } else if (data.type === 'answerPoll') {
+          return !!(data.targetNumberOfParticipants && data.targetNumberOfParticipants >= 50);
         }
         return false;
       case 4:
+        if (data.type === 'answerPoll') {
+          return validatePollQuestions(data.pollQuestions) === null;
+        }
         // Step 4: Links - requires link, and for checkOutApp also requires instructions and feedback
         if (data.type === 'checkOutApp') {
           return !!(data.link && data.instructions && data.feedback);
         }
         return !!data.link;
       case 5:
+        if (data.type === 'answerPoll') {
+          return !!(
+            data.type &&
+            data.title &&
+            data.category &&
+            data.difficulty &&
+            data.targetNumberOfParticipants &&
+            data.targetNumberOfParticipants >= 50 &&
+            validatePollQuestions(data.pollQuestions) === null
+          );
+        }
         // Step 5: Review - all required fields should be filled
         const baseFieldsValid = !!(
           data.type &&
@@ -306,8 +324,13 @@ export default function NewTask() {
                 targetNumberOfParticipants: data.targetNumberOfParticipants,
                 numberOfQuestions: data.numberOfQuestions,
                 numberOfFeedbackQuestions: data.numberOfFeedbackQuestions,
-                reviewStatus: 'pending', // Move back to pending review
-                reasonsForRejection: [], // Clear rejection reasons
+                pollQuestions: data.pollQuestions,
+                ...(editingTaskReasons?.length
+                  ? {
+                      reviewStatus: "pending" as const,
+                      reasonsForRejection: [],
+                    }
+                  : {}),
               },
             }),
           });
@@ -330,8 +353,7 @@ export default function NewTask() {
           // Stop loading and reset the form immediately after the toast
           setIsCreating(false);
           reset();
-          // Refresh the tasks list in the background
-          fetchTasksAndCompletions(true);
+          void fetchTasksForList(true);
         } else {
           // Create new task
           // Get the last task creation timestamp to send to API (avoids DB reads)
@@ -358,6 +380,7 @@ export default function NewTask() {
               targetNumberOfParticipants: data.targetNumberOfParticipants,
               numberOfQuestions: data.numberOfQuestions,
               numberOfFeedbackQuestions: data.numberOfFeedbackQuestions,
+              pollQuestions: data.pollQuestions,
               lastTaskCreatedAt, // Send timestamp to avoid server DB reads
               isSuperAdmin: user?.isSuperAdmin === true, // Send super admin status to avoid server DB reads
               // Super admin can assign to different task master
@@ -373,6 +396,36 @@ export default function NewTask() {
 
           const result = await response.json();
 
+          const createdTask: Task = {
+            id: result.taskId,
+            taskMasterId: null,
+            title: data.title ?? null,
+            type: data.type ?? null,
+            category: data.category ?? "Other",
+            estimatedTimeOfCompletionInMinutes: null,
+            deadline: null,
+            targetNumberOfParticipants: data.targetNumberOfParticipants ?? null,
+            numberOfQuestions: data.numberOfQuestions ?? null,
+            numberOfFeedbackQuestions: data.numberOfFeedbackQuestions ?? null,
+            link: data.link ?? null,
+            levelOfDifficulty: data.difficulty ?? "Medium",
+            managerContractAddress: null,
+            rewardAmountPerParticipant: null,
+            rewardCurrencyId: null,
+            isAvailable: false,
+            reviewStatus: "pending",
+            timeCreated: { seconds: Math.floor(Date.now() / 1000) } as Task["timeCreated"],
+            timeUpdated: null,
+            isTest: null,
+            feedback: data.feedback ?? null,
+            paymentTerms: null,
+            instructions: data.instructions ?? null,
+            targetCountry: null,
+            numberOfCooldownHours: null,
+            rezTaskMasterEmailAddress: user?.emailAddress ?? null,
+          };
+          prependTask(createdTask);
+
           toast("Task created!", {
             description: `Your new task has been created successfully with ID: ${result.taskId}`,
           });
@@ -387,8 +440,7 @@ export default function NewTask() {
           // Stop loading and reset the form immediately after the toast
           setIsCreating(false);
           reset();
-          // Refresh the tasks list in the background
-          fetchTasksAndCompletions(true);
+          void fetchTasksForList(true);
         }
       } catch (error) {
         toast(editMode ? "Error updating task" : "Error creating task", {
