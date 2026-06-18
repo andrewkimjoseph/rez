@@ -10,6 +10,9 @@ import {
 const TASK_PUBLICATION_SELECT =
   'id, title, is_published, target_number_of_participants, deadline, review_status, is_active';
 
+const PUBLISHED_POLL_TASK_SELECT =
+  'id, title, is_published, target_number_of_participants, deadline, review_status, is_active, pax_task_id, created_at';
+
 type TaskPublicationRow = {
   id: string;
   title: string;
@@ -163,7 +166,7 @@ export async function fetchAllPublishedPollSummaries(): Promise<PublishedPollSum
 
   const { data: tasks, error: tasksError } = await supabase
     .from('tasks')
-    .select(TASK_PUBLICATION_SELECT + ', pax_task_id, created_at')
+    .select(PUBLISHED_POLL_TASK_SELECT)
     .eq('is_published', true)
     .order('created_at', { ascending: false });
 

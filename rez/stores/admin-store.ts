@@ -307,7 +307,11 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
 
       const currentTasks = get().tasks;
       set({
-        tasks: currentTasks.map((t) => (t.id === taskId ? { ...t, ...data } : t)),
+        tasks: currentTasks.map((t) => {
+          if (t.id !== taskId) return t;
+          const { deadline: _deadline, ...patch } = data;
+          return { ...t, ...patch };
+        }),
         isUpdating: false,
       });
       await get().fetchAllTasks(true, true);
