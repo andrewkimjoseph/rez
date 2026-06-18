@@ -34,7 +34,7 @@ function TasksContent() {
       setSelectedTab(tabParam);
     }
   }, [tabParam]);
-  const { fetchTasksAndCompletions, isLoading, tasks } = useTasksStore();
+  const { fetchTasksForList, fetchTasksAndCompletions, isLoading, isRefreshing, tasks } = useTasksStore();
   const { checkCanRefresh, updateRefreshTime } = useRefreshStore();
   const [, forceUpdate] = useState({});
   const [isHydrated, setIsHydrated] = useState(false);
@@ -88,6 +88,15 @@ function TasksContent() {
     }
   }, [isHydrated, tasksRefreshStatus.canRefresh]);
 
+  // Fast task-list sync when opening the view tab (skips heavy completion stats)
+  useEffect(() => {
+    if (selectedTab === "view-tasks") {
+      void fetchTasksForList();
+    }
+  }, [selectedTab, fetchTasksForList]);
+
+  const tasksBusy = isLoading || isRefreshing;
+
   const getTitle = () => {
     switch (selectedTab) {
       case "create":
@@ -122,9 +131,13 @@ function TasksContent() {
     }
 
     try {
-      await fetchTasksAndCompletions(true);
+      if (selectedTab === "view-tasks") {
+        await fetchTasksForList(true);
+      } else {
+        await fetchTasksAndCompletions(true);
+      }
       updateRefreshTime();
-      toast.success("Tasks data refreshed successfully!");
+      toast.success("Tasks refreshed");
     } catch (error) {
       toast.error("Failed to refresh tasks data");
     }
@@ -186,7 +199,7 @@ function TasksContent() {
           {selectedTab === "view-tasks" && (
             <Button
               onClick={handleRefresh}
-              disabled={isLoading || (isHydrated && !tasksRefreshStatus.canRefresh)}
+              disabled={tasksBusy || (isHydrated && !tasksRefreshStatus.canRefresh)}
               variant="outline"
               size="sm"
               className="self-start sm:self-auto"
@@ -194,7 +207,7 @@ function TasksContent() {
               {isHydrated && !tasksRefreshStatus.canRefresh ? (
                 <ClockIcon className="h-4 w-4 mr-2" />
               ) : (
-                <ArrowPathIcon className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+                <ArrowPathIcon className={`h-4 w-4 mr-2 ${tasksBusy ? "animate-spin" : ""}`} />
               )}
               {isHydrated && !tasksRefreshStatus.canRefresh
                 ? `${tasksRefreshStatus.formattedTime}`
@@ -246,14 +259,12 @@ function TasksContent() {
           </TabsContent>
 
           <TabsContent value="view-tasks" className="mt-0">
-            <div className="enterprise-card bg-card rounded-lg border border-border/50">
+            <div className="enterprise-card bg-card rounded-lg border border-border/50 overflow-hidden">
               <ViewTasks />
             </div>
-            {selectedTab === "view-tasks" && (
-              <p className="text-sm text-muted-foreground text-center mt-4">
-                Showing {tasks.length} task{tasks.length !== 1 ? 's' : ''}
-              </p>
-            )}
+            <p className="text-sm text-muted-foreground mt-3">
+              {tasks.length} task{tasks.length !== 1 ? "s" : ""}
+            </p>
           </TabsContent>
         </Tabs>
       </div>

@@ -184,7 +184,7 @@ export default function AdminTaskDetailsPage() {
       toast.success(`Task ${reviewAction === 'approve' ? 'approved' : 'rejected'} successfully`);
       // Update selected task so UI reflects new state immediately (refetched list may be paginated)
       setTask({ ...task, ...updateData });
-      await fetchAllTasks(true);
+      await fetchAllTasks(true, true);
     } else {
       if (reviewAction === 'approve') {
         adminTaskApproveFailed({ 
@@ -265,7 +265,7 @@ export default function AdminTaskDetailsPage() {
       setActionType(null);
       // Update selected task in store so UI reflects new state immediately (refetched list may be paginated)
       setTask({ ...task, ...payload });
-      await fetchAllTasks(true);
+      await fetchAllTasks(true, true);
     } else {
       if (actionType === 'publish') {
         adminTaskPublishFailed({
@@ -300,7 +300,7 @@ export default function AdminTaskDetailsPage() {
       setTask({ ...task, reviewStatus: 'archived' });
       setArchiveDialogOpen(false);
       toast.success("Task archived");
-      await fetchAllTasks(true);
+      await fetchAllTasks(true, true);
     } else {
       toast.error("Failed to archive task");
     }
@@ -315,17 +315,18 @@ export default function AdminTaskDetailsPage() {
   };
 
   const getReviewStatusBadge = (reviewStatus: string | null | undefined) => {
+    const badgeClass = "shrink-0 whitespace-nowrap border-0";
     switch (reviewStatus) {
       case 'pending':
-        return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100/80 border-0">Pending Review</Badge>;
+        return <Badge variant="outline" className={`${badgeClass} bg-yellow-100 text-yellow-700`}>Pending Review</Badge>;
       case 'approved':
-        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">Approved</Badge>;
+        return <Badge variant="outline" className={`${badgeClass} bg-green-100 text-green-700`}>Approved</Badge>;
       case 'published':
-        return <Badge className="bg-[#5C29A3]/10 text-[#5C29A3] hover:bg-[#5C29A3]/20 border-0">Published</Badge>;
+        return <Badge variant="outline" className={`${badgeClass} bg-[#5C29A3]/10 text-[#5C29A3]`}>Published</Badge>;
       case 'archived':
-        return <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100/80 border-0">Archived</Badge>;
+        return <Badge variant="outline" className={`${badgeClass} bg-slate-100 text-slate-700`}>Archived</Badge>;
       case 'rejected':
-        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">Rejected</Badge>;
+        return <Badge variant="outline" className={`${badgeClass} bg-red-100 text-red-700`}>Rejected</Badge>;
       default:
         return <Badge variant="outline">N/A</Badge>;
     }

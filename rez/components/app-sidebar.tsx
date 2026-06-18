@@ -9,6 +9,7 @@ import {
   ShieldCheckIcon,
   InformationCircleIcon,
   PlusIcon,
+  ChartBarIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import React from "react";
@@ -53,6 +54,11 @@ const mainNavItems = [
     title: "Tasks",
     url: "/tasks",
     icon: ClipboardDocumentListIcon,
+  },
+  {
+    title: "Insights",
+    url: "/insights",
+    icon: ChartBarIcon,
   },
   {
     title: "Resources",

@@ -109,6 +109,7 @@ export default function AdminTasksPage() {
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [taskToToggle, setTaskToToggle] = useState<Task | null>(null);
+  const [statusActionType, setStatusActionType] = useState<'publish' | 'activate' | 'deactivate' | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [reviewFilter, setReviewFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'published' | 'archived'>('all');
   const [activeFilter, setActiveFilter] = useState<'all' | 'active'>('all');
@@ -155,7 +156,7 @@ export default function AdminTasksPage() {
   const handleRefresh = async () => {
     adminTasksRefreshClicked();
     try {
-      await fetchAllTasks(true);
+      await fetchAllTasks(true, true);
       toast.success("Tasks refreshed!");
     } catch {
       toast.error("Failed to refresh tasks");
@@ -208,60 +209,91 @@ export default function AdminTasksPage() {
   };
 
   const handleStatusToggleClick = (task: Task) => {
-    if (task.isAvailable) {
-      adminTaskDeactivateClicked({ task_id: task.id, task_title: task.title });
+    let action: 'publish' | 'activate' | 'deactivate';
+    if (task.reviewStatus === 'approved') {
+      action = 'publish';
+    } else if (task.reviewStatus === 'published') {
+      action = task.isAvailable ? 'deactivate' : 'activate';
+      if (task.isAvailable) {
+        adminTaskDeactivateClicked({ task_id: task.id, task_title: task.title });
+      } else {
+        adminTaskActivateClicked({ task_id: task.id, task_title: task.title });
+      }
     } else {
-      adminTaskActivateClicked({ task_id: task.id, task_title: task.title });
+      return;
     }
+
+    setStatusActionType(action);
     setTaskToToggle(task);
     setStatusDialogOpen(true);
   };
 
   const handleConfirmStatusToggle = async () => {
-    if (!taskToToggle?.id) return;
+    if (!taskToToggle?.id || !statusActionType) return;
 
-    const isCurrentlyActive = taskToToggle.isAvailable;
-    // Activate = set to Published (only for approved tasks). Deactivate = set to Approved and isAvailable false.
-    const payload = isCurrentlyActive
-      ? { reviewStatus: 'approved' as const, isAvailable: false }
-      : { reviewStatus: 'published' as const };
-    
-    if (!isCurrentlyActive) {
+    let payload: { reviewStatus?: 'published'; isAvailable?: boolean };
+    let successMessage: string;
+    let errorMessage: string;
+
+    if (statusActionType === 'publish') {
+      payload = { reviewStatus: 'published' };
+      successMessage = 'Task published';
+      errorMessage = 'Failed to publish task';
       adminTaskPublishClicked({ task_id: taskToToggle.id, task_title: taskToToggle.title });
+    } else if (statusActionType === 'activate') {
+      payload = { isAvailable: true };
+      successMessage = 'Task activated';
+      errorMessage = 'Failed to activate task';
+    } else {
+      payload = { isAvailable: false };
+      successMessage = 'Task deactivated';
+      errorMessage = 'Failed to deactivate task';
     }
-    
+
     const success = await updateTask(taskToToggle.id, payload);
     if (success) {
-      if (!isCurrentlyActive) {
-        adminTaskPublishComplete({ 
+      if (statusActionType === 'publish') {
+        adminTaskPublishComplete({
           task_id: taskToToggle.id,
           task_title: taskToToggle.title,
         });
+      } else if (statusActionType === 'activate') {
         adminTaskActivateComplete({ task_id: taskToToggle.id });
       } else {
         adminTaskDeactivateComplete({ task_id: taskToToggle.id });
       }
       setStatusDialogOpen(false);
       setTaskToToggle(null);
-      toast.success(isCurrentlyActive ? 'Task unpublished' : 'Task published');
+      setStatusActionType(null);
+      toast.success(successMessage);
     } else {
-      if (!isCurrentlyActive) {
-        adminTaskPublishFailed({ 
+      if (statusActionType === 'publish') {
+        adminTaskPublishFailed({
           task_id: taskToToggle.id,
           task_title: taskToToggle.title,
-          error_message: "Failed to publish task",
+          error_message: errorMessage,
         });
-        adminTaskActivateFailed({ task_id: taskToToggle.id, error_message: "Failed to publish task" });
+      } else if (statusActionType === 'activate') {
+        adminTaskActivateFailed({ task_id: taskToToggle.id, error_message: errorMessage });
       } else {
-        adminTaskDeactivateFailed({ task_id: taskToToggle.id, error_message: "Failed to unpublish task" });
+        adminTaskDeactivateFailed({ task_id: taskToToggle.id, error_message: errorMessage });
       }
-      toast.error('Failed to update task status');
+      toast.error(errorMessage);
     }
   };
 
   const handleCancelStatusToggle = () => {
     setStatusDialogOpen(false);
     setTaskToToggle(null);
+    setStatusActionType(null);
+  };
+
+  const getStatusActionLabel = (task: Task) => {
+    if (task.reviewStatus === 'approved') return 'Publish';
+    if (task.reviewStatus === 'published') {
+      return task.isAvailable ? 'Deactivate' : 'Activate';
+    }
+    return 'Publish';
   };
 
   const handleReviewClick = (task: Task, action: 'approve' | 'reject') => {
@@ -333,17 +365,18 @@ export default function AdminTasksPage() {
   };
 
   const getReviewStatusBadge = (reviewStatus: string | null | undefined) => {
+    const badgeClass = "shrink-0 whitespace-nowrap border-0";
     switch (reviewStatus) {
       case 'pending':
-        return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100/80 border-0">Pending Review</Badge>;
+        return <Badge variant="outline" className={`${badgeClass} bg-yellow-100 text-yellow-700`}>Pending Review</Badge>;
       case 'approved':
-        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0">Approved</Badge>;
+        return <Badge variant="outline" className={`${badgeClass} bg-green-100 text-green-700`}>Approved</Badge>;
       case 'published':
-        return <Badge className="bg-[#5C29A3]/10 text-[#5C29A3] hover:bg-[#5C29A3]/20 border-0">Published</Badge>;
+        return <Badge variant="outline" className={`${badgeClass} bg-[#5C29A3]/10 text-[#5C29A3]`}>Published</Badge>;
       case 'archived':
-        return <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100/80 border-0">Archived</Badge>;
+        return <Badge variant="outline" className={`${badgeClass} bg-slate-100 text-slate-700`}>Archived</Badge>;
       case 'rejected':
-        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100/80 border-0">Rejected</Badge>;
+        return <Badge variant="outline" className={`${badgeClass} bg-red-100 text-red-700`}>Rejected</Badge>;
       default:
         return <Badge variant="outline">N/A</Badge>;
     }
@@ -353,6 +386,7 @@ export default function AdminTasksPage() {
     switch (type) {
       case 'fillAForm': return 'Fill a Form';
       case 'checkOutApp': return 'Check Out App';
+      case 'answerPoll': return 'Answer Poll';
       case 'doVideoInterview': return 'Video Interview';
       default: return type || 'N/A';
     }
@@ -401,6 +435,10 @@ export default function AdminTasksPage() {
   });
 
   const pendingCount = tasks.filter(t => t.reviewStatus === 'pending').length;
+  const approvedCount = tasks.filter(t => t.reviewStatus === 'approved').length;
+  const publishedCount = tasks.filter(t => t.reviewStatus === 'published').length;
+  const archivedCount = tasks.filter(t => t.reviewStatus === 'archived').length;
+  const rejectedCount = tasks.filter(t => t.reviewStatus === 'rejected').length;
   const activeCount = tasks.filter(t => t.isAvailable === true).length;
 
   // Sort by creation date (newest first)
@@ -512,6 +550,11 @@ export default function AdminTasksPage() {
               className={reviewFilter === 'approved' ? '' : 'text-green-700 border-green-300 hover:bg-green-50'}
             >
               Approved
+              {approvedCount > 0 && (
+                <Badge className={`ml-1.5 h-5 min-w-5 px-1.5 text-xs font-semibold tabular-nums border-0 rounded-full ${reviewFilter === 'approved' ? 'bg-white/25 text-white' : 'bg-green-600 text-white hover:bg-green-600'}`}>
+                  {approvedCount}
+                </Badge>
+              )}
             </Button>
             <Button
               variant={reviewFilter === 'published' ? 'default' : 'outline'}
@@ -520,6 +563,11 @@ export default function AdminTasksPage() {
               className={reviewFilter === 'published' ? '' : 'text-[#5C29A3] border-[#5C29A3]/40 hover:bg-[#5C29A3]/5'}
             >
               Published
+              {publishedCount > 0 && (
+                <Badge className={`ml-1.5 h-5 min-w-5 px-1.5 text-xs font-semibold tabular-nums border-0 rounded-full ${reviewFilter === 'published' ? 'bg-white/25 text-white' : 'bg-[#5C29A3] text-white hover:bg-[#5C29A3]'}`}>
+                  {publishedCount}
+                </Badge>
+              )}
             </Button>
             <Button
               variant={reviewFilter === 'archived' ? 'default' : 'outline'}
@@ -528,6 +576,11 @@ export default function AdminTasksPage() {
               className={reviewFilter === 'archived' ? '' : 'text-slate-600 border-slate-300 hover:bg-slate-50'}
             >
               Archived
+              {archivedCount > 0 && (
+                <Badge className={`ml-1.5 h-5 min-w-5 px-1.5 text-xs font-semibold tabular-nums border-0 rounded-full ${reviewFilter === 'archived' ? 'bg-white/25 text-white' : 'bg-slate-600 text-white hover:bg-slate-600'}`}>
+                  {archivedCount}
+                </Badge>
+              )}
             </Button>
             <Button
               variant={reviewFilter === 'rejected' ? 'default' : 'outline'}
@@ -536,6 +589,11 @@ export default function AdminTasksPage() {
               className={reviewFilter === 'rejected' ? '' : 'text-red-700 border-red-300 hover:bg-red-50'}
             >
               Rejected
+              {rejectedCount > 0 && (
+                <Badge className={`ml-1.5 h-5 min-w-5 px-1.5 text-xs font-semibold tabular-nums border-0 rounded-full ${reviewFilter === 'rejected' ? 'bg-white/25 text-white' : 'bg-red-600 text-white hover:bg-red-600'}`}>
+                  {rejectedCount}
+                </Badge>
+              )}
             </Button>
             <AlgoliaAttribution />
           </div>
@@ -579,7 +637,7 @@ export default function AdminTasksPage() {
                   <TableHead className="font-semibold">Creator</TableHead>
                   <TableHead className="font-semibold">Task Manager</TableHead>
                   <TableHead className="font-semibold">Type</TableHead>
-                  <TableHead className="font-semibold">Review</TableHead>
+                  <TableHead className="font-semibold min-w-[110px]">Review</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
                   <TableHead className="text-right font-semibold">Target</TableHead>
                   <TableHead className="text-right font-semibold">Reward</TableHead>
@@ -635,7 +693,7 @@ export default function AdminTasksPage() {
                         {getTaskTypeLabel(task.type)}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       {getReviewStatusBadge(task.reviewStatus)}
                     </TableCell>
                     <TableCell>
@@ -729,8 +787,8 @@ export default function AdminTasksPage() {
                             className="cursor-pointer"
                             disabled={task.reviewStatus === 'archived' || (task.reviewStatus !== 'approved' && task.reviewStatus !== 'published')}
                           >
-                            <PowerIcon className={`h-4 w-4 mr-2 ${task.isAvailable ? '' : 'opacity-50'}`} />
-                            {task.isAvailable ? 'Unpublish' : 'Publish'}
+                            <PowerIcon className={`h-4 w-4 mr-2 ${task.reviewStatus === 'published' && task.isAvailable ? '' : 'opacity-50'}`} />
+                            {getStatusActionLabel(task)}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
@@ -814,14 +872,29 @@ export default function AdminTasksPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                {taskToToggle?.isAvailable ? 'Unpublish Task' : 'Publish Task'}
+                {statusActionType === 'publish' && 'Publish Task'}
+                {statusActionType === 'activate' && 'Activate Task'}
+                {statusActionType === 'deactivate' && 'Deactivate Task'}
               </DialogTitle>
               <DialogDescription>
-                Are you sure you want to {taskToToggle?.isAvailable ? 'unpublish' : 'publish'} &quot;{taskToToggle?.title || 'this task'}&quot;?
-                {taskToToggle?.isAvailable
-                  ? ' The task will move back to Approved and no longer be active for participants.'
-                  : ' The task will be marked as Published. This does not automatically activate the task or change its availability.'
-                }
+                {statusActionType === 'publish' && (
+                  <>
+                    Are you sure you want to publish &quot;{taskToToggle?.title || 'this task'}&quot;?
+                    The task will be marked as Published. This does not automatically activate the task or change its availability.
+                  </>
+                )}
+                {statusActionType === 'activate' && (
+                  <>
+                    Are you sure you want to activate &quot;{taskToToggle?.title || 'this task'}&quot;?
+                    The task will become active and available for participants to complete.
+                  </>
+                )}
+                {statusActionType === 'deactivate' && (
+                  <>
+                    Are you sure you want to deactivate &quot;{taskToToggle?.title || 'this task'}&quot;?
+                    The task will no longer be active and available for participants.
+                  </>
+                )}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -833,7 +906,7 @@ export default function AdminTasksPage() {
                 Cancel
               </Button>
               <Button
-                variant={taskToToggle?.isAvailable ? "secondary" : "default"}
+                variant={statusActionType === 'deactivate' ? "secondary" : "default"}
                 onClick={handleConfirmStatusToggle}
                 disabled={isUpdating}
               >
@@ -842,7 +915,13 @@ export default function AdminTasksPage() {
                     <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
                     Updating...
                   </>
-                ) : taskToToggle?.isAvailable ? 'Unpublish' : 'Publish'}
+                ) : (
+                  <>
+                    {statusActionType === 'publish' && 'Publish'}
+                    {statusActionType === 'activate' && 'Activate'}
+                    {statusActionType === 'deactivate' && 'Deactivate'}
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>

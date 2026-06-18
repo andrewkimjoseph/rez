@@ -93,6 +93,8 @@ export default function AdminTaskCompletionsPage() {
         return "Fill a Form";
       case "checkOutApp":
         return "Check Out App";
+      case "answerPoll":
+        return "Answer Poll";
       case "doVideoInterview":
         return "Video Interview";
       default:

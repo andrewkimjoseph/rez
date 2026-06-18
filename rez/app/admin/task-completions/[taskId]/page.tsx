@@ -34,11 +34,13 @@ import {
   ClipboardDocumentIcon,
   MagnifyingGlassIcon,
   ArrowDownTrayIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -79,6 +81,8 @@ export default function AdminTaskCompletionsDetailPage() {
   const [updatingCompletionId, setUpdatingCompletionId] = useState<string | null>(null);
   const [invalidateDialogOpen, setInvalidateDialogOpen] = useState(false);
   const [completionToInvalidate, setCompletionToInvalidate] = useState<TaskCompletionWithReward | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [completionToDelete, setCompletionToDelete] = useState<TaskCompletionWithReward | null>(null);
   const [validateDialogOpen, setValidateDialogOpen] = useState(false);
   const [completionToValidate, setCompletionToValidate] = useState<TaskCompletionWithReward | null>(null);
   const [validationDate, setValidationDate] = useState<Date | undefined>(undefined);
@@ -462,6 +466,77 @@ export default function AdminTaskCompletionsDetailPage() {
   const openInvalidateDialog = (completion: TaskCompletionWithReward) => {
     setCompletionToInvalidate(completion);
     setInvalidateDialogOpen(true);
+  };
+
+  const openDeleteDialog = (completion: TaskCompletionWithReward) => {
+    setCompletionToDelete(completion);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async (completion: TaskCompletionWithReward) => {
+    if (!completion.id) return;
+    setUpdatingCompletionId(completion.id);
+    setDeleteDialogOpen(false);
+    setCompletionToDelete(null);
+    try {
+      const res = await fetchWithAuthRetry(
+        `/api/admin/deleteTaskCompletion?completionId=${encodeURIComponent(completion.id)}`,
+        { method: "DELETE" }
+      );
+      if (res.ok) {
+        const wasValidated = completion.isValid === true && completion.invalidatedAt == null;
+        const wasInvalidated = completion.invalidatedAt != null;
+        const wasClaimed = completion.reward?.txnHash != null;
+        const wasPending = !wasValidated && !wasInvalidated && !isExpired(completion.screeningTimeCreated);
+        const wasExpired = !wasValidated && !wasInvalidated && isExpired(completion.screeningTimeCreated);
+        const countryKey =
+          typeof completion.participantCountry === "string" && completion.participantCountry.length > 0
+            ? completion.participantCountry
+            : "—";
+
+        setTotalStats((prev) => {
+          if (!prev) return prev;
+          const countryTotalsByStatus = prev.countryTotalsByStatus
+            ? { ...prev.countryTotalsByStatus }
+            : undefined;
+          if (countryTotalsByStatus) {
+            const buckets: Array<keyof typeof countryTotalsByStatus> = ["all"];
+            if (wasValidated) buckets.push("validated");
+            if (wasInvalidated) buckets.push("invalidated");
+            if (wasPending) buckets.push("pending");
+            if (wasExpired) buckets.push("expired");
+            if (wasClaimed) buckets.push("claimed");
+            for (const bucket of buckets) {
+              const bucketData = { ...countryTotalsByStatus[bucket] };
+              const current = bucketData[countryKey] ?? 0;
+              if (current <= 1) delete bucketData[countryKey];
+              else bucketData[countryKey] = current - 1;
+              countryTotalsByStatus[bucket] = bucketData;
+            }
+          }
+          return {
+            ...prev,
+            totalCount: Math.max(0, prev.totalCount - 1),
+            ...(wasValidated && { validated: Math.max(0, prev.validated - 1) }),
+            ...(wasInvalidated && { invalidated: Math.max(0, prev.invalidated - 1) }),
+            ...(wasClaimed && { claimed: Math.max(0, prev.claimed - 1) }),
+            ...(wasPending && { pending: Math.max(0, prev.pending - 1) }),
+            ...(wasExpired && { expired: Math.max(0, prev.expired - 1) }),
+            ...(countryTotalsByStatus && { countryTotalsByStatus }),
+          };
+        });
+        setTotalCompletionsCount((prev) => (prev != null ? Math.max(0, prev - 1) : prev));
+        setTaskCompletions((prev) => prev.filter((c) => c.id !== completion.id));
+        toast.success("Completion deleted");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || "Failed to delete completion");
+      }
+    } catch {
+      toast.error("Failed to delete completion");
+    } finally {
+      setUpdatingCompletionId(null);
+    }
   };
 
   const copyToClipboard = (text: string, label: string) => {
@@ -1263,6 +1338,16 @@ export default function AdminTaskCompletionsDetailPage() {
                             <XCircleIcon className="h-4 w-4 mr-2" />
                             Invalidate
                           </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => openDeleteDialog(completion)}
+                            className="cursor-pointer text-red-700"
+                            disabled={!!completion.reward?.txnHash}
+                            title={completion.reward?.txnHash ? "Cannot delete: already claimed" : undefined}
+                          >
+                            <TrashIcon className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -1401,6 +1486,35 @@ export default function AdminTaskCompletionsDetailPage() {
                 disabled={!completionToInvalidate}
               >
                 Invalidate
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete completion?</DialogTitle>
+              <DialogDescription>
+                This will permanently remove the task completion record. This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setDeleteDialogOpen(false);
+                  setCompletionToDelete(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => completionToDelete && handleDelete(completionToDelete)}
+                disabled={!completionToDelete}
+              >
+                Delete
               </Button>
             </DialogFooter>
           </DialogContent>
