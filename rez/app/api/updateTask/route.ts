@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { paxDB, rezDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { FieldValue } from 'firebase-admin/firestore';
+import { updatePollInInsights, syncPollFromFirestoreTask } from '@/services/syncPollPublication';
+import { getPollResponseCount } from '@/services/fetchPollContent';
 import { requireAuth } from '@/lib/api-auth';
+import type { PollQuestionDraft } from '@/types/poll';
+import { validatePollQuestions } from '@/types/poll';
 
 export interface TaskMasterUpdateTaskData {
-  type?: 'fillAForm' | 'checkOutApp' | 'doVideoInterview';
+  type?: 'fillAForm' | 'checkOutApp' | 'doVideoInterview' | 'answerPoll';
   title?: string;
   category?: string;
   difficulty?: string;
@@ -15,6 +19,7 @@ export interface TaskMasterUpdateTaskData {
   targetNumberOfParticipants?: number;
   numberOfQuestions?: number;
   numberOfFeedbackQuestions?: number;
+  pollQuestions?: PollQuestionDraft[];
   reviewStatus?: 'pending' | 'approved' | 'rejected' | 'published' | 'archived';
   reasonsForRejection?: number[];
 }
@@ -102,45 +107,87 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Only allow updating rejected tasks (moving them back to pending)
-    if (taskData?.reviewStatus !== 'rejected') {
+    const wasRejected = taskData?.reviewStatus === 'rejected';
+    const isPollTask = taskData?.type === 'answerPoll';
+    const hasPollQuestions = data.pollQuestions !== undefined;
+    let canEditPollQuestions = false;
+
+    if (isPollTask && hasPollQuestions) {
+      const responseCount = await getPollResponseCount(taskId);
+      canEditPollQuestions = responseCount === 0;
+    }
+
+    if (!wasRejected && !canEditPollQuestions) {
       return NextResponse.json(
-        { error: 'Only rejected tasks can be updated' },
+        { error: 'Only rejected tasks can be updated, or polls with no responses for question edits' },
         { status: 400 }
       );
     }
 
-    // Filter out undefined values
-    const updateData: Record<string, unknown> = {};
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined) {
-        updateData[key] = value;
+    if (wasRejected) {
+      const updateData: Record<string, unknown> = {};
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined) {
+          updateData[key] = value;
+        }
+      });
+
+      if (updateData.difficulty) {
+        updateData.levelOfDifficulty = updateData.difficulty;
+        delete updateData.difficulty;
       }
-    });
 
-    // Map difficulty to levelOfDifficulty
-    if (updateData.difficulty) {
-      updateData.levelOfDifficulty = updateData.difficulty;
-      delete updateData.difficulty;
+      updateData.reviewStatus = 'pending';
+      updateData.reasonsForRejection = [];
+      updateData.isAvailable = false;
+
+      if (Object.keys(updateData).length === 0) {
+        return NextResponse.json(
+          { error: 'No valid fields to update' },
+          { status: 400 }
+        );
+      }
+
+      await taskRef.update({
+        ...updateData,
+        timeUpdated: FieldValue.serverTimestamp(),
+      });
+    } else if (canEditPollQuestions && (data.instructions !== undefined || data.title !== undefined)) {
+      const lightUpdate: Record<string, unknown> = {};
+      if (data.instructions !== undefined) lightUpdate.instructions = data.instructions;
+      if (data.title !== undefined) lightUpdate.title = data.title;
+      if (Object.keys(lightUpdate).length > 0) {
+        await taskRef.update({
+          ...lightUpdate,
+          timeUpdated: FieldValue.serverTimestamp(),
+        });
+      }
     }
 
-    // Ensure reviewStatus is set to pending and reasonsForRejection is cleared
-    updateData.reviewStatus = 'pending';
-    updateData.reasonsForRejection = [];
-    updateData.isAvailable = false; // Not available until approved and published
-
-    if (Object.keys(updateData).length === 0) {
-      return NextResponse.json(
-        { error: 'No valid fields to update' },
-        { status: 400 }
-      );
+    if (isPollTask && hasPollQuestions) {
+      try {
+        if (data.pollQuestions) {
+          const pollValidation = validatePollQuestions(data.pollQuestions);
+          if (pollValidation) {
+            return NextResponse.json({ error: pollValidation }, { status: 400 });
+          }
+        }
+        await updatePollInInsights(taskId, {
+          title: data.title,
+          category: data.category,
+          targetNumberOfParticipants: data.targetNumberOfParticipants,
+          pollQuestions: data.pollQuestions,
+          reviewStatus: wasRejected ? 'pending' : undefined,
+        });
+        if (wasRejected) {
+          await syncPollFromFirestoreTask(taskId);
+        }
+      } catch (syncError) {
+        const message = syncError instanceof Error ? syncError.message : 'Failed to update poll';
+        const status = message.includes('cannot be changed') ? 403 : 500;
+        return NextResponse.json({ error: message }, { status });
+      }
     }
-
-    // Update the task
-    await taskRef.update({
-      ...updateData,
-      timeUpdated: FieldValue.serverTimestamp(),
-    });
 
     // Fetch updated task for notification
     const updatedTaskDoc = await taskRef.get();

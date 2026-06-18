@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { paxDB, rezDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
+import { syncPollFromFirestoreTask } from '@/services/syncPollPublication';
 import { requireSuperAdmin } from '@/lib/api-auth';
 
 export interface AdminUpdateTaskData {
   title?: string;
-  type?: 'fillAForm' | 'checkOutApp' | 'doVideoInterview';
+  type?: 'fillAForm' | 'checkOutApp' | 'doVideoInterview' | 'answerPoll';
   category?: string;
   levelOfDifficulty?: string;
   link?: string;
@@ -163,9 +164,17 @@ export async function PATCH(request: NextRequest) {
       timeUpdated: FieldValue.serverTimestamp(),
     });
 
-    // Fetch updated task for notification
     const updatedTaskDoc = await taskRef.get();
     const taskData = updatedTaskDoc.data();
+
+    const updatedTaskType = (updateData.type as string | undefined) ?? taskData?.type;
+    if (updatedTaskType === 'answerPoll') {
+      try {
+        await syncPollFromFirestoreTask(taskId);
+      } catch (syncError) {
+        console.error('Failed to sync poll publication to Insights:', syncError);
+      }
+    }
 
     // Send notification (fire and forget)
     try {

@@ -87,7 +87,23 @@ export async function GET(request: NextRequest) {
         }
       } catch (algoliaError) {
         console.warn('Algolia task completion stats failed, falling back to Firestore:', algoliaError);
+        completionRecords = [];
       }
+    }
+
+    if (completionRecords.length > 0) {
+      const completionsRef = paxDB.collection(COLLECTIONS.TASK_COMPLETIONS);
+      const verifiedRecords: CompletionRecord[] = [];
+      const VERIFY_BATCH_SIZE = 30;
+      for (let i = 0; i < completionRecords.length; i += VERIFY_BATCH_SIZE) {
+        const batch = completionRecords.slice(i, i + VERIFY_BATCH_SIZE);
+        const docRefs = batch.map((c) => completionsRef.doc(c.id));
+        const snaps = await paxDB.getAll(...docRefs);
+        snaps.forEach((snap, idx) => {
+          if (snap.exists) verifiedRecords.push(batch[idx]);
+        });
+      }
+      completionRecords = verifiedRecords;
     }
 
     if (completionRecords.length === 0) {

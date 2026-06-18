@@ -4,7 +4,7 @@ import { COLLECTIONS } from '../constants/collections';
 
 export interface UpdateTaskData {
   title?: string;
-  type?: 'fillAForm' | 'checkOutApp' | 'doVideoInterview';
+  type?: 'fillAForm' | 'checkOutApp' | 'doVideoInterview' | 'answerPoll';
   category?: string;
   levelOfDifficulty?: string;
   link?: string;

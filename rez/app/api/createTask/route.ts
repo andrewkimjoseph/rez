@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createTaskInPaxApp } from '@/firebase/firestore/services/createTaskInPaxApp';
+import { createPollInInsights } from '@/services/createPollInInsights';
+import { syncPollFromFirestoreTask } from '@/services/syncPollPublication';
 import { requireAuth } from '@/lib/api-auth';
-import { rezDB } from '@/firebase/serverConfig';
+import { validatePollQuestions } from '@/types/poll';
+import { rezDB, paxDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 
 export async function POST(request: NextRequest) {
@@ -89,7 +92,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create the task using the server-side service
+    if (body.type === 'answerPoll') {
+      const pollValidation = validatePollQuestions(body.pollQuestions);
+      if (pollValidation) {
+        return NextResponse.json({ error: pollValidation }, { status: 400 });
+      }
+    }
+
     const taskId = await createTaskInPaxApp({
       type: body.type,
       title: body.title,
@@ -105,6 +114,23 @@ export async function POST(request: NextRequest) {
       numberOfFeedbackQuestions: body.numberOfFeedbackQuestions,
     });
 
+    if (body.type === 'answerPoll') {
+      try {
+        await createPollInInsights({
+          paxTaskId: taskId,
+          title: body.title,
+          category: body.category || "Other",
+          taskMasterEmail,
+          targetNumberOfParticipants: body.targetNumberOfParticipants,
+          pollQuestions: body.pollQuestions,
+        });
+        await syncPollFromFirestoreTask(taskId);
+      } catch (insightsError) {
+        await paxDB.collection(COLLECTIONS.TASKS).doc(taskId).delete();
+        throw insightsError;
+      }
+    }
+
     // Trigger notification about the new task (fire and forget)
     try {
       const notificationData = {
@@ -118,7 +144,7 @@ export async function POST(request: NextRequest) {
         link: body.link,
         estimatedTimeOfCompletionInMinutes: 5, // Default from service
         targetNumberOfParticipants: body.targetNumberOfParticipants || 100,
-        rewardAmountPerParticipant: 0.15, // Default from service
+        rewardAmountPerParticipant: 100, // Default from service
       };
 
       // Send notification without awaiting (fire and forget)

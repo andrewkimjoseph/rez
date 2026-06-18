@@ -173,6 +173,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const scope = request.nextUrl.searchParams.get('scope');
+    const listOnly = scope === 'list';
+
     let tasks: unknown[] = [];
     const taskIds: string[] = [];
 
@@ -213,6 +216,14 @@ export async function GET(request: NextRequest) {
         tasks,
         taskCompletions: [],
         completionStats: emptyCompletionStats,
+      });
+    }
+
+    if (listOnly) {
+      return NextResponse.json({
+        tasks,
+        taskCompletions: [],
+        completionStats: null,
       });
     }
 

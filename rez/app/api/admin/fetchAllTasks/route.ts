@@ -21,8 +21,9 @@ export async function GET(request: NextRequest) {
       MAX_LIMIT
     );
     const startAfterDocId = searchParams.get('startAfterDocId') || undefined;
+    const preferFirestore = searchParams.get('source') === 'firestore';
 
-    if (isAlgoliaConfigured()) {
+    if (isAlgoliaConfigured() && !preferFirestore) {
       try {
         const client = getAlgoliaClient();
         const page = startAfterDocId?.startsWith(ALGOLIA_PAGE_PREFIX)

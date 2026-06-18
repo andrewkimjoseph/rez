@@ -76,7 +76,6 @@ export async function GET(request: NextRequest) {
           },
         });
         const hits = (response.hits ?? []) as Record<string, unknown>[];
-        const totalCount = response.nbHits ?? 0;
 
         const rewardsSnapshot = await rewardsRef
           .where('taskId', '==', taskId)
@@ -104,9 +103,21 @@ export async function GET(request: NextRequest) {
           } as CompletionData & { id: string; reward?: { txnHash: string } };
         });
 
+        const completionsRef = paxDB.collection(COLLECTIONS.TASK_COMPLETIONS);
+        const VERIFY_BATCH_SIZE = 10;
+        const verifiedCompletions: typeof rawCompletions = [];
+        for (let i = 0; i < rawCompletions.length; i += VERIFY_BATCH_SIZE) {
+          const batch = rawCompletions.slice(i, i + VERIFY_BATCH_SIZE);
+          const docRefs = batch.map((c) => completionsRef.doc(c.id));
+          const snaps = await paxDB.getAll(...docRefs);
+          snaps.forEach((snap, idx) => {
+            if (snap.exists) verifiedCompletions.push(batch[idx]);
+          });
+        }
+
         const uniqueParticipantIds = [
           ...new Set(
-            rawCompletions
+            verifiedCompletions
               .map((c) => c.participantId)
               .filter((id): id is string => typeof id === 'string' && id.length > 0)
           ),
@@ -132,7 +143,7 @@ export async function GET(request: NextRequest) {
         }
         const screeningIds = [
           ...new Set(
-            rawCompletions
+            verifiedCompletions
               .map((c) => c.screeningId)
               .filter((id): id is string => typeof id === 'string' && id.length > 0)
           ),
@@ -151,7 +162,7 @@ export async function GET(request: NextRequest) {
             }
           });
         }
-        const taskCompletions = rawCompletions.map((c) => {
+        const taskCompletions = verifiedCompletions.map((c) => {
           const participantId = c.participantId;
           const participantEmailAddress = participantId != null && participantId !== '' ? (emailByParticipantId.get(participantId) ?? null) : null;
           const participantCountry = participantId != null && participantId !== '' ? (countryByParticipantId.get(participantId) ?? null) : null;
@@ -160,6 +171,11 @@ export async function GET(request: NextRequest) {
           const screeningTimeCreated = screeningId != null && screeningId !== '' ? screeningTimeById.get(screeningId) ?? null : null;
           return { ...c, participantEmailAddress, participantCountry, participantAccountType, screeningTimeCreated };
         });
+        const totalCountSnapshot = await completionsRef
+          .where('taskId', '==', taskId)
+          .count()
+          .get();
+        const totalCount = totalCountSnapshot.data().count;
         const nbPages = response.nbPages ?? 0;
         const hasMore = page + 1 < nbPages;
         const nextCursor = hasMore ? { startAfterDocId: `${ALGOLIA_PAGE_PREFIX}${page + 1}` } : null;
