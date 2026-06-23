@@ -8,7 +8,7 @@ import {
   TooltipTrigger,
   TooltipProvider,
 } from '@/components/ui/tooltip';
-import { GlobeAltIcon, DocumentTextIcon, ChatBubbleLeftRightIcon, ExclamationCircleIcon, InformationCircleIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { GlobeAltIcon, DocumentTextIcon, ChatBubbleLeftRightIcon, ExclamationCircleIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
 import { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +16,8 @@ import { Button } from '@/components/ui/button';
 import { isFieldRejected, getRejectionReasonsForField } from '@/utils/rejection-highlighting';
 import { getRejectionReasonLabel } from '@/utils/rejection-reasons';
 import { TOOLTIP_TEXTS } from '@/data/tooltip-texts';
-import { MAX_POLL_QUESTIONS, validatePollQuestions, type PollQuestionDraft } from '@/types/poll';
+import type { PollQuestionDraft } from '@/types/poll';
+import { PollQuestionsEditor } from '@/components/poll/PollQuestionsEditor';
 
 const isValidUrl = (url: string): boolean => {
   if (!url) return false;
@@ -58,162 +59,28 @@ export default function Step4QuestionsTasks() {
   const isCheckOutApp = data.type === 'checkOutApp';
   const isPoll = data.type === 'answerPoll';
 
-  const defaultPollQuestions = (): PollQuestionDraft[] => [
-    { questionText: '', options: ['', ''] },
-  ];
-
-  const pollQuestions =
-    data.pollQuestions?.length ? data.pollQuestions : defaultPollQuestions();
-
-  const updatePollQuestionText = (qIndex: number, value: string) => {
-    const next = pollQuestions.map((q, i) =>
-      i === qIndex ? { ...q, questionText: value } : q,
-    );
-    updateData({ pollQuestions: next });
-  };
-
-  const updatePollOption = (qIndex: number, oIndex: number, value: string) => {
-    const next = pollQuestions.map((q, i) => {
-      if (i !== qIndex) return q;
-      const options = [...q.options];
-      options[oIndex] = value;
-      return { ...q, options };
-    });
-    updateData({ pollQuestions: next });
-  };
-
-  const addPollOption = (qIndex: number) => {
-    const next = pollQuestions.map((q, i) =>
-      i === qIndex ? { ...q, options: [...q.options, ''] } : q,
-    );
-    updateData({ pollQuestions: next });
-  };
-
-  const removePollOption = (qIndex: number, oIndex: number) => {
-    const next = pollQuestions.map((q, i) => {
-      if (i !== qIndex || q.options.length <= 2) return q;
-      return { ...q, options: q.options.filter((_, j) => j !== oIndex) };
-    });
-    updateData({ pollQuestions: next });
-  };
-
-  const addPollQuestion = () => {
-    if (pollQuestions.length >= MAX_POLL_QUESTIONS) return;
-    updateData({
-      pollQuestions: [...pollQuestions, { questionText: '', options: ['', ''] }],
-    });
-  };
-
-  const removePollQuestion = (qIndex: number) => {
-    if (pollQuestions.length <= 1) return;
-    updateData({ pollQuestions: pollQuestions.filter((_, i) => i !== qIndex) });
-  };
+  const pollQuestions: PollQuestionDraft[] =
+    data.pollQuestions?.length ? data.pollQuestions : [{ questionText: '', options: ['', ''] }];
 
   if (isPoll) {
     return (
       <div>
-        <div className="mb-3 flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Poll questions</h2>
-            <p className="text-sm text-gray-500 mt-0.5">
-              Add up to {MAX_POLL_QUESTIONS} multiple-choice questions
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs shrink-0"
-            onClick={addPollQuestion}
-            disabled={pollQuestions.length >= MAX_POLL_QUESTIONS}
-          >
-            <PlusIcon className="w-3.5 h-3.5 mr-1" />
-            Add question
-          </Button>
-        </div>
+        <PollQuestionsEditor
+          value={pollQuestions}
+          onChange={(next) => updateData({ pollQuestions: next })}
+        />
 
-        <div className="space-y-4">
-          {pollQuestions.map((question, qIndex) => (
-            <div
-              key={qIndex}
-              className="rounded-lg border border-border/60 bg-muted/20 p-4 space-y-3"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <Label className="text-xs font-medium text-gray-500">
-                  Question {qIndex + 1}
-                </Label>
-                {pollQuestions.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 text-xs text-gray-400 hover:text-red-500"
-                    onClick={() => removePollQuestion(qIndex)}
-                  >
-                    <TrashIcon className="w-3.5 h-3.5 mr-1" />
-                    Remove
-                  </Button>
-                )}
-              </div>
-              <Textarea
-                value={question.questionText}
-                onChange={(e) => updatePollQuestionText(qIndex, e.target.value)}
-                placeholder="e.g. Would you trust a stablecoin issued by your country's central bank?"
-                className="min-h-[72px] text-sm"
-              />
-              <div>
-                <Label className="text-xs font-medium text-gray-500 mb-2 block">
-                  Answer options
-                </Label>
-                <div className="space-y-2">
-                  {question.options.map((option, oIndex) => (
-                    <div key={oIndex} className="flex items-center gap-2">
-                      <Input
-                        value={option}
-                        onChange={(e) => updatePollOption(qIndex, oIndex, e.target.value)}
-                        placeholder={`Option ${oIndex + 1}`}
-                        className="h-9 text-sm"
-                      />
-                      {question.options.length > 2 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 shrink-0 text-gray-400 hover:text-red-500"
-                          onClick={() => removePollOption(qIndex, oIndex)}
-                        >
-                          <TrashIcon className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="mt-2 h-8 text-xs"
-                  onClick={() => addPollOption(qIndex)}
-                >
-                  <PlusIcon className="w-3.5 h-3.5 mr-1" />
-                  Add option
-                </Button>
-              </div>
-            </div>
-          ))}
-
-          <div>
-            <Label htmlFor="instructions" className="text-xs font-medium text-gray-500 mb-1 block">
-              Instructions (optional)
-            </Label>
-            <Textarea
-              id="instructions"
-              value={data.instructions || ''}
-              onChange={(e) => updateData({ instructions: e.target.value })}
-              placeholder="Any extra guidance for participants"
-              className="min-h-[60px] text-sm"
-            />
-          </div>
+        <div className="mt-4">
+          <Label htmlFor="instructions" className="text-xs font-medium text-gray-500 mb-1 block">
+            Instructions (optional)
+          </Label>
+          <Textarea
+            id="instructions"
+            value={data.instructions || ''}
+            onChange={(e) => updateData({ instructions: e.target.value })}
+            placeholder="Any extra guidance for participants"
+            className="min-h-[60px] text-sm"
+          />
         </div>
       </div>
     );

@@ -26,9 +26,43 @@ export function validatePollQuestions(questions: PollQuestionDraft[] | undefined
   return null;
 }
 
+export function validatePollQuestionsTextOnly(
+  existing: PollQuestionDraft[],
+  draft: PollQuestionDraft[],
+): string | null {
+  if (existing.length !== draft.length) {
+    return 'Cannot add or remove questions while responses exist';
+  }
+
+  for (let i = 0; i < existing.length; i++) {
+    const prev = existing[i];
+    const next = draft[i];
+    if (prev.options.length !== next.options.length) {
+      return `Question ${i + 1}: cannot add or remove options while responses exist`;
+    }
+    if (!next.questionText?.trim()) {
+      return `Question ${i + 1} text is required`;
+    }
+    for (let j = 0; j < next.options.length; j++) {
+      if (!next.options[j]?.trim()) {
+        return `Question ${i + 1}, option ${j + 1} text is required`;
+      }
+    }
+  }
+
+  return null;
+}
+
 export function normalizePollQuestions(questions: PollQuestionDraft[]): PollQuestionDraft[] {
   return questions.map((q) => ({
     questionText: q.questionText.trim(),
     options: q.options.map((o) => o.trim()).filter(Boolean),
   }));
+}
+
+export function pollQuestionsEqual(
+  a: PollQuestionDraft[],
+  b: PollQuestionDraft[],
+): boolean {
+  return JSON.stringify(normalizePollQuestions(a)) === JSON.stringify(normalizePollQuestions(b));
 }

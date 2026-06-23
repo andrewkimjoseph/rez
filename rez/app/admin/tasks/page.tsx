@@ -43,7 +43,6 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
-import AdminEditTaskDialog from "@/components/admin/AdminEditTaskDialog";
 import AdminRejectTaskDialog from "@/components/admin/AdminRejectTaskDialog";
 import AdminAccessDenied from "@/components/admin/AdminAccessDenied";
 import { getTokenInfo } from "@/utils/currencies";
@@ -105,8 +104,6 @@ export default function AdminTasksPage() {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [taskToToggle, setTaskToToggle] = useState<Task | null>(null);
   const [statusActionType, setStatusActionType] = useState<'publish' | 'activate' | 'deactivate' | null>(null);
@@ -200,12 +197,7 @@ export default function AdminTasksPage() {
 
   const handleEditClick = (task: Task) => {
     adminTaskEditClicked({ task_id: task.id, task_title: task.title });
-    setTaskToEdit(task);
-    setEditDialogOpen(true);
-  };
-
-  const handleEditSuccess = () => {
-    toast.success("Task updated successfully");
+    router.push(`/admin/tasks/${task.id}/edit`);
   };
 
   const handleStatusToggleClick = (task: Task) => {
@@ -926,14 +918,6 @@ export default function AdminTasksPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
-        {/* Edit Task Dialog */}
-        <AdminEditTaskDialog
-          task={taskToEdit}
-          open={editDialogOpen}
-          onOpenChange={setEditDialogOpen}
-          onSuccess={handleEditSuccess}
-        />
 
         {/* Review Confirmation Dialog */}
         {reviewAction === 'approve' ? (

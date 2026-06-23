@@ -1,12 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,6 +40,14 @@ import Image from "next/image";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 import { TOOLTIP_TEXTS } from "@/data/tooltip-texts";
+import { fetchWithAuthRetry } from "@/lib/api-fetch";
+import { PollQuestionsEditor } from "@/components/poll/PollQuestionsEditor";
+import {
+  pollQuestionsEqual,
+  validatePollQuestions,
+  validatePollQuestionsTextOnly,
+  type PollQuestionDraft,
+} from "@/types/poll";
 
 const REVIEW_STATUS_LABELS: Record<
   "pending" | "approved" | "rejected" | "published" | "archived",
@@ -58,11 +60,11 @@ const REVIEW_STATUS_LABELS: Record<
   rejected: "Rejected",
 };
 
-interface AdminEditTaskDialogProps {
-  task: Task | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+export interface AdminEditTaskFormProps {
+  task: Task;
+  defaultTab?: string;
   onSuccess?: (updatedTask?: Task) => void;
+  onCancel: () => void;
 }
 
 const taskTypes = [
@@ -74,12 +76,12 @@ const categories = ["Finance", "Climate", "Education", "Health", "Technology", "
 const difficulties = ["Easy", "Medium", "Hard"];
 const PAYMENT_TERMS_NONE = "__none__";
 
-export default function AdminEditTaskDialog({
+export default function AdminEditTaskForm({
   task,
-  open,
-  onOpenChange,
-  onSuccess
-}: AdminEditTaskDialogProps) {
+  defaultTab = "basic",
+  onSuccess,
+  onCancel,
+}: AdminEditTaskFormProps) {
   const { updateTask, isUpdating, taskMasters, fetchAllTaskMasters } = useAdminStore();
   const {
     adminTaskEditComplete,
@@ -121,6 +123,11 @@ export default function AdminEditTaskDialog({
   const [managerContractAddress, setManagerContractAddress] = useState("");
   const [assignToTaskMaster, setAssignToTaskMaster] = useState(false);
   const [assignedTaskMasterEmailAddress, setAssignedTaskMasterEmailAddress] = useState("");
+  const [pollQuestions, setPollQuestions] = useState<PollQuestionDraft[]>([]);
+  const [originalPollQuestions, setOriginalPollQuestions] = useState<PollQuestionDraft[]>([]);
+  const [pollResponseCount, setPollResponseCount] = useState(0);
+  const [isLoadingPollContent, setIsLoadingPollContent] = useState(false);
+  const [pollContentError, setPollContentError] = useState<string | null>(null);
 
   const coerceDeadlineToDate = (value: unknown): Date | undefined => {
     if (value == null) return undefined;
@@ -204,6 +211,51 @@ export default function AdminEditTaskDialog({
     }
   }, [task]);
 
+  useEffect(() => {
+    if (!task.id || task.type !== "answerPoll") {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadPollContent = async () => {
+      setIsLoadingPollContent(true);
+      setPollContentError(null);
+      try {
+        const response = await fetchWithAuthRetry(`/api/pollContent/${task.id}`);
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({}));
+          throw new Error(body.error || "Failed to load poll content");
+        }
+        const content = await response.json();
+        if (!cancelled) {
+          setPollQuestions(content.pollQuestions ?? []);
+          setOriginalPollQuestions(content.pollQuestions ?? []);
+          setPollResponseCount(content.responseCount ?? 0);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setPollContentError(
+            err instanceof Error ? err.message : "Failed to load poll content",
+          );
+          setPollQuestions([]);
+          setOriginalPollQuestions([]);
+          setPollResponseCount(0);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingPollContent(false);
+        }
+      }
+    };
+
+    loadPollContent();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [task.id, task.type]);
+
   const buildUpdateData = (): AdminUpdateTaskData => {
     const updateData: AdminUpdateTaskData = {};
     if (!task) return updateData;
@@ -254,6 +306,13 @@ export default function AdminEditTaskDialog({
     if (isSuperAdmin && assignToTaskMaster && assignedTaskMasterEmailAddress !== (task.rezTaskMasterEmailAddress || "")) {
       updateData.rezTaskMasterEmailAddress = assignedTaskMasterEmailAddress;
     }
+    if (
+      type === "answerPoll" &&
+      originalPollQuestions.length > 0 &&
+      !pollQuestionsEqual(pollQuestions, originalPollQuestions)
+    ) {
+      updateData.pollQuestions = pollQuestions;
+    }
     return updateData;
   };
 
@@ -269,8 +328,19 @@ export default function AdminEditTaskDialog({
     const updateData = buildUpdateData();
     if (Object.keys(updateData).length === 0) {
       toast.info("No changes detected");
-      onOpenChange(false);
+      onCancel();
       return;
+    }
+
+    if (updateData.pollQuestions) {
+      const pollValidation =
+        pollResponseCount > 0
+          ? validatePollQuestionsTextOnly(originalPollQuestions, pollQuestions)
+          : validatePollQuestions(pollQuestions);
+      if (pollValidation) {
+        toast.error(pollValidation);
+        return;
+      }
     }
     
     // Track review status changes
@@ -307,7 +377,9 @@ export default function AdminEditTaskDialog({
       }
       
       adminTaskEditComplete({ task_id: task.id, changed_fields: Object.keys(updateData) });
-      onOpenChange(false);
+      if (updateData.pollQuestions) {
+        setOriginalPollQuestions(pollQuestions);
+      }
       onSuccess?.({ ...task, ...updateData } as Task);
     } else {
       // Track failed review status changes
@@ -345,19 +417,13 @@ export default function AdminEditTaskDialog({
   };
 
   const handleCancel = () => {
-    if (task?.id) adminTaskEditCancelled({ task_id: task.id });
-    onOpenChange(false);
+    adminTaskEditCancelled({ task_id: task.id });
+    onCancel();
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 gap-0">
-        <DialogHeader className="px-6 pt-5 pb-3 border-b border-gray-100">
-          <DialogTitle className="text-lg font-semibold text-gray-900">Edit task</DialogTitle>
-          <p className="text-xs text-gray-500 mt-0.5">ID: {task?.id}</p>
-        </DialogHeader>
-
-        <Tabs defaultValue="basic" className="w-full">
+    <div className="rounded-lg border bg-card overflow-hidden">
+        <Tabs defaultValue={defaultTab} className="w-full">
           <TabsList className="w-full justify-start rounded-none border-b border-gray-100 bg-transparent p-0 h-auto gap-0">
             <TabsTrigger value="basic" className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#5C29A3] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm font-medium text-gray-500 data-[state=active]:text-[#5C29A3]">
               <DocumentTextIcon className="w-4 h-4 mr-2" />
@@ -576,6 +642,33 @@ export default function AdminEditTaskDialog({
                     </SelectContent>
                   </Select>
                 </div>
+                {type === "answerPoll" && (
+                  <div className="rounded-lg border border-gray-200 bg-gray-50/50 p-4">
+                    <div className="mb-3">
+                      <h4 className="text-sm font-semibold text-gray-900">Poll questions</h4>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {pollResponseCount > 0
+                          ? `${pollResponseCount} response${pollResponseCount === 1 ? "" : "s"} — text-only edits (wording fixes)`
+                          : "Full edit — add, remove, or reorder questions and options"}
+                      </p>
+                    </div>
+                    {isLoadingPollContent ? (
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                        Loading poll questions...
+                      </div>
+                    ) : pollContentError ? (
+                      <p className="text-sm text-red-600">{pollContentError}</p>
+                    ) : (
+                      <PollQuestionsEditor
+                        value={pollQuestions}
+                        onChange={setPollQuestions}
+                        textOnlyMode={pollResponseCount > 0}
+                        showHeader={false}
+                      />
+                    )}
+                  </div>
+                )}
               </div>
             </TabsContent>
 
@@ -1005,7 +1098,7 @@ export default function AdminEditTaskDialog({
           </div>
         </Tabs>
 
-        <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
+        <div className="sticky bottom-0 z-10 px-6 py-4 border-t border-gray-100 bg-background flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={handleCancel} disabled={isUpdating}>Cancel</Button>
           <Button 
             size="sm" 
@@ -1015,7 +1108,6 @@ export default function AdminEditTaskDialog({
             {isUpdating ? <><ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" /> Saving...</> : "Save changes"}
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+    </div>
   );
 }

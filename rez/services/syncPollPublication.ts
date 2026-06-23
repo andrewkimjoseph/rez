@@ -8,9 +8,14 @@ import {
 import {
   normalizePollQuestions,
   validatePollQuestions,
+  validatePollQuestionsTextOnly,
   type PollQuestionDraft,
 } from '@/types/poll';
-import { getPollResponseCount } from '@/services/fetchPollContent';
+import { fetchPollContentByPaxTaskId, getPollResponseCount } from '@/services/fetchPollContent';
+
+export type UpdatePollInInsightsOptions = {
+  adminOverride?: boolean;
+};
 
 export type SyncPollPublicationInput = {
   reviewStatus: string | null;
@@ -79,8 +84,10 @@ export async function updatePollInInsights(
     pollQuestions?: PollQuestionDraft[];
     reviewStatus?: string;
   },
+  options?: UpdatePollInInsightsOptions,
 ): Promise<void> {
   const supabase = getSupabaseAdmin();
+  const adminOverride = options?.adminOverride === true;
 
   const taskUpdate: {
     title?: string;
@@ -112,88 +119,159 @@ export async function updatePollInInsights(
 
   if (data.pollQuestions !== undefined) {
     const responseCount = await getPollResponseCount(paxTaskId);
-    if (responseCount > 0) {
+    if (responseCount > 0 && !adminOverride) {
       throw new Error('Poll questions cannot be changed after responses have been received');
     }
 
     const pollQuestions = normalizePollQuestions(data.pollQuestions);
-    const validationError = validatePollQuestions(pollQuestions);
-    if (validationError) {
-      throw new Error(validationError);
-    }
 
-    if (task.is_published) {
-      taskUpdate.is_published = false;
-      taskUpdate.review_status = 'pending';
-    }
-
-    const { data: existingQuestions, error: existingError } = await supabase
-      .from('questions')
-      .select('id, sort_order')
-      .eq('task_id', task.id)
-      .order('sort_order', { ascending: true });
-
-    if (existingError) {
-      throw new Error(existingError.message);
-    }
-
-    const existingBySort = new Map(
-      (existingQuestions ?? []).map((q) => [q.sort_order, q.id]),
-    );
-    const keptQuestionIds = new Set<string>();
-
-    for (let i = 0; i < pollQuestions.length; i++) {
-      const draft = pollQuestions[i];
-      const existingId = existingBySort.get(i);
-
-      let questionId: string;
-      if (existingId) {
-        const { error: updateError } = await supabase
-          .from('questions')
-          .update({ question_text: draft.questionText, sort_order: i })
-          .eq('id', existingId);
-        if (updateError) throw new Error(updateError.message);
-        questionId = existingId;
-      } else {
-        const { data: inserted, error: insertError } = await supabase
-          .from('questions')
-          .insert({
-            task_id: task.id,
-            question_text: draft.questionText,
-            sort_order: i,
-          })
-          .select('id')
-          .single();
-        if (insertError || !inserted) {
-          throw new Error(insertError?.message ?? 'Failed to insert poll question');
-        }
-        questionId = inserted.id;
+    if (responseCount > 0 && adminOverride) {
+      const existing = await fetchPollContentByPaxTaskId(paxTaskId);
+      if (!existing) {
+        throw new Error('Poll content not found in Insights');
+      }
+      const textOnlyError = validatePollQuestionsTextOnly(existing.pollQuestions, pollQuestions);
+      if (textOnlyError) {
+        throw new Error(textOnlyError);
+      }
+      await applyPollQuestionsTextOnlyUpdate(supabase, task.id, pollQuestions);
+    } else {
+      const validationError = validatePollQuestions(pollQuestions);
+      if (validationError) {
+        throw new Error(validationError);
       }
 
-      keptQuestionIds.add(questionId);
+      if (task.is_published && !adminOverride) {
+        taskUpdate.is_published = false;
+        taskUpdate.review_status = 'pending';
+      }
 
-      await supabase.from('question_options').delete().eq('question_id', questionId);
-      const optionRows = draft.options.map((optionText, index) => ({
-        question_id: questionId,
-        option_text: optionText,
-        sort_order: index,
-      }));
-      const { error: optionsError } = await supabase.from('question_options').insert(optionRows);
-      if (optionsError) throw new Error(optionsError.message);
-    }
-
-    const toDelete = (existingQuestions ?? [])
-      .map((q) => q.id)
-      .filter((id) => !keptQuestionIds.has(id));
-
-    if (toDelete.length > 0) {
-      const { error: deleteError } = await supabase.from('questions').delete().in('id', toDelete);
-      if (deleteError) throw new Error(deleteError.message);
+      await applyPollQuestionsFullUpdate(supabase, task.id, pollQuestions);
     }
   }
 
   if (Object.keys(taskUpdate).length > 0) {
     const { error } = await supabase.from('tasks').update(taskUpdate).eq('pax_task_id', paxTaskId);
     if (error) throw new Error(error.message);
+  }
+}
+
+async function applyPollQuestionsTextOnlyUpdate(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  taskId: string,
+  pollQuestions: PollQuestionDraft[],
+): Promise<void> {
+  const { data: existingQuestions, error: existingError } = await supabase
+    .from('questions')
+    .select('id, sort_order')
+    .eq('task_id', taskId)
+    .order('sort_order', { ascending: true });
+
+  if (existingError) {
+    throw new Error(existingError.message);
+  }
+
+  for (let i = 0; i < pollQuestions.length; i++) {
+    const draft = pollQuestions[i];
+    const questionId = existingQuestions?.[i]?.id;
+    if (!questionId) {
+      throw new Error(`Question ${i + 1} not found in Insights`);
+    }
+
+    const { error: updateError } = await supabase
+      .from('questions')
+      .update({ question_text: draft.questionText })
+      .eq('id', questionId);
+    if (updateError) throw new Error(updateError.message);
+
+    const { data: existingOptions, error: optionsError } = await supabase
+      .from('question_options')
+      .select('id, sort_order')
+      .eq('question_id', questionId)
+      .order('sort_order', { ascending: true });
+
+    if (optionsError) throw new Error(optionsError.message);
+
+    for (let j = 0; j < draft.options.length; j++) {
+      const optionId = existingOptions?.[j]?.id;
+      if (!optionId) {
+        throw new Error(`Question ${i + 1}, option ${j + 1} not found in Insights`);
+      }
+      const { error: optionUpdateError } = await supabase
+        .from('question_options')
+        .update({ option_text: draft.options[j] })
+        .eq('id', optionId);
+      if (optionUpdateError) throw new Error(optionUpdateError.message);
+    }
+  }
+}
+
+async function applyPollQuestionsFullUpdate(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  taskId: string,
+  pollQuestions: PollQuestionDraft[],
+): Promise<void> {
+  const { data: existingQuestions, error: existingError } = await supabase
+    .from('questions')
+    .select('id, sort_order')
+    .eq('task_id', taskId)
+    .order('sort_order', { ascending: true });
+
+  if (existingError) {
+    throw new Error(existingError.message);
+  }
+
+  const existingBySort = new Map(
+    (existingQuestions ?? []).map((q) => [q.sort_order, q.id]),
+  );
+  const keptQuestionIds = new Set<string>();
+
+  for (let i = 0; i < pollQuestions.length; i++) {
+    const draft = pollQuestions[i];
+    const existingId = existingBySort.get(i);
+
+    let questionId: string;
+    if (existingId) {
+      const { error: updateError } = await supabase
+        .from('questions')
+        .update({ question_text: draft.questionText, sort_order: i })
+        .eq('id', existingId);
+      if (updateError) throw new Error(updateError.message);
+      questionId = existingId;
+    } else {
+      const { data: inserted, error: insertError } = await supabase
+        .from('questions')
+        .insert({
+          task_id: taskId,
+          question_text: draft.questionText,
+          sort_order: i,
+        })
+        .select('id')
+        .single();
+      if (insertError || !inserted) {
+        throw new Error(insertError?.message ?? 'Failed to insert poll question');
+      }
+      questionId = inserted.id;
+    }
+
+    keptQuestionIds.add(questionId);
+
+    await supabase.from('question_options').delete().eq('question_id', questionId);
+    const optionRows = draft.options.map((optionText, index) => ({
+      question_id: questionId,
+      option_text: optionText,
+      sort_order: index,
+    }));
+    const { error: optionsError } = await supabase.from('question_options').insert(optionRows);
+    if (optionsError) throw new Error(optionsError.message);
+  }
+
+  const toDelete = (existingQuestions ?? [])
+    .map((q) => q.id)
+    .filter((id) => !keptQuestionIds.has(id));
+
+  if (toDelete.length > 0) {
+    const { error: deleteError } = await supabase.from('questions').delete().in('id', toDelete);
+    if (deleteError) throw new Error(deleteError.message);
   }
 }

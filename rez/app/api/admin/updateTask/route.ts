@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { paxDB, rezDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { syncPollFromFirestoreTask } from '@/services/syncPollPublication';
+import { syncPollFromFirestoreTask, updatePollInInsights } from '@/services/syncPollPublication';
 import { requireSuperAdmin } from '@/lib/api-auth';
+import type { PollQuestionDraft } from '@/types/poll';
+import { validatePollQuestions, validatePollQuestionsTextOnly } from '@/types/poll';
+import { fetchPollContentByPaxTaskId } from '@/services/fetchPollContent';
 
 export interface AdminUpdateTaskData {
   title?: string;
@@ -28,6 +31,7 @@ export interface AdminUpdateTaskData {
   managerContractAddress?: string;
   reviewStatus?: 'pending' | 'approved' | 'rejected' | 'published' | 'archived';
   reasonsForRejection?: number[]; // Array of rejection reason IDs (1-8)
+  pollQuestions?: PollQuestionDraft[];
 }
 
 export async function PATCH(request: NextRequest) {
@@ -80,11 +84,14 @@ export async function PATCH(request: NextRequest) {
     const oldTaskData = taskDoc.data();
     const oldIsAvailable = oldTaskData?.isAvailable;
     const oldReviewStatus = oldTaskData?.reviewStatus;
+    const pollQuestions = data.pollQuestions;
+    const hasPollQuestionUpdate = pollQuestions !== undefined;
 
     // Filter out undefined values and convert deadline to Timestamp
     const updateData: Record<string, unknown> = {};
     Object.entries(data).forEach(([key, value]) => {
       if (value === undefined) return;
+      if (key === 'pollQuestions') return;
       if (key === 'deadline') {
         updateData.deadline = value === null ? null : Timestamp.fromDate(new Date(value as string));
         return;
@@ -127,7 +134,7 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    if (Object.keys(updateData).length === 0) {
+    if (Object.keys(updateData).length === 0 && !hasPollQuestionUpdate) {
       return NextResponse.json(
         { error: 'No valid fields to update' },
         { status: 400 }
@@ -159,10 +166,12 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update the task
-    await taskRef.update({
-      ...updateData,
-      timeUpdated: FieldValue.serverTimestamp(),
-    });
+    if (Object.keys(updateData).length > 0) {
+      await taskRef.update({
+        ...updateData,
+        timeUpdated: FieldValue.serverTimestamp(),
+      });
+    }
 
     const updatedTaskDoc = await taskRef.get();
     const taskData = updatedTaskDoc.data();
@@ -170,9 +179,42 @@ export async function PATCH(request: NextRequest) {
     const updatedTaskType = (updateData.type as string | undefined) ?? taskData?.type;
     if (updatedTaskType === 'answerPoll') {
       try {
+        if (hasPollQuestionUpdate) {
+          const existing = await fetchPollContentByPaxTaskId(taskId);
+          if (!existing) {
+            return NextResponse.json(
+              { error: 'Poll content not found in Insights' },
+              { status: 404 },
+            );
+          }
+
+          if (existing.responseCount > 0) {
+            const textOnlyError = validatePollQuestionsTextOnly(
+              existing.pollQuestions,
+              pollQuestions!,
+            );
+            if (textOnlyError) {
+              return NextResponse.json({ error: textOnlyError }, { status: 400 });
+            }
+          } else {
+            const validationError = validatePollQuestions(pollQuestions);
+            if (validationError) {
+              return NextResponse.json({ error: validationError }, { status: 400 });
+            }
+          }
+
+          await updatePollInInsights(
+            taskId,
+            { pollQuestions },
+            { adminOverride: true },
+          );
+        }
         await syncPollFromFirestoreTask(taskId);
       } catch (syncError) {
-        console.error('Failed to sync poll publication to Insights:', syncError);
+        const message = syncError instanceof Error ? syncError.message : 'Failed to update poll';
+        const status = message.includes('cannot') || message.includes('Cannot') ? 400 : 500;
+        console.error('Failed to sync poll to Insights:', syncError);
+        return NextResponse.json({ error: message }, { status });
       }
     }
 

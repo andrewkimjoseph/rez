@@ -3,6 +3,7 @@ import { fetchWithAuthRetry } from '@/lib/api-fetch';
 import { Task } from '@/firebase/firestore/models/Task';
 import { TaskMaster } from '@/firebase/firestore/models/TaskMaster';
 import { useTaskMasterStore } from './taskmaster-store';
+import type { PollQuestionDraft } from '@/types/poll';
 
 export interface AdminUpdateTaskData {
   title?: string;
@@ -28,6 +29,7 @@ export interface AdminUpdateTaskData {
   rezTaskMasterEmailAddress?: string; // Super admin can reassign task to different task master
   reviewStatus?: 'pending' | 'approved' | 'rejected' | 'published' | 'archived'; // Task review workflow
   reasonsForRejection?: number[]; // Array of rejection reason IDs (1-8)
+  pollQuestions?: PollQuestionDraft[];
 }
 
 export interface AdminUpdateTaskMasterData {

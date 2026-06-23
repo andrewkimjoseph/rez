@@ -37,10 +37,12 @@ import {
   ArchiveBoxIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
-import AdminEditTaskDialog from "@/components/admin/AdminEditTaskDialog";
 import AdminRejectTaskDialog from "@/components/admin/AdminRejectTaskDialog";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 import AdminAccessDenied from "@/components/admin/AdminAccessDenied";
+import { fetchWithAuthRetry } from "@/lib/api-fetch";
+import { PollQuestionsPreview } from "@/components/poll/PollQuestionsPreview";
+import type { PollQuestionDraft } from "@/types/poll";
 
 
 export default function AdminTaskDetailsPage() {
@@ -63,7 +65,6 @@ export default function AdminTaskDetailsPage() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [reviewAction, setReviewAction] = useState<'approve' | 'reject' | null>(null);
   const [instructionsExpanded, setInstructionsExpanded] = useState(false);
@@ -71,6 +72,12 @@ export default function AdminTaskDetailsPage() {
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const [actionType, setActionType] = useState<'publish' | 'activate' | 'deactivate' | null>(null);
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [pollContent, setPollContent] = useState<{
+    pollQuestions: PollQuestionDraft[];
+    responseCount: number;
+  } | null>(null);
+  const [isLoadingPollContent, setIsLoadingPollContent] = useState(false);
+  const [pollContentError, setPollContentError] = useState<string | null>(null);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -99,6 +106,49 @@ export default function AdminTaskDetailsPage() {
     }
   }, [tasks, taskId, setTask]);
 
+  useEffect(() => {
+    if (!task?.id || task.type !== "answerPoll") {
+      setPollContent(null);
+      setPollContentError(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadPollContent = async () => {
+      setIsLoadingPollContent(true);
+      setPollContentError(null);
+      try {
+        const response = await fetchWithAuthRetry(`/api/pollContent/${task.id}`);
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({}));
+          throw new Error(body.error || "Failed to load poll content");
+        }
+        const content = await response.json();
+        if (!cancelled) {
+          setPollContent(content);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setPollContentError(
+            err instanceof Error ? err.message : "Failed to load poll content",
+          );
+          setPollContent(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingPollContent(false);
+        }
+      }
+    };
+
+    loadPollContent();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [task?.id, task?.type]);
+
   const handleConfirmDelete = async () => {
     if (!task?.id) return;
 
@@ -109,16 +159,6 @@ export default function AdminTaskDetailsPage() {
       router.push("/admin/tasks");
     } else {
       toast.error("Failed to delete task");
-    }
-  };
-
-  const handleEditSuccess = (updatedTask?: Task) => {
-    toast.success("Task updated successfully");
-    if (updatedTask) {
-      setTask(updatedTask);
-    } else {
-      const fromStore = useAdminStore.getState().tasks.find((t) => t.id === taskId);
-      if (fromStore) setTask(fromStore);
     }
   };
 
@@ -496,7 +536,7 @@ export default function AdminTaskDetailsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setEditDialogOpen(true)}
+                onClick={() => router.push(`/admin/tasks/${task.id}/edit?from=detail`)}
               >
                 <PencilIcon className="h-4 w-4 mr-2" />
                 Edit
@@ -512,6 +552,56 @@ export default function AdminTaskDetailsPage() {
             </div>
           </div>
         </div>
+
+        {task.type === "answerPoll" && (
+          <div
+            className={`rounded-lg border p-4 ${
+              task.reviewStatus === "pending"
+                ? "border-[#5C29A3]/30 bg-[#EFECFD]/20"
+                : "bg-card"
+            }`}
+          >
+            {task.reviewStatus === "pending" && (
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <p className="text-xs text-muted-foreground">
+                  Review the submitted poll questions before approving or rejecting.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0 h-8 text-xs"
+                  onClick={() =>
+                    router.push(`/admin/tasks/${task.id}/edit?from=detail&tab=content`)
+                  }
+                >
+                  <PencilIcon className="h-3.5 w-3.5 mr-1.5" />
+                  Edit poll questions
+                </Button>
+              </div>
+            )}
+            {isLoadingPollContent ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                Loading poll questions...
+              </div>
+            ) : pollContentError ? (
+              <p className="text-sm text-destructive">{pollContentError}</p>
+            ) : pollContent ? (
+              <>
+                <PollQuestionsPreview
+                  pollQuestions={pollContent.pollQuestions}
+                  responseCount={pollContent.responseCount}
+                />
+                {pollContent.responseCount > 0 && (
+                  <p className="text-xs text-muted-foreground mt-3">
+                    This poll has responses — structural edits are locked; use Edit to change
+                    question or option wording only.
+                  </p>
+                )}
+              </>
+            ) : null}
+          </div>
+        )}
 
         {/* Dense Key-Value Grid */}
         <dl className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-2.5 p-4 rounded-lg border bg-muted/30">
@@ -876,14 +966,6 @@ export default function AdminTaskDetailsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
-        {/* Edit Task Dialog */}
-        <AdminEditTaskDialog
-          task={task}
-          open={editDialogOpen}
-          onOpenChange={setEditDialogOpen}
-          onSuccess={handleEditSuccess}
-        />
 
         {/* Review Confirmation Dialog */}
         {reviewAction === 'reject' ? (
