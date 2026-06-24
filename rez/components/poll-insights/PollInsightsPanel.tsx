@@ -153,7 +153,7 @@ export default function PollInsightsPanel({ taskId }: PollInsightsPanelProps) {
               Question {index + 1}
             </h3>
             <p className="text-sm text-muted-foreground mb-3">{question.questionText}</p>
-            <PollResultsChart data={pollResults} totalResponses={question.rows.length} />
+            <PollResultsChart data={pollResults} />
           </section>
         );
       })}
