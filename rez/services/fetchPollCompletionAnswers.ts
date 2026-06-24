@@ -1,5 +1,6 @@
 import { paxDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
+import { calculateAgeFromDateOfBirth } from '@/lib/poll-insights';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
 
 export type PollCompletionAnswer = {
@@ -14,8 +15,32 @@ export type PollCompletionAnswersResponse = {
   taskId: string;
   completionId: string | null;
   participantId: string;
+  country: string | null;
+  age: number | null;
   answers: PollCompletionAnswer[];
 };
+
+async function fetchParticipantDemographics(participantId: string | null | undefined) {
+  if (!participantId) {
+    return { country: null, age: null };
+  }
+
+  const supabase = getSupabaseAdmin();
+  const { data: participant, error } = await supabase
+    .from('participants')
+    .select('country, date_of_birth')
+    .eq('id', participantId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return {
+    country: participant?.country ?? null,
+    age: calculateAgeFromDateOfBirth(participant?.date_of_birth ?? null),
+  };
+}
 
 export async function fetchPollCompletionAnswers(
   paxTaskId: string,
@@ -74,10 +99,17 @@ export async function fetchPollCompletionAnswers(
   }
 
   if (!answerRows?.length) {
+    const resolvedParticipantId = participantId ?? '';
+    const demographics = await fetchParticipantDemographics(
+      resolvedParticipantId || null,
+    );
+
     return {
       taskId: paxTaskId,
       completionId: completionId ?? null,
-      participantId: participantId ?? '',
+      participantId: resolvedParticipantId,
+      country: demographics.country,
+      age: demographics.age,
       answers: [],
     };
   }
@@ -88,19 +120,24 @@ export async function fetchPollCompletionAnswers(
   const questionIds = Array.from(new Set(answerRows.map((row) => row.question_id)));
   const optionIds = Array.from(new Set(answerRows.map((row) => row.question_option_id)));
 
-  const { data: questions, error: questionsError } = await supabase
-    .from('questions')
-    .select('id, question_text, sort_order')
-    .in('id', questionIds);
+  const [questionsResult, optionsResult, demographics] = await Promise.all([
+    supabase
+      .from('questions')
+      .select('id, question_text, sort_order')
+      .in('id', questionIds),
+    supabase
+      .from('question_options')
+      .select('id, option_text')
+      .in('id', optionIds),
+    fetchParticipantDemographics(resolvedParticipantId),
+  ]);
+
+  const { data: questions, error: questionsError } = questionsResult;
+  const { data: optionRows, error: optionsError } = optionsResult;
 
   if (questionsError) {
     throw new Error(questionsError.message);
   }
-
-  const { data: optionRows, error: optionsError } = await supabase
-    .from('question_options')
-    .select('id, option_text')
-    .in('id', optionIds);
 
   if (optionsError) {
     throw new Error(optionsError.message);
@@ -131,6 +168,8 @@ export async function fetchPollCompletionAnswers(
     taskId: paxTaskId,
     completionId: resolvedCompletionId,
     participantId: resolvedParticipantId,
+    country: demographics.country,
+    age: demographics.age,
     answers,
   };
 }

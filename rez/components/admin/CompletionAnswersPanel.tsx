@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { CircleFlag } from "react-circle-flags";
 import {
   Sheet,
   SheetContent,
@@ -11,19 +12,23 @@ import {
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowPathIcon,
+  CalendarIcon,
   CheckCircleIcon,
   ClipboardDocumentIcon,
   ClipboardDocumentListIcon,
   ClockIcon,
+  GlobeAltIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import { fetchWithAuthRetry } from "@/lib/api-fetch";
+import { getCountryCode, getCountryEmoji } from "@/lib/country-display";
 
 export type CompletionAnswersContext = {
   id: string | null;
   participantId: string | null;
   participantEmailAddress?: string | null;
+  participantCountry?: string | null;
   timeCompleted?: unknown;
 };
 
@@ -39,6 +44,8 @@ type PollCompletionAnswersResponse = {
   taskId: string;
   completionId: string | null;
   participantId: string;
+  country: string | null;
+  age: number | null;
   answers: PollCompletionAnswer[];
 };
 
@@ -113,6 +120,18 @@ function resolveAnsweredAt(
   return formatTimestamp(completion?.timeCompleted ?? null);
 }
 
+function CountryDisplay({ label }: { label: string }) {
+  const code = getCountryCode(label);
+  if (code) {
+    return (
+      <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full">
+        <CircleFlag countryCode={code} height={20} />
+      </span>
+    );
+  }
+  return <span className="text-base leading-none shrink-0">{getCountryEmoji(label)}</span>;
+}
+
 export default function CompletionAnswersPanel({
   taskId,
   completion,
@@ -179,6 +198,9 @@ export default function CompletionAnswersPanel({
 
   const answerCount = data?.answers.length ?? 0;
 
+  const countryLabel = data?.country ?? completion?.participantCountry ?? null;
+  const ageLabel = data?.age;
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -218,6 +240,43 @@ export default function CompletionAnswersPanel({
                 </p>
                 <p className="text-sm font-medium text-foreground break-all mt-0.5">
                   {participantLabel}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <GlobeAltIcon className="h-5 w-5 shrink-0 text-[#5C29A3]/70 mt-0.5" />
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Country
+                </p>
+                {countryLabel ? (
+                  <p className="text-sm font-medium text-foreground mt-0.5 flex items-center gap-2">
+                    <CountryDisplay label={countryLabel} />
+                    <span>{countryLabel}</span>
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    {isLoading ? "Loading…" : "Unknown"}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <CalendarIcon className="h-5 w-5 shrink-0 text-[#5C29A3]/70 mt-0.5" />
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Age
+                </p>
+                <p className="text-sm text-foreground mt-0.5">
+                  {isLoading ? (
+                    <span className="text-muted-foreground">Loading…</span>
+                  ) : ageLabel != null ? (
+                    `${ageLabel} years`
+                  ) : (
+                    <span className="text-muted-foreground">Unknown</span>
+                  )}
                 </p>
               </div>
             </div>
