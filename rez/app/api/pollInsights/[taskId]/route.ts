@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { unstable_cache } from 'next/cache';
 import { requireAuth } from '@/lib/api-auth';
 import { paxDB, rezDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { fetchPollInsightsByPaxTaskId } from '@/services/fetchPollInsightsData';
+
+export const maxDuration = 30;
+
+function getCachedPollInsightsByPaxTaskId(paxTaskId: string) {
+  return unstable_cache(
+    async () => fetchPollInsightsByPaxTaskId(paxTaskId),
+    ['poll-insights-detail', paxTaskId],
+    { revalidate: 30, tags: [`poll-insights-${paxTaskId}`] },
+  )();
+}
 
 export async function GET(
   request: NextRequest,
@@ -19,7 +30,7 @@ export async function GET(
       return NextResponse.json({ error: 'Task ID is required' }, { status: 400 });
     }
 
-    const payload = await fetchPollInsightsByPaxTaskId(taskId);
+    const payload = await getCachedPollInsightsByPaxTaskId(taskId);
     if (!payload) {
       return NextResponse.json({ error: 'Poll not found in Insights' }, { status: 404 });
     }

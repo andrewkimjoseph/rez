@@ -1,39 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChartBarIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
 import { PollStatusBadge } from "@/components/poll-insights/PollStatusBadge";
+import { usePollInsightsQuery } from "@/hooks/use-poll-insights-query";
 import type { PublishedPollSummary } from "@/services/fetchPollInsightsData";
 
 export default function InsightsPage() {
-  const [polls, setPolls] = useState<PublishedPollSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadPolls = async () => {
-    try {
-      const response = await fetch("/api/pollInsights");
-      if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        throw new Error(body.error || "Failed to load insights");
-      }
-      const data = (await response.json()) as { polls: PublishedPollSummary[] };
-      setPolls(data.polls);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load insights");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadPolls();
-    const interval = setInterval(loadPolls, 30_000);
-    return () => clearInterval(interval);
-  }, []);
+  const { data: polls, error, refreshError, isLoading, isRefreshing, refresh } =
+    usePollInsightsQuery<PublishedPollSummary[]>("/api/pollInsights", {
+      select: (body) => (body as { polls: PublishedPollSummary[] }).polls,
+    });
 
   return (
     <div className="min-h-screen p-6 md:p-8">
@@ -56,22 +34,32 @@ export default function InsightsPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={loadPolls}
-          disabled={isLoading}
+          onClick={() => void refresh()}
+          disabled={isLoading || isRefreshing}
           className="self-start sm:self-auto"
         >
-          <ArrowPathIcon className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+          <ArrowPathIcon
+            className={`w-4 h-4 mr-2 ${isLoading || isRefreshing ? "animate-spin" : ""}`}
+          />
           Refresh
         </Button>
       </div>
 
-      {isLoading && (
+      {refreshError && (
+        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200/80 rounded-lg px-3 py-2 mb-4">
+          Couldn&apos;t refresh — showing last updated data.
+        </p>
+      )}
+
+      {isLoading && !polls && (
         <p className="text-sm text-muted-foreground">Loading poll insights...</p>
       )}
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {!polls && error && (
+        <p className="text-sm text-destructive">{error}</p>
+      )}
 
-      {!isLoading && !error && polls.length === 0 && (
+      {!isLoading && !error && polls && polls.length === 0 && (
         <div className="enterprise-card rounded-lg border border-border/50 bg-card p-8">
           <p className="text-muted-foreground">
             No published polls yet. Check back soon for live results.
@@ -79,7 +67,7 @@ export default function InsightsPage() {
         </div>
       )}
 
-      {!isLoading && !error && polls.length > 0 && (
+      {polls && polls.length > 0 && (
         <div className="space-y-4">
           {polls.map((poll) => (
             <Link

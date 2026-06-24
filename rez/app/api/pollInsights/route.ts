@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { unstable_cache } from 'next/cache';
 import { requireAuth } from '@/lib/api-auth';
 import { fetchAllPublishedPollSummaries } from '@/services/fetchPollInsightsData';
+
+export const maxDuration = 30;
+
+const getCachedPublishedPollSummaries = unstable_cache(
+  async () => fetchAllPublishedPollSummaries(),
+  ['poll-insights-list'],
+  { revalidate: 30, tags: ['poll-insights-list'] },
+);
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,7 +18,7 @@ export async function GET(request: NextRequest) {
       return authResult;
     }
 
-    const polls = await fetchAllPublishedPollSummaries();
+    const polls = await getCachedPublishedPollSummaries();
     return NextResponse.json({ polls });
   } catch (error) {
     console.error('Error fetching poll insights list:', error);

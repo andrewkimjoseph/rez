@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   ageBucket,
@@ -20,40 +20,18 @@ import {
   PollResultsChart,
 } from "@/components/poll-insights/PollCharts";
 import { PollStatusBadge } from "@/components/poll-insights/PollStatusBadge";
+import { usePollInsightsQuery } from "@/hooks/use-poll-insights-query";
 
 type PollInsightsPanelProps = {
   taskId: string;
 };
 
 export default function PollInsightsPanel({ taskId }: PollInsightsPanelProps) {
-  const [data, setData] = useState<PollInsightsData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data, error, refreshError, isLoading } = usePollInsightsQuery<PollInsightsData>(
+    `/api/pollInsights/${taskId}`,
+  );
 
   const publicInsightsUrl = `https://thecanvassing.xyz/insights/${taskId}`;
-
-  const loadInsights = async () => {
-    try {
-      const response = await fetch(`/api/pollInsights/${taskId}`);
-      if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        throw new Error(body.error || "Failed to load poll insights");
-      }
-      const payload = (await response.json()) as PollInsightsData;
-      setData(payload);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load poll insights");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadInsights();
-    const interval = setInterval(loadInsights, 30_000);
-    return () => clearInterval(interval);
-  }, [taskId]);
 
   const demographicRows = useMemo(() => (data ? allInsightRows(data) : []), [data]);
   const completedCount = useMemo(
@@ -92,11 +70,11 @@ export default function PollInsightsPanel({ taskId }: PollInsightsPanelProps) {
     URL.revokeObjectURL(url);
   };
 
-  if (isLoading) {
+  if (isLoading && !data) {
     return <p className="text-sm text-muted-foreground">Loading poll insights...</p>;
   }
 
-  if (error) {
+  if (!data && error) {
     return <p className="text-sm text-destructive">{error}</p>;
   }
 
@@ -111,6 +89,12 @@ export default function PollInsightsPanel({ taskId }: PollInsightsPanelProps) {
 
   return (
     <div className="space-y-6">
+      {refreshError && (
+        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200/80 rounded-lg px-3 py-2">
+          Couldn&apos;t refresh — showing last updated data.
+        </p>
+      )}
+
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <h2 className="text-xl font-semibold">{data.taskTitle}</h2>

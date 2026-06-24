@@ -76,14 +76,28 @@ export async function fetchPollInsightsByPaxTaskId(
   }
 
   const questionIds = questions.map((q) => q.id);
-  const { data: options, error: optionsError } = await supabase
-    .from('question_options')
-    .select('id, question_id, option_text, sort_order')
-    .in('question_id', questionIds)
-    .order('sort_order', { ascending: true });
+
+  const [optionsResult, answersResult] = await Promise.all([
+    supabase
+      .from('question_options')
+      .select('id, question_id, option_text, sort_order')
+      .in('question_id', questionIds)
+      .order('sort_order', { ascending: true }),
+    supabase
+      .from('answers')
+      .select('id, task_id, pax_task_id, question_id, question_option_id, participant_id, created_at')
+      .eq('pax_task_id', paxTaskId),
+  ]);
+
+  const { data: options, error: optionsError } = optionsResult;
+  const { data: answers, error: answersError } = answersResult;
 
   if (optionsError) {
     throw new Error(optionsError.message);
+  }
+
+  if (answersError) {
+    throw new Error(answersError.message);
   }
 
   const optionsByQuestionId = new Map<string, typeof options>();
@@ -91,15 +105,6 @@ export async function fetchPollInsightsByPaxTaskId(
     const list = optionsByQuestionId.get(option.question_id) ?? [];
     list.push(option);
     optionsByQuestionId.set(option.question_id, list);
-  }
-
-  const { data: answers, error: answersError } = await supabase
-    .from('answers')
-    .select('id, task_id, pax_task_id, question_id, question_option_id, participant_id, created_at')
-    .eq('pax_task_id', paxTaskId);
-
-  if (answersError) {
-    throw new Error(answersError.message);
   }
 
   const participantIds = Array.from(new Set((answers ?? []).map((answer) => answer.participant_id)));
@@ -186,14 +191,27 @@ export async function fetchAllPublishedPollSummaries(): Promise<PublishedPollSum
   const taskIds = tasks.map((task) => task.id);
   const paxTaskIds = tasks.map((task) => task.pax_task_id);
 
-  const { data: questions, error: questionsError } = await supabase
-    .from('questions')
-    .select('id, task_id, question_text, sort_order')
-    .in('task_id', taskIds)
-    .order('sort_order', { ascending: true });
+  const [questionsResult, answersResult] = await Promise.all([
+    supabase
+      .from('questions')
+      .select('id, task_id, question_text, sort_order')
+      .in('task_id', taskIds)
+      .order('sort_order', { ascending: true }),
+    supabase
+      .from('answers')
+      .select('pax_task_id, participant_id, question_id')
+      .in('pax_task_id', paxTaskIds),
+  ]);
+
+  const { data: questions, error: questionsError } = questionsResult;
+  const { data: answers, error: answersError } = answersResult;
 
   if (questionsError) {
     throw new Error(questionsError.message);
+  }
+
+  if (answersError) {
+    throw new Error(answersError.message);
   }
 
   const questionsByTaskId = new Map<string, typeof questions>();
@@ -201,15 +219,6 @@ export async function fetchAllPublishedPollSummaries(): Promise<PublishedPollSum
     const list = questionsByTaskId.get(question.task_id) ?? [];
     list.push(question);
     questionsByTaskId.set(question.task_id, list);
-  }
-
-  const { data: answers, error: answersError } = await supabase
-    .from('answers')
-    .select('pax_task_id, participant_id, question_id')
-    .in('pax_task_id', paxTaskIds);
-
-  if (answersError) {
-    throw new Error(answersError.message);
   }
 
   const answersByPaxTaskId = new Map<string, typeof answers>();
