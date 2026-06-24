@@ -34,6 +34,7 @@ import {
   ClipboardDocumentIcon,
   MagnifyingGlassIcon,
   ArrowDownTrayIcon,
+  ClipboardDocumentListIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import {
@@ -64,6 +65,7 @@ import { CircleFlag } from "react-circle-flags";
 import { countries } from "country-data-list";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import ParticipantDetailPanel from "@/components/admin/ParticipantDetailPanel";
+import CompletionAnswersPanel from "@/components/admin/CompletionAnswersPanel";
 import { AlgoliaAttribution } from "@/components/algolia-attribution";
 
 export default function AdminTaskCompletionsDetailPage() {
@@ -97,6 +99,9 @@ export default function AdminTaskCompletionsDetailPage() {
   const [countdownTick, setCountdownTick] = useState(0);
   const [selectedParticipantId, setSelectedParticipantId] = useState<string | null>(null);
   const [participantPanelOpen, setParticipantPanelOpen] = useState(false);
+  const [answersPanelOpen, setAnswersPanelOpen] = useState(false);
+  const [selectedCompletionForAnswers, setSelectedCompletionForAnswers] =
+    useState<TaskCompletionWithReward | null>(null);
   const [totalStats, setTotalStats] = useState<{
     totalCount: number;
     validated: number;
@@ -110,6 +115,12 @@ export default function AdminTaskCompletionsDetailPage() {
 
   const task = tasks.find((t) => t.id === taskId);
   const isTaskActive = task?.isAvailable === true;
+  const isPollTask = task?.type === "answerPoll";
+
+  const openAnswersPanel = (completion: TaskCompletionWithReward) => {
+    setSelectedCompletionForAnswers(completion);
+    setAnswersPanelOpen(true);
+  };
 
   const isExpired = (screeningTimeCreated: unknown) => {
     if (!screeningTimeCreated) return false;
@@ -1321,6 +1332,18 @@ export default function AdminTaskCompletionsDetailPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          {isPollTask && completion.timeCompleted != null && (
+                            <>
+                              <DropdownMenuItem
+                                onClick={() => openAnswersPanel(completion)}
+                                className="cursor-pointer"
+                              >
+                                <ClipboardDocumentListIcon className="h-4 w-4 mr-2" />
+                                View answers
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                            </>
+                          )}
                           <DropdownMenuItem
                             onClick={() => openValidateDialog(completion)}
                             className="cursor-pointer text-green-700"
@@ -1525,6 +1548,16 @@ export default function AdminTaskCompletionsDetailPage() {
           open={participantPanelOpen}
           onOpenChange={setParticipantPanelOpen}
           onUpdate={loadCompletions}
+        />
+
+        <CompletionAnswersPanel
+          taskId={taskId}
+          completion={selectedCompletionForAnswers}
+          open={answersPanelOpen}
+          onOpenChange={(open) => {
+            setAnswersPanelOpen(open);
+            if (!open) setSelectedCompletionForAnswers(null);
+          }}
         />
       </div>
     </div>
