@@ -205,8 +205,8 @@ export default function AdminTasksPage() {
     if (task.reviewStatus === 'approved') {
       action = 'publish';
     } else if (task.reviewStatus === 'published') {
-      action = task.isAvailable ? 'deactivate' : 'activate';
-      if (task.isAvailable) {
+      action = task.isAvailable === true ? 'deactivate' : 'activate';
+      if (task.isAvailable === true) {
         adminTaskDeactivateClicked({ task_id: task.id, task_title: task.title });
       } else {
         adminTaskActivateClicked({ task_id: task.id, task_title: task.title });
@@ -281,9 +281,11 @@ export default function AdminTasksPage() {
   };
 
   const getStatusActionLabel = (task: Task) => {
-    if (task.reviewStatus === 'approved') return 'Publish';
     if (task.reviewStatus === 'published') {
-      return task.isAvailable ? 'Deactivate' : 'Activate';
+      return task.isAvailable === true ? 'Inactive' : 'Activate';
+    }
+    if (task.reviewStatus === 'approved') {
+      return 'Publish';
     }
     return 'Publish';
   };
@@ -779,7 +781,7 @@ export default function AdminTasksPage() {
                             className="cursor-pointer"
                             disabled={task.reviewStatus === 'archived' || (task.reviewStatus !== 'approved' && task.reviewStatus !== 'published')}
                           >
-                            <PowerIcon className={`h-4 w-4 mr-2 ${task.reviewStatus === 'published' && task.isAvailable ? '' : 'opacity-50'}`} />
+                            <PowerIcon className={`h-4 w-4 mr-2 ${task.reviewStatus === 'published' && task.isAvailable === true ? '' : 'opacity-50'}`} />
                             {getStatusActionLabel(task)}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
@@ -866,7 +868,7 @@ export default function AdminTasksPage() {
               <DialogTitle>
                 {statusActionType === 'publish' && 'Publish Task'}
                 {statusActionType === 'activate' && 'Activate Task'}
-                {statusActionType === 'deactivate' && 'Deactivate Task'}
+                {statusActionType === 'deactivate' && 'Make Inactive'}
               </DialogTitle>
               <DialogDescription>
                 {statusActionType === 'publish' && (
@@ -911,7 +913,7 @@ export default function AdminTasksPage() {
                   <>
                     {statusActionType === 'publish' && 'Publish'}
                     {statusActionType === 'activate' && 'Activate'}
-                    {statusActionType === 'deactivate' && 'Deactivate'}
+                    {statusActionType === 'deactivate' && 'Inactive'}
                   </>
                 )}
               </Button>

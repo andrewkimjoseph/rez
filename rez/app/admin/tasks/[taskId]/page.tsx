@@ -519,7 +519,7 @@ export default function AdminTaskDetailsPage() {
                   onClick={handleOpenActivateDialog}
                 >
                   <PowerIcon className={`h-4 w-4 mr-2 ${formattedData.isAvailable ? '' : 'text-white'}`} />
-                  {formattedData.isAvailable ? 'Deactivate' : 'Activate'}
+                  {formattedData.isAvailable ? 'Inactive' : 'Activate'}
                 </Button>
               )}
               {(task.reviewStatus === 'published' || task.reviewStatus === 'approved') && (
@@ -815,7 +815,7 @@ export default function AdminTaskDetailsPage() {
               <DialogTitle>
                 {actionType === 'publish' && 'Publish Task'}
                 {actionType === 'activate' && 'Activate Task'}
-                {actionType === 'deactivate' && 'Deactivate Task'}
+                {actionType === 'deactivate' && 'Make Inactive'}
               </DialogTitle>
               <DialogDescription>
                 {actionType === 'publish' && (
@@ -860,7 +860,7 @@ export default function AdminTaskDetailsPage() {
                   <>
                     {actionType === 'publish' && 'Publish'}
                     {actionType === 'activate' && 'Activate'}
-                    {actionType === 'deactivate' && 'Deactivate'}
+                    {actionType === 'deactivate' && 'Inactive'}
                   </>
                 )}
               </Button>
