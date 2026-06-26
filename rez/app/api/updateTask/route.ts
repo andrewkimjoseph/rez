@@ -124,6 +124,8 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    let firestoreUpdated = false;
+
     if (wasRejected) {
       const updateData: Record<string, unknown> = {};
       Object.entries(data).forEach(([key, value]) => {
@@ -152,6 +154,7 @@ export async function PATCH(request: NextRequest) {
         ...updateData,
         timeUpdated: FieldValue.serverTimestamp(),
       });
+      firestoreUpdated = true;
     } else if (canEditPollQuestions && (data.instructions !== undefined || data.title !== undefined)) {
       const lightUpdate: Record<string, unknown> = {};
       if (data.instructions !== undefined) lightUpdate.instructions = data.instructions;
@@ -161,6 +164,7 @@ export async function PATCH(request: NextRequest) {
           ...lightUpdate,
           timeUpdated: FieldValue.serverTimestamp(),
         });
+        firestoreUpdated = true;
       }
     }
 
@@ -173,19 +177,22 @@ export async function PATCH(request: NextRequest) {
           }
         }
         await updatePollInInsights(taskId, {
-          title: data.title,
-          category: data.category,
-          targetNumberOfParticipants: data.targetNumberOfParticipants,
           pollQuestions: data.pollQuestions,
           reviewStatus: wasRejected ? 'pending' : undefined,
         });
-        if (wasRejected) {
-          await syncPollFromFirestoreTask(taskId);
-        }
       } catch (syncError) {
         const message = syncError instanceof Error ? syncError.message : 'Failed to update poll';
         const status = message.includes('cannot be changed') ? 403 : 500;
         return NextResponse.json({ error: message }, { status });
+      }
+    }
+
+    if (isPollTask && firestoreUpdated) {
+      try {
+        await syncPollFromFirestoreTask(taskId);
+      } catch (syncError) {
+        const message = syncError instanceof Error ? syncError.message : 'Failed to sync poll';
+        return NextResponse.json({ error: message }, { status: 500 });
       }
     }
 

@@ -23,6 +23,12 @@ export type SyncPollPublicationInput = {
   deadline: string | null;
 };
 
+export type SyncPollTaskMetadata = {
+  title: string;
+  category: string | null;
+  targetNumberOfParticipants: number | null;
+};
+
 export function buildPollPublicationUpdate(input: SyncPollPublicationInput) {
   const reviewStatus = input.reviewStatus ?? 'pending';
   const isActive = input.isAvailable === true;
@@ -36,24 +42,48 @@ export function buildPollPublicationUpdate(input: SyncPollPublicationInput) {
   };
 }
 
+export function buildPollInsightsTaskUpdate(
+  publication: SyncPollPublicationInput,
+  metadata: SyncPollTaskMetadata,
+) {
+  return {
+    ...buildPollPublicationUpdate(publication),
+    title: metadata.title,
+    category: metadata.category,
+    target_number_of_participants: metadata.targetNumberOfParticipants,
+  };
+}
+
+async function applyPollInsightsTaskUpdate(
+  paxTaskId: string,
+  update: ReturnType<typeof buildPollPublicationUpdate> & {
+    title?: string;
+    category?: string | null;
+    target_number_of_participants?: number | null;
+  },
+): Promise<void> {
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase.from('tasks').update(update).eq('pax_task_id', paxTaskId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
 export async function syncPollPublication(
   paxTaskId: string,
   reviewStatus: string,
   isAvailable?: boolean,
   deadline?: string | null,
 ): Promise<void> {
-  const supabase = getSupabaseAdmin();
-  const update = buildPollPublicationUpdate({
-    reviewStatus,
-    isAvailable: isAvailable ?? false,
-    deadline: deadline ?? null,
-  });
-
-  const { error } = await supabase.from('tasks').update(update).eq('pax_task_id', paxTaskId);
-
-  if (error) {
-    throw new Error(error.message);
-  }
+  await applyPollInsightsTaskUpdate(
+    paxTaskId,
+    buildPollPublicationUpdate({
+      reviewStatus,
+      isAvailable: isAvailable ?? false,
+      deadline: deadline ?? null,
+    }),
+  );
 }
 
 export async function syncPollFromFirestoreTask(paxTaskId: string): Promise<void> {
@@ -67,12 +97,20 @@ export async function syncPollFromFirestoreTask(paxTaskId: string): Promise<void
     return;
   }
 
-  await syncPollPublication(
-    paxTaskId,
-    taskData.reviewStatus ?? 'pending',
-    taskData.isAvailable ?? false,
-    coerceFirestoreDeadline(taskData.deadline),
+  const update = buildPollInsightsTaskUpdate(
+    {
+      reviewStatus: taskData.reviewStatus ?? 'pending',
+      isAvailable: taskData.isAvailable ?? false,
+      deadline: coerceFirestoreDeadline(taskData.deadline),
+    },
+    {
+      title: taskData.title ?? '',
+      category: taskData.category ?? null,
+      targetNumberOfParticipants: taskData.targetNumberOfParticipants ?? null,
+    },
   );
+
+  await applyPollInsightsTaskUpdate(paxTaskId, update);
 }
 
 export async function updatePollInInsights(
