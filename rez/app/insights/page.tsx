@@ -1,9 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { ChartBarIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
-import { PollStatusBadge } from "@/components/poll-insights/PollStatusBadge";
+import {
+  PollInsightSummaryCard,
+  PollInsightSummaryCardSkeleton,
+} from "@/components/poll-insights/PollInsightSummaryCard";
 import { usePollInsightsQuery } from "@/hooks/use-poll-insights-query";
 import type { PublishedPollSummary } from "@/services/fetchPollInsightsData";
 
@@ -52,7 +54,11 @@ export default function InsightsPage() {
       )}
 
       {isLoading && !polls && (
-        <p className="text-sm text-muted-foreground">Loading poll insights...</p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <PollInsightSummaryCardSkeleton />
+          <PollInsightSummaryCardSkeleton />
+          <PollInsightSummaryCardSkeleton />
+        </div>
       )}
 
       {!polls && error && (
@@ -68,27 +74,9 @@ export default function InsightsPage() {
       )}
 
       {polls && polls.length > 0 && (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {polls.map((poll) => (
-            <Link
-              key={poll.taskId}
-              href={`/insights/${poll.taskId}`}
-              className="block enterprise-card rounded-lg border border-border/50 bg-card p-6 hover:border-[#5C29A3]/40 hover:shadow-sm transition-all"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <h2 className="text-lg font-semibold text-foreground min-w-0">{poll.taskTitle}</h2>
-                <PollStatusBadge isActive={poll.isActive} deadline={poll.deadline} />
-              </div>
-              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                {poll.questionCount > 1
-                  ? `${poll.questionCount} questions · ${poll.questionText}`
-                  : poll.questionText}
-              </p>
-              <p className="text-sm text-muted-foreground mt-3">
-                <span className="font-medium text-foreground">{poll.responseCount}</span> responses
-                {poll.targetParticipants ? ` of ${poll.targetParticipants} target` : ""}
-              </p>
-            </Link>
+            <PollInsightSummaryCard key={poll.taskId} poll={poll} />
           ))}
         </div>
       )}
