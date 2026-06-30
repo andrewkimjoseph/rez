@@ -421,7 +421,7 @@ export default function NewTask() {
             paymentTerms: null,
             instructions: data.instructions ?? null,
             targetCountry: null,
-            numberOfCooldownHours: null,
+            numberOfCooldownHours: 24,
             rezTaskMasterEmailAddress: user?.emailAddress ?? null,
           };
           prependTask(createdTask);

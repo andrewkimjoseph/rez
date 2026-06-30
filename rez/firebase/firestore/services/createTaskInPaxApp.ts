@@ -63,7 +63,7 @@ export async function createTaskInPaxApp(taskData: CreateTaskData): Promise<stri
     paymentTerms: 'delayed',
     instructions: instructions,
     targetCountry: "ALL",
-    numberOfCooldownHours: 2,
+    numberOfCooldownHours: 24,
     rezTaskMasterEmailAddress: taskData.rezTaskMasterEmailAddress || null,
   };
 
