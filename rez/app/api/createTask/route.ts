@@ -33,6 +33,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const taskMasterDoc = await rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(authResult.uid).get();
+    const taskMasterData = taskMasterDoc.data();
+    const isTaskCreationBlocked = taskMasterData?.taskCreationBlocked === true;
+    const isTaskMasterSuperAdmin = taskMasterData?.isSuperAdmin === true;
+
+    if (isTaskCreationBlocked && !isTaskMasterSuperAdmin) {
+      return NextResponse.json(
+        {
+          error: 'Task creation blocked',
+          message: 'Task creation is temporarily restricted. Please contact support or an admin.',
+          blockReason: taskMasterData?.taskCreationBlockReason ?? 'unknown',
+        },
+        { status: 403 }
+      );
+    }
+
     // Get isSuperAdmin from request body (client sends it to avoid DB read)
     // For security, we still validate it matches the authenticated user if needed
     const isSuperAdmin = body.isSuperAdmin === true;

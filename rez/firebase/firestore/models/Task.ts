@@ -27,5 +27,5 @@ export interface Task {
   targetCountry: string | null;
   numberOfCooldownHours: number | null;
   rezTaskMasterEmailAddress: string | null;
-  reasonsForRejection?: number[]; // Array of rejection reason IDs (1-8)
+  reasonsForRejection?: number[]; // Array of rejection reason IDs (1-9)
 } 

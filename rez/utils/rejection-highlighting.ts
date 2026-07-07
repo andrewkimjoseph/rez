@@ -53,6 +53,9 @@ export function getRejectedFields(
           fields.push('feedback');
         }
         break;
+      case 9:
+        // Spam content is account-level, not tied to specific form fields
+        break;
     }
   });
 
@@ -116,6 +119,9 @@ export function getRejectionReasonsForField(
         if (fieldName === 'feedback') {
           fieldReasons.push(reasonId);
         }
+        break;
+      case 9:
+        // Spam content is account-level, not tied to specific form fields
         break;
     }
   });

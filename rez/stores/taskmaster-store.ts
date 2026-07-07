@@ -9,6 +9,8 @@ export interface TaskMasterStoreUser {
   organizationId: string | null;
   privyDid: string | null;
   isSuperAdmin?: boolean;
+  taskCreationBlocked?: boolean;
+  taskCreationBlockReason?: string | null;
 }
 
 interface TaskMasterStore {

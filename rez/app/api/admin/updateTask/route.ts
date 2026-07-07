@@ -7,6 +7,7 @@ import { requireSuperAdmin } from '@/lib/api-auth';
 import type { PollQuestionDraft } from '@/types/poll';
 import { validatePollQuestions, validatePollQuestionsTextOnly } from '@/types/poll';
 import { fetchPollContentByPaxTaskId } from '@/services/fetchPollContent';
+import { SPAM_CONTENT_REJECTION_REASON_ID } from '@/utils/rejection-reasons';
 
 export interface AdminUpdateTaskData {
   title?: string;
@@ -30,7 +31,7 @@ export interface AdminUpdateTaskData {
   paymentTerms?: string | null;
   managerContractAddress?: string;
   reviewStatus?: 'pending' | 'approved' | 'rejected' | 'published' | 'archived';
-  reasonsForRejection?: number[]; // Array of rejection reason IDs (1-8)
+  reasonsForRejection?: number[]; // Array of rejection reason IDs (1-9)
   pollQuestions?: PollQuestionDraft[];
 }
 
@@ -84,6 +85,9 @@ export async function PATCH(request: NextRequest) {
     const oldTaskData = taskDoc.data();
     const oldIsAvailable = oldTaskData?.isAvailable;
     const oldReviewStatus = oldTaskData?.reviewStatus;
+    const oldReasonsForRejection = Array.isArray(oldTaskData?.reasonsForRejection)
+      ? (oldTaskData?.reasonsForRejection as number[])
+      : [];
     const pollQuestions = data.pollQuestions;
     const hasPollQuestionUpdate = pollQuestions !== undefined;
 
@@ -175,6 +179,64 @@ export async function PATCH(request: NextRequest) {
 
     const updatedTaskDoc = await taskRef.get();
     const taskData = updatedTaskDoc.data();
+    const updatedReviewStatus = (taskData?.reviewStatus ?? oldReviewStatus) as string | undefined;
+    const updatedReasonsForRejection = Array.isArray(taskData?.reasonsForRejection)
+      ? (taskData?.reasonsForRejection as number[])
+      : [];
+
+    const hadSpamRejection =
+      oldReviewStatus === 'rejected' &&
+      oldReasonsForRejection.includes(SPAM_CONTENT_REJECTION_REASON_ID);
+    const hasSpamRejectionNow =
+      updatedReviewStatus === 'rejected' &&
+      updatedReasonsForRejection.includes(SPAM_CONTENT_REJECTION_REASON_ID);
+
+    const taskMasterEmailRaw = taskData?.rezTaskMasterEmailAddress;
+    const taskMasterEmail =
+      typeof taskMasterEmailRaw === 'string' ? taskMasterEmailRaw.trim() : null;
+
+    if (taskMasterEmail && (hadSpamRejection !== hasSpamRejectionNow)) {
+      const taskMasterSnapshot = await rezDB
+        .collection(COLLECTIONS.TASK_MASTERS)
+        .where('emailAddress', '==', taskMasterEmail)
+        .limit(1)
+        .get();
+
+      if (!taskMasterSnapshot.empty) {
+        const taskMasterRef = taskMasterSnapshot.docs[0].ref;
+
+        if (hasSpamRejectionNow) {
+          await taskMasterRef.update({
+            taskCreationBlocked: true,
+            taskCreationBlockReason: 'spam_content',
+            taskCreationBlockedAt: FieldValue.serverTimestamp(),
+            timeUpdated: FieldValue.serverTimestamp(),
+          });
+        } else {
+          // Only clear block when there are no other rejected spam tasks for this task master
+          const siblingRejectedTasks = await paxDB
+            .collection(COLLECTIONS.TASKS)
+            .where('rezTaskMasterEmailAddress', '==', taskMasterEmail)
+            .where('reviewStatus', '==', 'rejected')
+            .get();
+
+          const hasAnyOtherSpamRejectedTask = siblingRejectedTasks.docs.some((doc) => {
+            if (doc.id === taskId) return false;
+            const reasons = doc.data()?.reasonsForRejection;
+            return Array.isArray(reasons) && reasons.includes(SPAM_CONTENT_REJECTION_REASON_ID);
+          });
+
+          if (!hasAnyOtherSpamRejectedTask) {
+            await taskMasterRef.update({
+              taskCreationBlocked: false,
+              taskCreationBlockReason: null,
+              taskCreationBlockedAt: null,
+              timeUpdated: FieldValue.serverTimestamp(),
+            });
+          }
+        }
+      }
+    }
 
     const updatedTaskType = (updateData.type as string | undefined) ?? taskData?.type;
     if (updatedTaskType === 'answerPoll') {

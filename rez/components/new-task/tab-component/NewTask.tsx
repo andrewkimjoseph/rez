@@ -158,13 +158,23 @@ export default function NewTask() {
   // Check if user can create a new task (once per week limit)
   // Super admins are exempt from rate limiting
   const getTaskCreationStatus = () => {
+    if (user?.taskCreationBlocked === true && user?.isSuperAdmin !== true) {
+      return {
+        canCreate: false,
+        isBlockedForSpam: true,
+        blockReason: user.taskCreationBlockReason ?? "spam_content",
+        lastTaskDate: null,
+        daysLeft: 0,
+      };
+    }
+
     // Super admins can always create tasks
     if (user?.isSuperAdmin === true) {
-      return { canCreate: true, lastTaskDate: null, daysLeft: 0 };
+      return { canCreate: true, isBlockedForSpam: false, lastTaskDate: null, daysLeft: 0 };
     }
 
     if (!user?.emailAddress || !tasks.length) {
-      return { canCreate: true, lastTaskDate: null, daysLeft: 0 };
+      return { canCreate: true, isBlockedForSpam: false, lastTaskDate: null, daysLeft: 0 };
     }
 
     // Find the user's most recent task
@@ -173,7 +183,7 @@ export default function NewTask() {
     );
 
     if (userTasks.length === 0) {
-      return { canCreate: true, lastTaskDate: null, daysLeft: 0 };
+      return { canCreate: true, isBlockedForSpam: false, lastTaskDate: null, daysLeft: 0 };
     }
 
     // Sort by most recent activity (creation or update) and get the most recent
@@ -210,7 +220,7 @@ export default function NewTask() {
     const lastTaskTime = Math.max(createdTime, updatedTime);
 
     if (lastTaskTime === 0) {
-      return { canCreate: true, lastTaskDate: null, daysLeft: 0 };
+      return { canCreate: true, isBlockedForSpam: false, lastTaskDate: null, daysLeft: 0 };
     }
 
     const oneWeekMs = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
@@ -222,6 +232,7 @@ export default function NewTask() {
 
     return {
       canCreate,
+      isBlockedForSpam: false,
       lastTaskDate: new Date(lastTaskTime),
       daysLeft,
       lastTaskTitle: latestTask.title,
@@ -391,7 +402,14 @@ export default function NewTask() {
           });
 
           if (!response.ok) {
-            throw new Error("Failed to create task");
+            let errorMessage = "Failed to create task";
+            try {
+              const errorBody = await response.json();
+              errorMessage = errorBody?.message || errorBody?.error || errorMessage;
+            } catch {
+              // Keep fallback message when response body is not JSON
+            }
+            throw new Error(errorMessage);
           }
 
           const result = await response.json();
@@ -522,6 +540,32 @@ export default function NewTask() {
       </div>
     </Card>
   );
+
+  const SpamBlockedBanner = () => (
+    <Card className="p-6">
+      <div className="flex items-start space-x-4">
+        <div className="flex-shrink-0">
+          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+            <ExclamationCircleIcon className="w-6 h-6 text-red-600" />
+          </div>
+        </div>
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Task creation is restricted
+          </h3>
+          <p className="text-gray-600">
+            Your account is temporarily restricted from creating new tasks due to spam content.
+            Please contact support or a super admin to resolve this.
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+
+  // Show rate limit banner if user cannot create a task (skip for edit mode)
+  if (!editMode && taskCreationStatus.isBlockedForSpam) {
+    return <SpamBlockedBanner />;
+  }
 
   // Show rate limit banner if user cannot create a task (skip for edit mode)
   if (!editMode && !taskCreationStatus.canCreate) {

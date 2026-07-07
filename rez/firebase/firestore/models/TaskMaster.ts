@@ -10,4 +10,7 @@ export interface TaskMaster {
   timeCreated: Timestamp | null;
   timeUpdated: Timestamp | null;
   isSuperAdmin?: boolean;
+  taskCreationBlocked?: boolean;
+  taskCreationBlockReason?: string | null;
+  taskCreationBlockedAt?: Timestamp | null;
 } 

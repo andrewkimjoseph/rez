@@ -4,6 +4,8 @@ export interface RejectionReason {
   appliesTo: ('fillAForm' | 'checkOutApp' | 'both')[];
 }
 
+export const SPAM_CONTENT_REJECTION_REASON_ID = 9;
+
 export const REJECTION_REASONS: RejectionReason[] = [
   {
     id: 1,
@@ -43,6 +45,11 @@ export const REJECTION_REASONS: RejectionReason[] = [
   {
     id: 8,
     label: 'Feedback from questions need to edited / improved',
+    appliesTo: ['both'],
+  },
+  {
+    id: SPAM_CONTENT_REJECTION_REASON_ID,
+    label: 'Spam content',
     appliesTo: ['both'],
   },
 ];
