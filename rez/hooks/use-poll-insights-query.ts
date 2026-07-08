@@ -6,6 +6,7 @@ import { fetchWithAuthRetry } from '@/lib/api-fetch';
 const POLL_INTERVAL_MS = 30_000;
 
 const inFlightByUrl = new Map<string, Promise<void>>();
+const dataCacheByUrl = new Map<string, unknown>();
 
 type UsePollInsightsQueryOptions<T> = {
   select?: (body: unknown) => T;
@@ -26,13 +27,17 @@ export function usePollInsightsQuery<T>(
   options: UsePollInsightsQueryOptions<T> = {},
 ): UsePollInsightsQueryResult<T> {
   const { select, enabled = true } = options;
-  const [data, setData] = useState<T | null>(null);
+  const getCachedData = (): T | null => {
+    if (!url) return null;
+    return (dataCacheByUrl.get(url) as T | undefined) ?? null;
+  };
+  const [data, setData] = useState<T | null>(() => getCachedData());
   const [error, setError] = useState<string | null>(null);
   const [refreshError, setRefreshError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => getCachedData() == null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const hasDataRef = useRef(false);
+  const hasDataRef = useRef(getCachedData() != null);
   const abortRef = useRef<AbortController | null>(null);
   const selectRef = useRef(select);
   selectRef.current = select;
@@ -70,6 +75,7 @@ export function usePollInsightsQuery<T>(
 
           const next = selectRef.current ? selectRef.current(body) : (body as T);
           setData(next);
+          dataCacheByUrl.set(url, next as unknown);
           setError(null);
           setRefreshError(null);
           hasDataRef.current = true;
@@ -112,11 +118,18 @@ export function usePollInsightsQuery<T>(
       return;
     }
 
-    hasDataRef.current = false;
-    setData(null);
+    const cached = dataCacheByUrl.get(url) as T | undefined;
+    if (cached != null) {
+      hasDataRef.current = true;
+      setData(cached);
+      setIsLoading(false);
+    } else {
+      hasDataRef.current = false;
+      setData(null);
+      setIsLoading(true);
+    }
     setError(null);
     setRefreshError(null);
-    setIsLoading(true);
 
     void load(false);
 

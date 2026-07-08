@@ -1,9 +1,9 @@
 import { getSupabaseAdmin } from '@/lib/supabase/server';
 import {
   calculateAgeFromDateOfBirth,
-  completedParticipantCount,
   type PollInsightRow,
   type PollInsightsData,
+  type PollOptionMeta,
   type PollQuestionInsights,
 } from '@/lib/poll-insights';
 
@@ -12,6 +12,68 @@ const TASK_PUBLICATION_SELECT =
 
 const PUBLISHED_POLL_TASK_SELECT =
   'id, title, is_published, target_number_of_participants, deadline, review_status, is_active, pax_task_id, created_at' as const;
+
+const SUPABASE_PAGE_SIZE = 1000;
+
+type AnswerParticipantRow = {
+  participant_id: string | null;
+};
+
+type AnswerSummaryRow = AnswerParticipantRow & {
+  question_id: string;
+  question_option_id: string;
+};
+
+type AnswerDemographicsRow = AnswerParticipantRow & {
+  id: string;
+  task_id: string;
+  pax_task_id: string;
+  question_id: string;
+  question_option_id: string;
+  created_at: string;
+};
+
+type AnswerListCountRow = AnswerParticipantRow & {
+  pax_task_id: string;
+};
+
+async function fetchPaginatedRows<T>(
+  fetchPage: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+): Promise<T[]> {
+  const rows: T[] = [];
+  let from = 0;
+
+  while (true) {
+    const { data, error } = await fetchPage(from, from + SUPABASE_PAGE_SIZE - 1);
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (!data?.length) {
+      break;
+    }
+
+    rows.push(...data);
+
+    if (data.length < SUPABASE_PAGE_SIZE) {
+      break;
+    }
+
+    from += SUPABASE_PAGE_SIZE;
+  }
+
+  return rows;
+}
+
+function countUniqueParticipants(
+  answers: Array<{ participant_id: string | null }>,
+): number {
+  return new Set(
+    answers
+      .map((answer) => answer.participant_id)
+      .filter((participantId): participantId is string => typeof participantId === 'string' && participantId.length > 0),
+  ).size;
+}
 
 type TaskPublicationRow = {
   id: string;
@@ -50,9 +112,24 @@ export type PublishedPollSummary = {
   isActive: boolean;
 };
 
-export async function fetchPollInsightsByPaxTaskId(
+export type PollInsightsSummaryData = {
+  taskTitle: string;
+  questions: PollQuestionInsights[];
+  targetParticipants: number | null;
+  responseCount: number;
+  isPublished: boolean;
+  deadline: string | null;
+  reviewStatus: string;
+  isActive: boolean;
+};
+
+export type PollInsightsDemographicsData = {
+  rows: PollInsightRow[];
+};
+
+export async function fetchPollInsightsSummaryByPaxTaskId(
   paxTaskId: string,
-): Promise<PollInsightsData | null> {
+): Promise<PollInsightsSummaryData | null> {
   const supabase = getSupabaseAdmin();
 
   const { data: insightsTask, error: taskError } = await supabase
@@ -77,37 +154,95 @@ export async function fetchPollInsightsByPaxTaskId(
 
   const questionIds = questions.map((q) => q.id);
 
-  const [optionsResult, answersResult] = await Promise.all([
+  const [optionsResult, answers] = await Promise.all([
     supabase
       .from('question_options')
       .select('id, question_id, option_text, sort_order')
       .in('question_id', questionIds)
       .order('sort_order', { ascending: true }),
-    supabase
-      .from('answers')
-      .select('id, task_id, pax_task_id, question_id, question_option_id, participant_id, created_at')
-      .eq('pax_task_id', paxTaskId),
+    fetchPaginatedRows<AnswerSummaryRow>(async (from, to) =>
+      supabase
+        .from('answers')
+        .select('question_id, question_option_id, participant_id')
+        .eq('pax_task_id', paxTaskId)
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
   ]);
 
   const { data: options, error: optionsError } = optionsResult;
-  const { data: answers, error: answersError } = answersResult;
 
   if (optionsError) {
     throw new Error(optionsError.message);
   }
 
-  if (answersError) {
-    throw new Error(answersError.message);
-  }
-
-  const optionsByQuestionId = new Map<string, typeof options>();
+  const optionsByQuestionId = new Map<string, PollOptionMeta[]>();
   for (const option of options ?? []) {
     const list = optionsByQuestionId.get(option.question_id) ?? [];
     list.push(option);
     optionsByQuestionId.set(option.question_id, list);
   }
 
-  const participantIds = Array.from(new Set((answers ?? []).map((answer) => answer.participant_id)));
+  const rowsByQuestionId = new Map<string, PollInsightRow[]>();
+  for (const answer of answers) {
+    const row: PollInsightRow = {
+      answer_id: null,
+      task_id: null,
+      pax_task_id: paxTaskId,
+      question_id: answer.question_id,
+      question_option_id: answer.question_option_id,
+      participant_id: answer.participant_id,
+      answered_at: null,
+      gender: null,
+      country: null,
+      age: null,
+    };
+    const list = rowsByQuestionId.get(answer.question_id) ?? [];
+    list.push(row);
+    rowsByQuestionId.set(answer.question_id, list);
+  }
+
+  const responseCount = countUniqueParticipants(answers);
+
+  const questionInsights: PollQuestionInsights[] = questions.map((question) => ({
+    questionId: question.id,
+    questionText: question.question_text,
+    sortOrder: question.sort_order,
+    options: optionsByQuestionId.get(question.id) ?? [],
+    rows: rowsByQuestionId.get(question.id) ?? [],
+  }));
+
+  return {
+    taskTitle: insightsTask.title,
+    questions: questionInsights,
+    targetParticipants: insightsTask.target_number_of_participants,
+    responseCount,
+    ...mapTaskPublicationFields(insightsTask),
+  };
+}
+
+export async function fetchPollInsightsDemographicsByPaxTaskId(
+  paxTaskId: string,
+): Promise<PollInsightsDemographicsData> {
+  const supabase = getSupabaseAdmin();
+
+  const answers = await fetchPaginatedRows<AnswerDemographicsRow>(async (from, to) =>
+    supabase
+      .from('answers')
+      .select('id, task_id, pax_task_id, question_id, question_option_id, participant_id, created_at')
+      .eq('pax_task_id', paxTaskId)
+      .order('id', { ascending: true })
+      .range(from, to),
+  );
+
+  const participantIds = Array.from(
+    new Set(
+      answers
+        .map((answer) => answer.participant_id)
+        .filter((participantId): participantId is string => typeof participantId === 'string' && participantId.length > 0),
+    ),
+  );
+
   let participantsById = new Map<
     string,
     { gender: string | null; country: string | null; date_of_birth: string | null }
@@ -135,10 +270,11 @@ export async function fetchPollInsightsByPaxTaskId(
     );
   }
 
-  const rowsByQuestionId = new Map<string, PollInsightRow[]>();
-  for (const answer of answers ?? []) {
-    const participant = participantsById.get(answer.participant_id);
-    const row: PollInsightRow = {
+  const rows: PollInsightRow[] = answers.map((answer) => {
+    const participant = answer.participant_id
+      ? participantsById.get(answer.participant_id)
+      : undefined;
+    return {
       answer_id: answer.id,
       task_id: answer.task_id,
       pax_task_id: answer.pax_task_id,
@@ -150,25 +286,9 @@ export async function fetchPollInsightsByPaxTaskId(
       country: participant?.country ?? null,
       age: calculateAgeFromDateOfBirth(participant?.date_of_birth ?? null),
     };
-    const list = rowsByQuestionId.get(answer.question_id) ?? [];
-    list.push(row);
-    rowsByQuestionId.set(answer.question_id, list);
-  }
+  });
 
-  const questionInsights: PollQuestionInsights[] = questions.map((question) => ({
-    questionId: question.id,
-    questionText: question.question_text,
-    sortOrder: question.sort_order,
-    options: optionsByQuestionId.get(question.id) ?? [],
-    rows: rowsByQuestionId.get(question.id) ?? [],
-  }));
-
-  return {
-    taskTitle: insightsTask.title,
-    questions: questionInsights,
-    targetParticipants: insightsTask.target_number_of_participants,
-    ...mapTaskPublicationFields(insightsTask),
-  };
+  return { rows };
 }
 
 export async function fetchAllPublishedPollSummaries(): Promise<PublishedPollSummary[]> {
@@ -191,27 +311,26 @@ export async function fetchAllPublishedPollSummaries(): Promise<PublishedPollSum
   const taskIds = tasks.map((task) => task.id);
   const paxTaskIds = tasks.map((task) => task.pax_task_id);
 
-  const [questionsResult, answersResult] = await Promise.all([
+  const [questionsResult, answers] = await Promise.all([
     supabase
       .from('questions')
       .select('id, task_id, question_text, sort_order')
       .in('task_id', taskIds)
       .order('sort_order', { ascending: true }),
-    supabase
-      .from('answers')
-      .select('pax_task_id, participant_id, question_id')
-      .in('pax_task_id', paxTaskIds),
+    fetchPaginatedRows<AnswerListCountRow>(async (from, to) =>
+      supabase
+        .from('answers')
+        .select('pax_task_id, participant_id')
+        .in('pax_task_id', paxTaskIds)
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
   ]);
 
   const { data: questions, error: questionsError } = questionsResult;
-  const { data: answers, error: answersError } = answersResult;
 
   if (questionsError) {
     throw new Error(questionsError.message);
-  }
-
-  if (answersError) {
-    throw new Error(answersError.message);
   }
 
   const questionsByTaskId = new Map<string, typeof questions>();
@@ -221,8 +340,8 @@ export async function fetchAllPublishedPollSummaries(): Promise<PublishedPollSum
     questionsByTaskId.set(question.task_id, list);
   }
 
-  const answersByPaxTaskId = new Map<string, typeof answers>();
-  for (const answer of answers ?? []) {
+  const answersByPaxTaskId = new Map<string, AnswerListCountRow[]>();
+  for (const answer of answers) {
     if (!answer.pax_task_id) continue;
     const list = answersByPaxTaskId.get(answer.pax_task_id) ?? [];
     list.push(answer);
@@ -235,17 +354,7 @@ export async function fetchAllPublishedPollSummaries(): Promise<PublishedPollSum
       if (!taskQuestions.length) return null;
 
       const taskAnswers = answersByPaxTaskId.get(task.pax_task_id) ?? [];
-      const requiredCount = taskQuestions.length;
-      const countsByParticipant = new Map<string, number>();
-      for (const answer of taskAnswers) {
-        countsByParticipant.set(
-          answer.participant_id,
-          (countsByParticipant.get(answer.participant_id) ?? 0) + 1,
-        );
-      }
-      const responseCount = Array.from(countsByParticipant.values()).filter(
-        (c) => c >= requiredCount,
-      ).length;
+      const responseCount = countUniqueParticipants(taskAnswers);
 
       return {
         taskId: task.pax_task_id,
@@ -260,4 +369,40 @@ export async function fetchAllPublishedPollSummaries(): Promise<PublishedPollSum
     .filter((poll): poll is PublishedPollSummary => poll !== null);
 }
 
-export { completedParticipantCount };
+export function mergeSummaryAndDemographics(
+  summary: PollInsightsSummaryData,
+  demographics: PollInsightsDemographicsData | null,
+): PollInsightsData {
+  if (!demographics) {
+    return {
+      taskTitle: summary.taskTitle,
+      questions: summary.questions,
+      targetParticipants: summary.targetParticipants,
+      isPublished: summary.isPublished,
+      deadline: summary.deadline,
+      reviewStatus: summary.reviewStatus,
+      isActive: summary.isActive,
+    };
+  }
+
+  const rowsByQuestionId = new Map<string, PollInsightRow[]>();
+  for (const row of demographics.rows) {
+    if (!row.question_id) continue;
+    const list = rowsByQuestionId.get(row.question_id) ?? [];
+    list.push(row);
+    rowsByQuestionId.set(row.question_id, list);
+  }
+
+  return {
+    taskTitle: summary.taskTitle,
+    questions: summary.questions.map((question) => ({
+      ...question,
+      rows: rowsByQuestionId.get(question.questionId) ?? [],
+    })),
+    targetParticipants: summary.targetParticipants,
+    isPublished: summary.isPublished,
+    deadline: summary.deadline,
+    reviewStatus: summary.reviewStatus,
+    isActive: summary.isActive,
+  };
+}

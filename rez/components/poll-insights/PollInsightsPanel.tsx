@@ -6,12 +6,9 @@ import {
   ageBucket,
   aggregateCounts,
   aggregatePollResults,
-  allInsightRows,
   capCountryBuckets,
-  completedParticipantCount,
   orderAgeBuckets,
   toCsv,
-  type PollInsightsData,
 } from "@/lib/poll-insights";
 import {
   AgeOrderedChart,
@@ -21,23 +18,42 @@ import {
 } from "@/components/poll-insights/PollCharts";
 import { PollStatusBadge } from "@/components/poll-insights/PollStatusBadge";
 import { usePollInsightsQuery } from "@/hooks/use-poll-insights-query";
+import type {
+  PollInsightsDemographicsData,
+  PollInsightsSummaryData,
+} from "@/services/fetchPollInsightsData";
+import { mergeSummaryAndDemographics } from "@/services/fetchPollInsightsData";
 
 type PollInsightsPanelProps = {
   taskId: string;
 };
 
 export default function PollInsightsPanel({ taskId }: PollInsightsPanelProps) {
-  const { data, error, refreshError, isLoading } = usePollInsightsQuery<PollInsightsData>(
-    `/api/pollInsights/${taskId}`,
+  const {
+    data: summary,
+    error,
+    refreshError,
+    isLoading: isSummaryLoading,
+  } = usePollInsightsQuery<PollInsightsSummaryData>(
+    `/api/pollInsights/${taskId}?view=summary`,
+  );
+  const {
+    data: demographics,
+    error: demographicsError,
+    isLoading: isDemographicsLoading,
+  } = usePollInsightsQuery<PollInsightsDemographicsData>(
+    `/api/pollInsights/${taskId}?view=demographics`,
+    { enabled: !!summary },
   );
 
   const publicInsightsUrl = `https://thecanvassing.xyz/insights/${taskId}`;
 
-  const demographicRows = useMemo(() => (data ? allInsightRows(data) : []), [data]);
-  const completedCount = useMemo(
-    () => (data ? completedParticipantCount(data) : 0),
-    [data],
+  const data = useMemo(
+    () => (summary ? mergeSummaryAndDemographics(summary, demographics ?? null) : null),
+    [summary, demographics],
   );
+  const demographicRows = useMemo(() => demographics?.rows ?? [], [demographics]);
+  const completedCount = summary?.responseCount ?? 0;
 
   const genderData = useMemo(
     () => aggregateCounts(demographicRows, (row) => row.gender ?? "Unknown"),
@@ -59,7 +75,7 @@ export default function PollInsightsPanel({ taskId }: PollInsightsPanelProps) {
   );
 
   const handleExport = () => {
-    if (!data) return;
+    if (!data || !demographics) return;
     const csv = toCsv(data, genderData, countryData, ageData);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -70,21 +86,21 @@ export default function PollInsightsPanel({ taskId }: PollInsightsPanelProps) {
     URL.revokeObjectURL(url);
   };
 
-  if (isLoading && !data) {
+  if (isSummaryLoading && !summary) {
     return <p className="text-sm text-muted-foreground">Loading poll insights...</p>;
   }
 
-  if (!data && error) {
+  if (!summary && error) {
     return <p className="text-sm text-destructive">{error}</p>;
   }
 
-  if (!data) {
+  if (!summary || !data) {
     return null;
   }
 
   const completionRate =
-    data.targetParticipants && data.targetParticipants > 0
-      ? Math.round((completedCount / data.targetParticipants) * 100)
+    summary.targetParticipants && summary.targetParticipants > 0
+      ? Math.round((completedCount / summary.targetParticipants) * 100)
       : null;
 
   return (
@@ -97,25 +113,30 @@ export default function PollInsightsPanel({ taskId }: PollInsightsPanelProps) {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
-          <h2 className="text-xl font-semibold">{data.taskTitle}</h2>
+          <h2 className="text-xl font-semibold">{summary.taskTitle}</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            {data.questions.length} question{data.questions.length === 1 ? "" : "s"}
+            {summary.questions.length} question{summary.questions.length === 1 ? "" : "s"}
           </p>
           <p className="text-sm mt-2">
             <span className="font-medium">{completedCount}</span> completed responses
-            {data.targetParticipants ? ` of ${data.targetParticipants} target` : ""}
+            {summary.targetParticipants ? ` of ${summary.targetParticipants} target` : ""}
             {completionRate != null ? ` (${completionRate}% complete)` : ""}
           </p>
         </div>
         <div className="flex flex-col items-start sm:items-end gap-3 shrink-0">
-          <PollStatusBadge isActive={data.isActive} deadline={data.deadline} />
+          <PollStatusBadge isActive={summary.isActive} deadline={summary.deadline} />
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" asChild>
               <a href={publicInsightsUrl} target="_blank" rel="noopener noreferrer">
                 Share public summary
               </a>
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExport}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              disabled={!demographics || isDemographicsLoading}
+            >
               Export CSV
             </Button>
           </div>
@@ -126,7 +147,7 @@ export default function PollInsightsPanel({ taskId }: PollInsightsPanelProps) {
         The public link shows poll results only. Demographics and export are available here in Rez.
       </p>
 
-      {data.questions.map((question, index) => {
+      {summary.questions.map((question, index) => {
         const pollResults = aggregatePollResults(question.rows, question.options);
         return (
           <section
@@ -142,7 +163,20 @@ export default function PollInsightsPanel({ taskId }: PollInsightsPanelProps) {
         );
       })}
 
-      {completedCount > 0 && (
+      {isDemographicsLoading && (
+        <section className="space-y-4">
+          <h3 className="text-lg font-semibold">Demographic breakdown</h3>
+          <p className="text-sm text-muted-foreground">Loading demographics...</p>
+        </section>
+      )}
+
+      {demographicsError && (
+        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200/80 rounded-lg px-3 py-2">
+          Demographics are taking longer to load. Poll results are available now.
+        </p>
+      )}
+
+      {!!demographics && completedCount > 0 && (
         <section className="space-y-4">
           <h3 className="text-lg font-semibold">Demographic breakdown</h3>
           <div className="grid gap-4 md:grid-cols-2">

@@ -7,8 +7,8 @@ export const maxDuration = 30;
 
 const getCachedPublishedPollSummaries = unstable_cache(
   async () => fetchAllPublishedPollSummaries(),
-  ['poll-insights-list'],
-  { revalidate: 30, tags: ['poll-insights-list'] },
+  ['poll-insights-list-v2'],
+  { revalidate: 120, tags: ['poll-insights-list-v2'] },
 );
 
 export async function GET(request: NextRequest) {

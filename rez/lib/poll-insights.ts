@@ -42,16 +42,14 @@ export function allInsightRows(data: PollInsightsData): PollInsightRow[] {
 
 /** Participants who answered every question in the poll. */
 export function completedParticipantCount(data: PollInsightsData): number {
-  if (data.questions.length === 0) return 0;
-  const required = data.questions.length;
-  const counts = new Map<string, number>();
+  const participants = new Set<string>();
   for (const question of data.questions) {
     for (const row of question.rows) {
       if (!row.participant_id) continue;
-      counts.set(row.participant_id, (counts.get(row.participant_id) ?? 0) + 1);
+      participants.add(row.participant_id);
     }
   }
-  return Array.from(counts.values()).filter((c) => c >= required).length;
+  return participants.size;
 }
 
 export type ChartDatum = {
