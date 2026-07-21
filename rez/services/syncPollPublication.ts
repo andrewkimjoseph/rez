@@ -3,6 +3,7 @@ import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
 import {
   coerceFirestoreDeadline,
+  isPollInactiveReviewStatus,
   isPollPublished,
 } from '@/lib/poll-publication-state';
 import {
@@ -31,7 +32,8 @@ export type SyncPollTaskMetadata = {
 
 export function buildPollPublicationUpdate(input: SyncPollPublicationInput) {
   const reviewStatus = input.reviewStatus ?? 'pending';
-  const isActive = input.isAvailable === true;
+  const isActive =
+    !isPollInactiveReviewStatus(reviewStatus) && input.isAvailable === true;
   const deadline = input.deadline;
 
   return {
@@ -143,6 +145,9 @@ export async function updatePollInInsights(
   if (data.reviewStatus !== undefined) {
     taskUpdate.review_status = data.reviewStatus;
     taskUpdate.is_published = isPollPublished(data.reviewStatus);
+    if (isPollInactiveReviewStatus(data.reviewStatus)) {
+      taskUpdate.is_active = false;
+    }
   }
 
   const { data: task, error: taskError } = await supabase

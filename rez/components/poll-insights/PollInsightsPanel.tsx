@@ -124,7 +124,11 @@ export default function PollInsightsPanel({ taskId }: PollInsightsPanelProps) {
           </p>
         </div>
         <div className="flex flex-col items-start sm:items-end gap-3 shrink-0">
-          <PollStatusBadge isActive={summary.isActive} deadline={summary.deadline} />
+          <PollStatusBadge
+            isActive={summary.isActive}
+            deadline={summary.deadline}
+            reviewStatus={summary.reviewStatus}
+          />
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" asChild>
               <a href={publicInsightsUrl} target="_blank" rel="noopener noreferrer">

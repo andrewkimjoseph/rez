@@ -5,6 +5,15 @@ export function isPollPublished(reviewStatus: string | null): boolean {
   return reviewStatus === 'published';
 }
 
+export function isPollInactiveReviewStatus(reviewStatus: string | null): boolean {
+  return reviewStatus === 'archived' || reviewStatus === 'rejected';
+}
+
+/** Polls whose results may appear on public Insights surfaces. */
+export function isPollPubliclyVisible(reviewStatus: string | null): boolean {
+  return reviewStatus === 'published' || reviewStatus === 'archived';
+}
+
 /** Whether Pax is actively collecting responses right now. */
 export function isPollActiveOnPax(input: {
   isActive: boolean | null;

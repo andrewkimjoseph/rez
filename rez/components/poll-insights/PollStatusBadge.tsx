@@ -3,14 +3,28 @@ import { getInsightsCollectionStatus } from '@/lib/poll-publication-state';
 type PollStatusBadgeProps = {
   isActive: boolean;
   deadline?: string | null;
+  reviewStatus?: string | null;
   className?: string;
 };
 
 export function PollStatusBadge({
   isActive,
   deadline = null,
+  reviewStatus = null,
   className = '',
 }: PollStatusBadgeProps) {
+  if (reviewStatus === 'archived') {
+    return (
+      <span
+        className={`inline-flex items-center gap-1.5 shrink-0 ${className}`}
+        aria-label="Poll is archived"
+      >
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-muted-foreground/60" />
+        <span className="text-sm font-medium text-muted-foreground">Archived</span>
+      </span>
+    );
+  }
+
   const status = getInsightsCollectionStatus(isActive, deadline);
 
   if (!status) return null;

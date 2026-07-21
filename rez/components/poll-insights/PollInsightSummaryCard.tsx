@@ -35,7 +35,11 @@ export function PollInsightSummaryCard({ poll }: PollInsightSummaryCardProps) {
             {poll.questionCount} question{poll.questionCount === 1 ? "" : "s"}
           </Badge>
         </div>
-        <PollStatusBadge isActive={poll.isActive} deadline={poll.deadline} />
+        <PollStatusBadge
+          isActive={poll.isActive}
+          deadline={poll.deadline}
+          reviewStatus={poll.reviewStatus}
+        />
       </div>
 
       <h2 className="text-base font-semibold text-foreground line-clamp-2 group-hover:text-[#5C29A3] transition-colors">

@@ -238,8 +238,9 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    const updatedTaskType = (updateData.type as string | undefined) ?? taskData?.type;
-    if (updatedTaskType === 'answerPoll') {
+    const pollTaskType =
+      (updateData.type as string | undefined) ?? taskData?.type ?? oldTaskData?.type;
+    if (pollTaskType === 'answerPoll') {
       try {
         if (hasPollQuestionUpdate) {
           const existing = await fetchPollContentByPaxTaskId(taskId);
@@ -271,6 +272,7 @@ export async function PATCH(request: NextRequest) {
             { adminOverride: true },
           );
         }
+
         await syncPollFromFirestoreTask(taskId);
       } catch (syncError) {
         const message = syncError instanceof Error ? syncError.message : 'Failed to update poll';

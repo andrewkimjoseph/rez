@@ -297,7 +297,7 @@ export async function fetchAllPublishedPollSummaries(): Promise<PublishedPollSum
   const { data: tasks, error: tasksError } = await supabase
     .from('tasks')
     .select(PUBLISHED_POLL_TASK_SELECT)
-    .eq('is_published', true)
+    .in('review_status', ['published', 'archived'])
     .order('created_at', { ascending: false });
 
   if (tasksError) {
