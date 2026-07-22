@@ -136,7 +136,7 @@ export function OrganizationOnboardingClient() {
         Create your organization once, then launch studies and collect insights with your workspace configured.
       </p>
 
-      <div className="sign-in-ticket max-w-[520px]!">
+      <div className="sign-in-ticket">
         <div className="sign-in-ticket-perf" aria-hidden />
         <div className="flex justify-between items-baseline mb-[22px]">
           <span className="text-[11px] tracking-[0.08em] uppercase font-medium text-[color:var(--rez-pink)]">

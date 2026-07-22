@@ -243,13 +243,13 @@ export function SignInPageClient() {
         </div>
       </div>
 
-      <h1 className="font-[family-name:var(--font-fraunces)] font-medium text-[44px] leading-[1.08] tracking-[-0.01em] max-w-[380px] mb-3.5">
+      <h1 className="font-[family-name:var(--font-fraunces)] font-medium text-[44px] leading-[1.08] tracking-[-0.01em] max-w-[520px] mb-3.5">
         Where real people
         <br />
         <em className="not-italic rez-gradient-text">answer back.</em>
       </h1>
 
-      <p className="text-muted-foreground text-[15px] max-w-[360px] mb-10 leading-relaxed">
+      <p className="text-muted-foreground text-[15px] max-w-[520px] mb-10 leading-relaxed">
         Sign in to manage the research tasks running across your Canvassing network right now.
       </p>
 
@@ -300,7 +300,7 @@ export function SignInPageClient() {
         </div>
       </div>
 
-      <p className="max-w-[380px] mt-6 text-xs text-muted-foreground leading-relaxed">
+      <p className="max-w-[520px] mt-6 text-xs text-muted-foreground leading-relaxed">
         By signing in, you agree to our{" "}
         <Link href="/terms-of-service" className="text-primary underline underline-offset-2">
           terms of service

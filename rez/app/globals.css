@@ -299,7 +299,7 @@
     color: var(--foreground);
     border: 0.5px solid var(--border);
     border-radius: 14px;
-    max-width: 380px;
+    max-width: 520px;
     padding: 28px 28px 24px;
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
   }
