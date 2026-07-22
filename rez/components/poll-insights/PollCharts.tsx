@@ -39,19 +39,29 @@ function ColorDot({ color }: { color: string }) {
   );
 }
 
-function ProgressRows({
+export function ProgressRows({
   data,
   renderLeading,
   showColorDots = false,
+  barClassName = 'h-2.5',
+  listClassName = 'space-y-3.5',
+  labelClassName = 'text-foreground',
+  metaClassName = 'text-muted-foreground',
+  trackClassName = 'bg-muted/50',
 }: {
   data: ChartDatumWithPct[];
   renderLeading?: (row: ChartDatumWithPct, index: number) => ReactNode;
   showColorDots?: boolean;
+  barClassName?: string;
+  listClassName?: string;
+  labelClassName?: string;
+  metaClassName?: string;
+  trackClassName?: string;
 }) {
   const palette = useChartPalette();
 
   return (
-    <div className="space-y-3.5">
+    <div className={listClassName}>
       {data.map((row, index) => {
         const color = rowColor(palette, index);
         return (
@@ -60,16 +70,16 @@ function ProgressRows({
             className={row.value === 0 ? 'opacity-50' : undefined}
           >
             <div className="flex items-center justify-between gap-3 text-sm mb-1.5">
-              <span className="flex items-center gap-2 min-w-0 text-foreground leading-snug">
+              <span className={`flex items-center gap-2 min-w-0 leading-snug ${labelClassName}`}>
                 {renderLeading?.(row, index) ??
                   (showColorDots ? <ColorDot color={color} /> : null)}
                 <span className="truncate">{row.label}</span>
               </span>
-              <span className="shrink-0 tabular-nums text-muted-foreground text-xs">
+              <span className={`shrink-0 tabular-nums text-xs ${metaClassName}`}>
                 {row.value} ({row.pct}%)
               </span>
             </div>
-            <div className="h-2.5 rounded-full bg-muted/50 overflow-hidden">
+            <div className={`${barClassName} rounded-full overflow-hidden ${trackClassName}`}>
               <div
                 className="h-full rounded-full transition-all duration-500 ease-out"
                 style={{
