@@ -152,6 +152,7 @@ export function formatTicketId(date = new Date(), countryCode?: string | null): 
 export type FieldPanelContentProps = {
   data: SignInFieldPanelData;
   compact?: boolean;
+  grow?: boolean;
 };
 
 export function FieldPanelStats({ data }: { data: SignInFieldPanelData }) {
@@ -177,7 +178,7 @@ export function FieldPanelStats({ data }: { data: SignInFieldPanelData }) {
   );
 }
 
-export function FieldPanelFeed({ data, compact = false }: FieldPanelContentProps) {
+export function FieldPanelFeed({ data, compact = false, grow = true }: FieldPanelContentProps) {
   const sectionLabel = data.latestPollTitle
     ? `Latest from ${data.latestPollTitle}`
     : 'Recent responses';
@@ -202,7 +203,11 @@ export function FieldPanelFeed({ data, compact = false }: FieldPanelContentProps
           </span>
         </div>
       )}
-      <div className="sign-in-feed-grid rounded-xl border border-sidebar-border bg-sidebar-accent px-[18px] py-4 mb-auto overflow-hidden">
+      <div
+        className={`sign-in-feed-grid rounded-xl border border-sidebar-border bg-sidebar-accent px-[18px] py-4 overflow-hidden ${
+          grow ? 'mb-auto' : ''
+        }`}
+      >
         {!hasResults ? (
           <div className="text-sm text-[color:var(--sidebar-muted)]">No poll responses yet.</div>
         ) : (
@@ -227,6 +232,44 @@ export function FieldPanelFooter({ data }: { data: SignInFieldPanelData }) {
       Panel refreshed{' '}
       <span className="sign-in-panel-footer-highlight">{formatRelativeRefreshTime(data.refreshedAt)}</span>
       {' · '}sourced from live Canvassing tasks
+    </div>
+  );
+}
+
+const SETUP_CUE_STEPS = [
+  'Save organization profile',
+  'Invite collaborators',
+  'Create and publish first task',
+] as const;
+
+export function FieldPanelSetupCue({ compact = false }: { compact?: boolean }) {
+  return (
+    <div className={`w-full shrink-0 ${compact ? 'mb-6' : 'mb-8'}`}>
+      <div className="sign-in-section-label mb-3.5 min-w-0">
+        <span className="min-w-0 truncate">Your next steps</span>
+      </div>
+      <div
+        className={`sign-in-feed-grid w-full rounded-xl overflow-hidden bg-sidebar-accent ${
+          compact ? 'px-4 py-3.5' : 'px-5 py-4'
+        }`}
+      >
+        <ol className={compact ? 'space-y-2.5' : 'space-y-3'}>
+          {SETUP_CUE_STEPS.map((step, index) => (
+            <li key={step} className="flex items-center gap-3 min-w-0">
+              <span className="shrink-0 text-xs tabular-nums tracking-wide font-medium text-sidebar-foreground">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <span
+                className={`min-w-0 truncate text-sidebar-foreground ${
+                  compact ? 'text-[13px]' : 'text-sm'
+                }`}
+              >
+                {step}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </div>
     </div>
   );
 }
