@@ -20,10 +20,14 @@ type AnswerParticipantRow = {
   pax_task_id: string;
 };
 
-type RecentAnswerRow = {
-  created_at: string;
-  participant_id: string;
-  pax_task_id: string;
+type QuestionOptionRow = {
+  id: string;
+  option_text: string;
+  sort_order: number;
+};
+
+type QuestionAnswerCountRow = {
+  question_option_id: string;
 };
 
 async function fetchPaginatedRows<T>(
@@ -54,19 +58,19 @@ async function fetchPaginatedRows<T>(
   return rows;
 }
 
-export type SignInFieldPanelResponse = {
-  taskTitle: string;
-  taskType: string | null;
-  category: string | null;
-  location: string | null;
-  answeredAt: string;
+export type SignInFieldPanelQuestionResult = {
+  label: string;
+  value: number;
 };
 
 export type SignInFieldPanelData = {
   uniqueRespondents: number;
   tasksCreated: number;
   countriesCovered: number;
-  recentResponses: SignInFieldPanelResponse[];
+  latestPollTitle: string | null;
+  latestQuestionText: string | null;
+  latestTaskType: string | null;
+  questionResults: SignInFieldPanelQuestionResult[];
   refreshedAt: string;
 };
 
@@ -159,61 +163,92 @@ export async function fetchSignInFieldPanelData(): Promise<SignInFieldPanelData>
     countriesCovered = countries.size;
   }
 
-  let recentRows: RecentAnswerRow[] = [];
+  let latestPollTitle: string | null = null;
+  let latestQuestionText: string | null = null;
+  let latestTaskType: string | null = null;
+  let questionResults: SignInFieldPanelQuestionResult[] = [];
+
   if (paxTaskIds.length > 0) {
-    const { data: recentAnswers, error: recentError } = await supabase
+    const { data: latestAnswerRows, error: latestAnswerError } = await supabase
       .from('answers')
-      .select('created_at, participant_id, pax_task_id')
+      .select('pax_task_id, question_id')
       .in('pax_task_id', paxTaskIds)
       .order('created_at', { ascending: false })
-      .limit(4);
+      .limit(1);
 
-    if (recentError) {
-      throw new Error(recentError.message);
+    if (latestAnswerError) {
+      throw new Error(latestAnswerError.message);
     }
 
-    recentRows = (recentAnswers ?? []) as RecentAnswerRow[];
-  }
-  const recentParticipantIds = Array.from(new Set(recentRows.map((row) => row.participant_id)));
+    const latestPaxTaskId = latestAnswerRows?.[0]?.pax_task_id ?? null;
+    const featuredQuestionId = latestAnswerRows?.[0]?.question_id ?? null;
+    const latestTask = latestPaxTaskId ? taskByPaxId.get(latestPaxTaskId) : undefined;
+    latestPollTitle = latestTask?.title ?? null;
+    latestTaskType = latestTask?.type ?? 'poll';
 
-  let countryByParticipantId = new Map<string, string | null>();
-  if (recentParticipantIds.length > 0) {
-    const { data: recentParticipants, error: recentParticipantsError } = await supabase
-      .from('participants')
-      .select('id, country')
-      .in('id', recentParticipantIds);
+    if (latestPaxTaskId && featuredQuestionId) {
+      const { data: questionRow, error: questionError } = await supabase
+        .from('questions')
+        .select('id, question_text')
+        .eq('id', featuredQuestionId)
+        .maybeSingle();
 
-    if (recentParticipantsError) {
-      throw new Error(recentParticipantsError.message);
+      if (questionError) {
+        throw new Error(questionError.message);
+      }
+
+      latestQuestionText = questionRow?.question_text?.trim() || null;
+
+      const [optionsResult, answerOptionRows] = await Promise.all([
+        supabase
+          .from('question_options')
+          .select('id, option_text, sort_order')
+          .eq('question_id', featuredQuestionId)
+          .order('sort_order', { ascending: true }),
+        fetchPaginatedRows<QuestionAnswerCountRow>(async (from, to) =>
+          supabase
+            .from('answers')
+            .select('question_option_id')
+            .eq('pax_task_id', latestPaxTaskId)
+            .eq('question_id', featuredQuestionId)
+            .order('id', { ascending: true })
+            .range(from, to),
+        ),
+      ]);
+
+      if (optionsResult.error) {
+        throw new Error(optionsResult.error.message);
+      }
+
+      const options = (optionsResult.data ?? []) as QuestionOptionRow[];
+      const counts = new Map(options.map((option) => [option.id, 0]));
+
+      for (const row of answerOptionRows) {
+        if (!row.question_option_id) continue;
+        counts.set(row.question_option_id, (counts.get(row.question_option_id) ?? 0) + 1);
+      }
+
+      questionResults = options.map((option) => ({
+        label: option.option_text,
+        value: counts.get(option.id) ?? 0,
+      }));
     }
-
-    countryByParticipantId = new Map(
-      (recentParticipants ?? []).map((participant) => [participant.id, participant.country]),
-    );
   }
-
-  const recentResponses: SignInFieldPanelResponse[] = recentRows.map((row) => {
-    const task = taskByPaxId.get(row.pax_task_id);
-    return {
-      taskTitle: task?.title ?? 'Poll response',
-      taskType: task?.type ?? null,
-      category: task?.category ?? null,
-      location: countryByParticipantId.get(row.participant_id) ?? null,
-      answeredAt: row.created_at,
-    };
-  });
 
   return {
     uniqueRespondents,
     tasksCreated,
     countriesCovered,
-    recentResponses,
+    latestPollTitle,
+    latestQuestionText,
+    latestTaskType,
+    questionResults,
     refreshedAt,
   };
 }
 
 export const getCachedSignInFieldPanelData = unstable_cache(
   async () => fetchSignInFieldPanelData(),
-  ['sign-in-field-panel-v3'],
-  { revalidate: 120, tags: ['sign-in-field-panel-v3'] },
+  ['sign-in-field-panel-v6'],
+  { revalidate: 120, tags: ['sign-in-field-panel-v6'] },
 );
