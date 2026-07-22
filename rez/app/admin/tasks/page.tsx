@@ -38,6 +38,7 @@ import {
   CheckCircleIcon,
   XMarkIcon,
   ArrowTopRightOnSquareIcon,
+  ArchiveBoxIcon,
 } from "@heroicons/react/24/outline";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -98,6 +99,9 @@ export default function AdminTasksPage() {
     adminTaskPublishClicked,
     adminTaskPublishComplete,
     adminTaskPublishFailed,
+    adminTaskArchiveClicked,
+    adminTaskArchiveComplete,
+    adminTaskArchiveFailed,
   } = useAmplitudeEvents();
   
   const [isHydrated, setIsHydrated] = useState(false);
@@ -113,6 +117,10 @@ export default function AdminTasksPage() {
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [taskToReview, setTaskToReview] = useState<Task | null>(null);
   const [reviewAction, setReviewAction] = useState<'approve' | 'reject' | null>(null);
+  const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [taskToArchive, setTaskToArchive] = useState<Task | null>(null);
+  const [unarchiveDialogOpen, setUnarchiveDialogOpen] = useState(false);
+  const [taskToUnarchive, setTaskToUnarchive] = useState<Task | null>(null);
 
   const selectActiveFilter = (next: 'all' | 'active') => {
     setActiveFilter(next);
@@ -356,6 +364,62 @@ export default function AdminTasksPage() {
     setReviewDialogOpen(false);
     setTaskToReview(null);
     setReviewAction(null);
+  };
+
+  const handleArchiveClick = (task: Task) => {
+    adminTaskArchiveClicked({ task_id: task.id, task_title: task.title });
+    setTaskToArchive(task);
+    setArchiveDialogOpen(true);
+  };
+
+  const handleConfirmArchive = async () => {
+    if (!taskToArchive?.id) return;
+
+    const success = await updateTask(taskToArchive.id, { reviewStatus: 'archived' });
+    if (success) {
+      adminTaskArchiveComplete({
+        task_id: taskToArchive.id,
+        task_title: taskToArchive.title,
+      });
+      setArchiveDialogOpen(false);
+      setTaskToArchive(null);
+      toast.success("Task archived");
+    } else {
+      adminTaskArchiveFailed({
+        task_id: taskToArchive.id,
+        task_title: taskToArchive.title,
+        error_message: "Failed to archive task",
+      });
+      toast.error("Failed to archive task");
+    }
+  };
+
+  const handleCancelArchive = () => {
+    setArchiveDialogOpen(false);
+    setTaskToArchive(null);
+  };
+
+  const handleUnarchiveClick = (task: Task) => {
+    setTaskToUnarchive(task);
+    setUnarchiveDialogOpen(true);
+  };
+
+  const handleConfirmUnarchive = async () => {
+    if (!taskToUnarchive?.id) return;
+
+    const success = await updateTask(taskToUnarchive.id, { reviewStatus: 'published' });
+    if (success) {
+      setUnarchiveDialogOpen(false);
+      setTaskToUnarchive(null);
+      toast.success("Task unarchived — activate it when ready");
+    } else {
+      toast.error("Failed to unarchive task");
+    }
+  };
+
+  const handleCancelUnarchive = () => {
+    setUnarchiveDialogOpen(false);
+    setTaskToUnarchive(null);
   };
 
   const getReviewStatusBadge = (reviewStatus: string | null | undefined) => {
@@ -784,6 +848,24 @@ export default function AdminTasksPage() {
                             <PowerIcon className={`h-4 w-4 mr-2 ${task.reviewStatus === 'published' && task.isAvailable === true ? '' : 'opacity-50'}`} />
                             {getStatusActionLabel(task)}
                           </DropdownMenuItem>
+                          {(task.reviewStatus === 'published' || task.reviewStatus === 'approved') && (
+                            <DropdownMenuItem
+                              onClick={() => handleArchiveClick(task)}
+                              className="cursor-pointer"
+                            >
+                              <ArchiveBoxIcon className="h-4 w-4 mr-2" />
+                              Archive
+                            </DropdownMenuItem>
+                          )}
+                          {task.reviewStatus === 'archived' && (
+                            <DropdownMenuItem
+                              onClick={() => handleUnarchiveClick(task)}
+                              className="cursor-pointer"
+                            >
+                              <ArchiveBoxIcon className="h-4 w-4 mr-2" />
+                              Unarchive
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => handleDeleteClick(task)}
@@ -914,6 +996,84 @@ export default function AdminTasksPage() {
                     {statusActionType === 'publish' && 'Publish'}
                     {statusActionType === 'activate' && 'Activate'}
                     {statusActionType === 'deactivate' && 'Inactive'}
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Archive Confirmation Dialog */}
+        <Dialog open={archiveDialogOpen} onOpenChange={setArchiveDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Archive Task</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to archive &quot;{taskToArchive?.title || 'this task'}&quot;?
+                The task will be marked as Archived and no longer appear in active lists.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={handleCancelArchive}
+                disabled={isUpdating}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={handleConfirmArchive}
+                disabled={isUpdating}
+              >
+                {isUpdating ? (
+                  <>
+                    <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
+                    Archiving...
+                  </>
+                ) : (
+                  <>
+                    <ArchiveBoxIcon className="h-4 w-4 mr-2" />
+                    Archive
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Unarchive Confirmation Dialog */}
+        <Dialog open={unarchiveDialogOpen} onOpenChange={setUnarchiveDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Unarchive Task</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to unarchive &quot;{taskToUnarchive?.title || 'this task'}&quot;?
+                The task will be restored to Published (inactive). Activate it separately when you are ready to accept new participants.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={handleCancelUnarchive}
+                disabled={isUpdating}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                onClick={handleConfirmUnarchive}
+                disabled={isUpdating}
+              >
+                {isUpdating ? (
+                  <>
+                    <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
+                    Unarchiving...
+                  </>
+                ) : (
+                  <>
+                    <ArchiveBoxIcon className="h-4 w-4 mr-2" />
+                    Unarchive
                   </>
                 )}
               </Button>

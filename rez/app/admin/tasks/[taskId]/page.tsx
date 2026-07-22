@@ -72,6 +72,7 @@ export default function AdminTaskDetailsPage() {
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const [actionType, setActionType] = useState<'publish' | 'activate' | 'deactivate' | null>(null);
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [unarchiveDialogOpen, setUnarchiveDialogOpen] = useState(false);
   const [pollContent, setPollContent] = useState<{
     pollQuestions: PollQuestionDraft[];
     responseCount: number;
@@ -346,6 +347,19 @@ export default function AdminTaskDetailsPage() {
     }
   };
 
+  const handleConfirmUnarchive = async () => {
+    if (!task?.id) return;
+    const success = await updateTask(task.id, { reviewStatus: 'published' });
+    if (success) {
+      setTask({ ...task, reviewStatus: 'published', isAvailable: false });
+      setUnarchiveDialogOpen(false);
+      toast.success("Task unarchived — activate it when ready");
+      await fetchAllTasks(true, true);
+    } else {
+      toast.error("Failed to unarchive task");
+    }
+  };
+
   const copyToClipboard = (text: string, label: string) => {
     if (!text) return;
     navigator.clipboard.writeText(text).then(
@@ -531,6 +545,17 @@ export default function AdminTaskDetailsPage() {
                 >
                   <ArchiveBoxIcon className="h-4 w-4 mr-2" />
                   Archive
+                </Button>
+              )}
+              {task.reviewStatus === 'archived' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setUnarchiveDialogOpen(true)}
+                  className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                >
+                  <ArchiveBoxIcon className="h-4 w-4 mr-2" />
+                  Unarchive
                 </Button>
               )}
               <Button
@@ -900,6 +925,45 @@ export default function AdminTaskDetailsPage() {
                   <>
                     <ArchiveBoxIcon className="h-4 w-4 mr-2" />
                     Archive
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Unarchive Confirmation Dialog */}
+        <Dialog open={unarchiveDialogOpen} onOpenChange={setUnarchiveDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Unarchive Task</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to unarchive &quot;{formattedData.title || 'this task'}&quot;?
+                The task will be restored to Published (inactive). Activate it separately when you are ready to accept new participants.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setUnarchiveDialogOpen(false)}
+                disabled={isUpdating}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                onClick={handleConfirmUnarchive}
+                disabled={isUpdating}
+              >
+                {isUpdating ? (
+                  <>
+                    <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
+                    Unarchiving...
+                  </>
+                ) : (
+                  <>
+                    <ArchiveBoxIcon className="h-4 w-4 mr-2" />
+                    Unarchive
                   </>
                 )}
               </Button>
