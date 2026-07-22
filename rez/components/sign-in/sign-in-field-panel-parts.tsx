@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { SignInFieldPanelData } from '@/services/fetchSignInFieldPanelData';
+import { ProgressRows } from '@/components/poll-insights/PollCharts';
+import { withPercentages } from '@/lib/poll-insights';
 
 type TaskTypeTag = { label: string; className: string };
 const STAT_ANIMATION_MS = 900;
-const FEED_STAGGER_MS = 80;
 const SESSION_COUNTUP_KEY = 'signInFieldPanelCountUpPlayed';
 
 export function getTaskTypeTag(taskType: string | null): TaskTypeTag {
@@ -150,7 +151,7 @@ export function formatTicketId(date = new Date(), countryCode?: string | null): 
 
 export type FieldPanelContentProps = {
   data: SignInFieldPanelData;
-  maxRows: number;
+  compact?: boolean;
 };
 
 export function FieldPanelStats({ data }: { data: SignInFieldPanelData }) {
@@ -176,45 +177,44 @@ export function FieldPanelStats({ data }: { data: SignInFieldPanelData }) {
   );
 }
 
-export function FieldPanelFeed({ data, maxRows }: FieldPanelContentProps) {
-  const rows = data.recentResponses.slice(0, maxRows);
-  const prefersReducedMotion = usePrefersReducedMotion();
+export function FieldPanelFeed({ data, compact = false }: FieldPanelContentProps) {
+  const sectionLabel = data.latestPollTitle
+    ? `Latest from ${data.latestPollTitle}`
+    : 'Recent responses';
+  const tag = getTaskTypeTag(data.latestTaskType ?? 'poll');
+  const chartData = withPercentages(data.questionResults);
+  const hasResults = chartData.some((row) => row.value > 0);
 
   return (
     <>
-      <div className="sign-in-section-label mb-3.5">
-        Recent responses
+      <div className="sign-in-section-label mb-3.5 min-w-0">
+        <span className="min-w-0 truncate">{sectionLabel}</span>
       </div>
-      <div className="sign-in-feed-grid flex flex-col gap-px rounded-xl overflow-hidden mb-auto">
-        {rows.length === 0 ? (
-          <div className="sign-in-feed-row px-[18px] py-3.5 text-sm text-[color:var(--sidebar-muted)]">
-            No poll responses yet.
-          </div>
+      {data.latestQuestionText && (
+        <div className="mb-3.5 flex items-start gap-2.5 min-w-0">
+          <p className="font-display text-base sm:text-lg font-medium leading-snug text-sidebar-foreground flex-1 min-w-0 line-clamp-3">
+            {data.latestQuestionText}
+          </p>
+          <span
+            className={`inline-block shrink-0 mt-1 text-[9px] tracking-wide font-medium px-1.5 py-0.5 rounded ${tag.className}`}
+          >
+            {tag.label}
+          </span>
+        </div>
+      )}
+      <div className="sign-in-feed-grid rounded-xl border border-sidebar-border bg-sidebar-accent px-[18px] py-4 mb-auto overflow-hidden">
+        {!hasResults ? (
+          <div className="text-sm text-[color:var(--sidebar-muted)]">No poll responses yet.</div>
         ) : (
-          rows.map((row, index) => {
-            const tag = getTaskTypeTag(row.taskType);
-            return (
-              <div
-                key={`${row.answeredAt}-${index}`}
-                className={`sign-in-feed-row px-[18px] py-3.5 flex items-center justify-between gap-3 ${
-                  prefersReducedMotion ? '' : 'sign-in-feed-row-enter'
-                }`}
-                style={prefersReducedMotion ? undefined : { animationDelay: `${index * FEED_STAGGER_MS}ms` }}
-              >
-                <div className="text-sm min-w-0">
-                  <span
-                    className={`inline-block text-[10px] tracking-wide font-medium px-[7px] py-0.5 rounded mr-2.5 ${tag.className}`}
-                  >
-                    {tag.label}
-                  </span>
-                  <span className="truncate">{row.taskTitle}</span>
-                </div>
-                <div className="sign-in-feed-location whitespace-nowrap shrink-0">
-                  {row.location ?? '—'}
-                </div>
-              </div>
-            );
-          })
+          <ProgressRows
+            data={chartData}
+            showColorDots
+            listClassName={compact ? 'space-y-2.5' : 'space-y-3.5'}
+            barClassName={compact ? 'h-2' : 'h-2.5'}
+            labelClassName="text-sidebar-foreground"
+            metaClassName="text-[color:var(--sidebar-muted)]"
+            trackClassName="bg-sidebar-border/70"
+          />
         )}
       </div>
     </>

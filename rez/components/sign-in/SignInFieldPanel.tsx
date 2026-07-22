@@ -17,7 +17,7 @@ export function SignInFieldPanel({ data }: SignInFieldPanelProps) {
       <aside className="sign-in-board sign-in-board--desktop-only">
         <FieldPanelHeader />
         <FieldPanelStats data={data} />
-        <FieldPanelFeed data={data} maxRows={4} />
+        <FieldPanelFeed data={data} />
         <FieldPanelHumanPhoto countriesCovered={data.countriesCovered} variant="desktop" />
         <FieldPanelFooter data={data} />
       </aside>
@@ -25,7 +25,7 @@ export function SignInFieldPanel({ data }: SignInFieldPanelProps) {
       <aside className="sign-in-board-compact">
         <FieldPanelHeader />
         <FieldPanelStats data={data} />
-        <FieldPanelFeed data={data} maxRows={2} />
+        <FieldPanelFeed data={data} compact />
         <FieldPanelHumanPhoto countriesCovered={data.countriesCovered} variant="compact" />
         <FieldPanelFooter data={data} />
       </aside>

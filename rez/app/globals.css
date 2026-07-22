@@ -477,11 +477,7 @@
 
   .sign-in-board .sign-in-feed-grid,
   .sign-in-board-compact .sign-in-feed-grid {
-    background: linear-gradient(
-      135deg,
-      color-mix(in oklch, var(--rez-pink) 28%, var(--sidebar-border)),
-      color-mix(in oklch, var(--sidebar-primary) 28%, var(--sidebar-border))
-    );
+    background: var(--sidebar-accent);
     border: 1px solid color-mix(in oklch, var(--rez-orange) 18%, var(--sidebar-border));
   }
 
