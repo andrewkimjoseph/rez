@@ -123,8 +123,8 @@ export default function AboutPage() {
   }, [aboutPageViewed]);
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 md:p-8">
-      <div className="max-w-4xl space-y-8 sm:space-y-10 md:space-y-12">
+    <div className="min-h-screen p-4 sm:p-6 md:p-8 font-body">
+      <div className="max-w-5xl mx-auto space-y-8 sm:space-y-10 md:space-y-12">
         {/* Hero Section */}
         <div className="text-center space-y-6">
           <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4">
@@ -136,13 +136,13 @@ export default function AboutPage() {
               className="shrink-0 sm:w-12 sm:h-12 md:w-16 md:h-16"
             />
             <div className="text-left">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold rez-gradient-text">
+              <h1 className="type-h1 rez-gradient-text">
                 Rez
               </h1>
               <p className="text-xs sm:text-sm text-muted-foreground">by Canvassing</p>
             </div>
           </div>
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-foreground px-2">
+          <h2 className="type-h2 text-foreground px-2">
             Research Task Management Platform
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed px-2">
@@ -207,7 +207,7 @@ export default function AboutPage() {
         {/* What is Rez Section */}
         <section className="space-y-6">
           <div className="text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3 px-2">
+            <h2 className="type-h2 text-foreground mb-3 px-2">
               What is Rez?
             </h2>
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
@@ -264,7 +264,7 @@ export default function AboutPage() {
             <CardContent className="p-4 sm:p-6 md:p-8">
               <div className="text-center space-y-3 sm:space-y-4">
                 <ArrowRightCircleIcon className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto" />
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground px-2">
+                <h2 className="type-h2 text-foreground px-2">
                   Reach Real Users Who Actively Use Stablecoins
                 </h2>
                 <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
@@ -288,7 +288,7 @@ export default function AboutPage() {
         {/* How It Works - Task Creation Guide */}
         <section id="how-to-create-a-task" className="space-y-8 scroll-mt-20">
           <div className="text-center space-y-3 sm:space-y-4">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground px-2">
+            <h2 className="type-h2 text-foreground px-2">
               How to Create a Task
             </h2>
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
@@ -305,7 +305,7 @@ export default function AboutPage() {
                   <span className="text-xl sm:text-2xl font-bold text-primary">1</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-xl sm:text-2xl mb-2">Step 1: Select Type</CardTitle>
+                  <CardTitle className="font-display text-xl sm:text-2xl mb-2">Step 1: Select Type</CardTitle>
                   <CardDescription className="text-sm sm:text-base">
                     Choose the type of research activity you want to create. Rez supports three types of tasks:
                   </CardDescription>
@@ -331,7 +331,7 @@ export default function AboutPage() {
                   <span className="text-xl sm:text-2xl font-bold text-primary">2</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-xl sm:text-2xl mb-2">Step 2: Define Details</CardTitle>
+                  <CardTitle className="font-display text-xl sm:text-2xl mb-2">Step 2: Define Details</CardTitle>
                   <CardDescription className="text-sm sm:text-base">
                     Provide the essential information about your task:
                   </CardDescription>
@@ -357,7 +357,7 @@ export default function AboutPage() {
                   <span className="text-xl sm:text-2xl font-bold text-primary">3</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-xl sm:text-2xl mb-2">Step 3: Set Cost</CardTitle>
+                  <CardTitle className="font-display text-xl sm:text-2xl mb-2">Step 3: Set Cost</CardTitle>
                   <CardDescription className="text-sm sm:text-base">
                     Define the scope and pricing for your task:
                   </CardDescription>
@@ -384,7 +384,7 @@ export default function AboutPage() {
                   <span className="text-xl sm:text-2xl font-bold text-primary">4</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-xl sm:text-2xl mb-2">Step 4: Add Links</CardTitle>
+                  <CardTitle className="font-display text-xl sm:text-2xl mb-2">Step 4: Add Links</CardTitle>
                   <CardDescription className="text-sm sm:text-base">
                     Configure the content participants will interact with:
                   </CardDescription>
@@ -422,7 +422,7 @@ export default function AboutPage() {
                   <span className="text-xl sm:text-2xl font-bold text-primary">5</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-xl sm:text-2xl mb-2">Step 5: Review & Submit</CardTitle>
+                  <CardTitle className="font-display text-xl sm:text-2xl mb-2">Step 5: Review & Submit</CardTitle>
                   <CardDescription className="text-sm sm:text-base">
                     Review all the details of your task before submitting:
                   </CardDescription>
@@ -448,7 +448,7 @@ export default function AboutPage() {
         {/* Features Section */}
         <section className="space-y-6">
           <div className="text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3 px-2">
+            <h2 className="type-h2 text-foreground mb-3 px-2">
               Key Features
             </h2>
           </div>
@@ -521,7 +521,7 @@ export default function AboutPage() {
         {/* Target Users Section */}
         <section className="space-y-6">
           <div className="text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3 px-2">
+            <h2 className="type-h2 text-foreground mb-3 px-2">
               Who Uses Rez?
             </h2>
           </div>
@@ -529,7 +529,7 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="enterprise-card border-0">
               <CardHeader>
-                <CardTitle className="text-xl">Primary Users</CardTitle>
+                <CardTitle className="font-display text-xl">Primary Users</CardTitle>
                 <CardDescription className="text-base">
                   Researchers, UX teams, and product managers who need user feedback 
                   to improve their products and services.
@@ -539,7 +539,7 @@ export default function AboutPage() {
 
             <Card className="enterprise-card border-0">
               <CardHeader>
-                <CardTitle className="text-xl">Secondary Users</CardTitle>
+                <CardTitle className="font-display text-xl">Secondary Users</CardTitle>
                 <CardDescription className="text-base">
                   Organizations conducting market research in emerging markets, 
                   particularly those interested in fintech and stablecoin adoption.
@@ -549,7 +549,7 @@ export default function AboutPage() {
 
             <Card className="enterprise-card border-0">
               <CardHeader>
-                <CardTitle className="text-xl">Focus Area</CardTitle>
+                <CardTitle className="font-display text-xl">Focus Area</CardTitle>
                 <CardDescription className="text-base">
                   Rez specializes in reaching users who actively use stablecoins 
                   and digital payments, with a particular focus on African markets.
@@ -565,7 +565,7 @@ export default function AboutPage() {
         <section className="space-y-6">
           <Card className="enterprise-card border-0 bg-gradient-to-br from-primary/10 via-primary/5 to-primary/10">
             <CardContent className="p-4 sm:p-6 md:p-8 text-center space-y-4 sm:space-y-6">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground px-2">
+              <h2 className="type-h2 text-foreground px-2">
                 Ready to Launch Your Research?
               </h2>
               <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">

@@ -23,7 +23,7 @@ export default function TermsOfServicePage() {
 
   return (
     <div className="min-h-screen p-6 md:p-8">
-      <div className="max-w-4xl">
+      <div className="page-column-reading">
         {/* Header */}
         <div className="mb-8">
           <Button

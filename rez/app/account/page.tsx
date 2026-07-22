@@ -68,6 +68,7 @@ export default function Account() {
 
   return (
     <div className="min-h-screen pb-20 sm:p-4 p-4 font-[family-name:var(--font-sen)]">
+      <div className="page-column-reading">
       <h1 className="text-3xl md:text-4xl font-bold mt-2 mb-1">
         Account Management
       </h1>
@@ -199,6 +200,7 @@ export default function Account() {
           </div>
         </div>
       </Card>
+      </div>
     </div>
   );
 }

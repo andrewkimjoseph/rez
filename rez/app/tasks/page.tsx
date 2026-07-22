@@ -145,92 +145,96 @@ function TasksContent() {
 
   return (
     <div className="min-h-screen p-6 md:p-8">
-      <div className={selectedTab === "view-tasks" ? "" : "max-w-3xl"}>
-        {/* Rejection Alert Banner */}
-        {hasRejectedTasks && !dismissedRejectionBanner && (
-          <div className="mb-6 p-4 rounded-lg border border-red-200 bg-red-50 relative">
-            <div className="flex items-start gap-3">
-              <ExclamationTriangleIcon className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold text-red-900 mb-1">
-                  {rejectedTasksCount} Task{rejectedTasksCount !== 1 ? 's' : ''} Rejected
-                </h3>
-                <p className="text-sm text-red-700 mb-2">
-                  You have {rejectedTasksCount} rejected task{rejectedTasksCount !== 1 ? 's' : ''} that need{rejectedTasksCount === 1 ? 's' : ''} to be updated. 
-                  Please review the rejection reasons and make the necessary changes.
-                </p>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Link href="/tasks?tab=view-tasks" onClick={() => rejectionBannerViewTasksClicked({ rejected_tasks_count: rejectedTasksCount })}>
-                    <Button variant="outline" size="sm" className="h-8 text-xs border-red-300 text-red-700 hover:bg-red-100">
-                      View Rejected Tasks
+      {/* Rejection Alert Banner */}
+      {hasRejectedTasks && !dismissedRejectionBanner && (
+        <div className="page-column-narrow mb-6 p-4 rounded-lg border border-red-200 bg-red-50 relative">
+          <div className="flex items-start gap-3">
+            <ExclamationTriangleIcon className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-red-900 mb-1">
+                {rejectedTasksCount} Task{rejectedTasksCount !== 1 ? 's' : ''} Rejected
+              </h3>
+              <p className="text-sm text-red-700 mb-2">
+                You have {rejectedTasksCount} rejected task{rejectedTasksCount !== 1 ? 's' : ''} that need{rejectedTasksCount === 1 ? 's' : ''} to be updated. 
+                Please review the rejection reasons and make the necessary changes.
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <Link href="/tasks?tab=view-tasks" onClick={() => rejectionBannerViewTasksClicked({ rejected_tasks_count: rejectedTasksCount })}>
+                  <Button variant="outline" size="sm" className="h-8 text-xs border-red-300 text-red-700 hover:bg-red-100">
+                    View Rejected Tasks
+                  </Button>
+                </Link>
+                {firstRejectedTaskId && (
+                  <Link
+                    href={`/tasks/edit/${firstRejectedTaskId}`}
+                    onClick={() => rejectedTaskEditClicked({ task_id: firstRejectedTaskId })}
+                  >
+                    <Button size="sm" className="h-8 text-xs bg-red-600 text-white hover:bg-red-700">
+                      Edit task
                     </Button>
                   </Link>
-                  {firstRejectedTaskId && (
-                    <Link
-                      href={`/tasks/edit/${firstRejectedTaskId}`}
-                      onClick={() => rejectedTaskEditClicked({ task_id: firstRejectedTaskId })}
-                    >
-                      <Button size="sm" className="h-8 text-xs bg-red-600 text-white hover:bg-red-700">
-                        Edit task
-                      </Button>
-                    </Link>
-                  )}
-                </div>
+                )}
               </div>
-              <button
-                onClick={handleDismissRejectionBanner}
-                className="text-red-400 hover:text-red-600 transition-colors flex-shrink-0"
-                aria-label="Dismiss"
-              >
-                <XMarkIcon className="w-5 h-5" />
-              </button>
             </div>
-          </div>
-        )}
-
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight">
-              {getTitle()}
-            </h1>
-            <p className="text-muted-foreground mt-1">{getSubtitle()}</p>
-          </div>
-          {selectedTab === "view-tasks" && (
-            <Button
-              onClick={handleRefresh}
-              disabled={tasksBusy || (isHydrated && !tasksRefreshStatus.canRefresh)}
-              variant="outline"
-              size="sm"
-              className="self-start sm:self-auto"
+            <button
+              onClick={handleDismissRejectionBanner}
+              className="text-red-400 hover:text-red-600 transition-colors flex-shrink-0"
+              aria-label="Dismiss"
             >
-              {isHydrated && !tasksRefreshStatus.canRefresh ? (
-                <ClockIcon className="h-4 w-4 mr-2" />
-              ) : (
-                <ArrowPathIcon className={`h-4 w-4 mr-2 ${tasksBusy ? "animate-spin" : ""}`} />
-              )}
-              {isHydrated && !tasksRefreshStatus.canRefresh
-                ? `${tasksRefreshStatus.formattedTime}`
-                : "Refresh"}
-            </Button>
-          )}
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
         </div>
+      )}
 
-        {/* Tabs */}
-        <Tabs
-          defaultValue="create"
-          className="w-full"
-          value={selectedTab}
-          onValueChange={(value) => {
-            setSelectedTab(value);
-            if (value === "view-tasks") {
-              viewTasksTabClicked();
-            } else {
-              createNewTaskTabClicked();
-            }
-          }}
-        >
-          <TabsList className="bg-card border border-border/50 p-1 rounded-lg h-auto mb-6">
+      {/* Header */}
+      <div
+        className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 ${
+          selectedTab === "view-tasks" ? "" : "page-column-narrow"
+        }`}
+      >
+        <div className="text-center sm:text-left">
+          <h1 className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight">
+            {getTitle()}
+          </h1>
+          <p className="text-muted-foreground mt-1">{getSubtitle()}</p>
+        </div>
+        {selectedTab === "view-tasks" && (
+          <Button
+            onClick={handleRefresh}
+            disabled={tasksBusy || (isHydrated && !tasksRefreshStatus.canRefresh)}
+            variant="outline"
+            size="sm"
+            className="self-center sm:self-auto shrink-0"
+          >
+            {isHydrated && !tasksRefreshStatus.canRefresh ? (
+              <ClockIcon className="h-4 w-4 mr-2" />
+            ) : (
+              <ArrowPathIcon className={`h-4 w-4 mr-2 ${tasksBusy ? "animate-spin" : ""}`} />
+            )}
+            {isHydrated && !tasksRefreshStatus.canRefresh
+              ? `${tasksRefreshStatus.formattedTime}`
+              : "Refresh"}
+          </Button>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <Tabs
+        defaultValue="create"
+        className="w-full"
+        value={selectedTab}
+        onValueChange={(value) => {
+          setSelectedTab(value);
+          if (value === "view-tasks") {
+            viewTasksTabClicked();
+          } else {
+            createNewTaskTabClicked();
+          }
+        }}
+      >
+        <div className="flex justify-center mb-6">
+          <TabsList className="bg-card border border-border/50 p-1 rounded-lg h-auto w-fit">
             <TabsTrigger
               value="create"
               className="data-[state=active]:bg-[#5C29A3] data-[state=active]:text-white data-[state=active]:shadow-sm px-4 py-2.5 rounded-md transition-all duration-200 text-sm font-medium"
@@ -251,23 +255,25 @@ function TasksContent() {
               )}
             </TabsTrigger>
           </TabsList>
+        </div>
 
-          <TabsContent value="create" className="mt-0">
+        <TabsContent value="create" className="mt-0">
+          <div className="page-column-narrow">
             <div className="enterprise-card bg-card rounded-lg border border-border/50 p-6">
               <NewTask />
             </div>
-          </TabsContent>
+          </div>
+        </TabsContent>
 
-          <TabsContent value="view-tasks" className="mt-0">
-            <div className="enterprise-card bg-card rounded-lg border border-border/50 overflow-hidden">
-              <ViewTasks />
-            </div>
-            <p className="text-sm text-muted-foreground mt-3">
-              {tasks.length} task{tasks.length !== 1 ? "s" : ""}
-            </p>
-          </TabsContent>
-        </Tabs>
-      </div>
+        <TabsContent value="view-tasks" className="mt-0">
+          <div className="enterprise-card bg-card rounded-lg border border-border/50 overflow-hidden">
+            <ViewTasks />
+          </div>
+          <p className="text-sm text-muted-foreground mt-3">
+            {tasks.length} task{tasks.length !== 1 ? "s" : ""}
+          </p>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
@@ -276,7 +282,7 @@ export default function Tasks() {
   return (
     <Suspense fallback={
       <div className="min-h-screen p-6 md:p-8">
-        <div className="max-w-3xl">
+        <div className="page-column-narrow">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-64 mb-4"></div>
             <div className="h-4 bg-gray-200 rounded w-96 mb-6"></div>
