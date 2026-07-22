@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 
@@ -25,15 +26,9 @@ import { auth } from "@/firebase/clientConfig";
 import { createOrganizationInFirestore } from "@/firebase/firestore/services/createOrganizationInFirestore";
 import { useOrganizationStore } from "@/stores/organization-store";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
-import {
-  ArrowPathIcon,
-  ArrowLeftIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { updateTaskMasterOrganizationId } from "@/firebase/firestore/services/updateTaskMasterOrganizationId";
-import { deleteTaskMasterFromFirestore } from "@/firebase/firestore/services/deleteTaskMasterFromFirestore";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
-import { deleteUser } from "firebase/auth";
-import { signOutTaskMaster } from "@/firebase/auth/auth";
 
 const FormSchema = z.object({
   organizationName: z.string().min(2, {
@@ -52,43 +47,8 @@ export default function OrganizationOnboardingPage() {
   const setTaskMasterUser = useTaskMasterStore((state) => state.setUser);
   const taskMasterUser = useTaskMasterStore((state) => state.user);
   const [loading, setLoading] = useState(false);
-  const [goingBack, setGoingBack] = useState(false);
   const { organizationOnboardingClicked, organizationOnboardingComplete, organizationOnboardingFailed, identifyTaskMaster } = useAmplitudeEvents();
 
-  const handleGoBack = async () => {
-    setGoingBack(true);
-    try {
-      const user = auth.currentUser;
-      if (user) {
-        // Delete from Firestore first
-        try {
-          await deleteTaskMasterFromFirestore(user.uid);
-        } catch (firestoreError) {
-          console.error("Error deleting from Firestore:", firestoreError);
-          // Continue even if Firestore delete fails
-        }
-        
-        // Delete from Firebase Auth
-        try {
-          await deleteUser(user);
-        } catch (authError) {
-          console.error("Error deleting from Auth:", authError);
-          // If delete fails, just sign out
-          await signOutTaskMaster();
-        }
-      }
-      
-      // Clear stores
-      setTaskMasterUser(null);
-      
-      // Navigate to sign-in
-      router.push("/sign-in");
-    } catch (error) {
-      console.error("Error going back:", error);
-      toast.error("Failed to cancel registration. Please try again.");
-      setGoingBack(false);
-    }
-  };
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUserName(user?.displayName || null);
@@ -145,201 +105,236 @@ export default function OrganizationOnboardingPage() {
     organizationOnboardingComplete();
     router.push("/dashboard");
   }
+
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-      {/* Left Side - Form */}
-      <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 py-8 md:py-0 px-4">
-        <div className="w-full max-w-md">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 md:p-10">
-            {/* Go Back Button - Commented out for now
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mb-4 -ml-2 text-slate-600 hover:text-slate-900"
-              onClick={handleGoBack}
-              disabled={goingBack || loading}
-            >
-              {goingBack ? (
-                <>
-                  <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
-                  Cancelling...
-                </>
-              ) : (
-                <>
-                  <ArrowLeftIcon className="h-4 w-4 mr-2" />
-                  Go Back
-                </>
-              )}
-            </Button>
-            */}
-
-            {/* Header */}
-            <div className="text-center mb-8">
-              <div className="flex justify-center mb-6">
-                <Image
-                  src="/rez-logo.svg"
-                  alt="Rez Logo"
-                  width={48}
-                  height={48}
-                  className="rounded-lg"
-                />
-              </div>
-              <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-2">
-                Create Your <span className="rez-gradient-text">Organization</span>
-              </h1>
-              {userName && (
-                <p className="text-slate-600">
-                  Welcome, <span className="font-medium rez-gradient-text">{userName}</span>
-                </p>
-              )}
-            </div>
-
-            {/* Form */}
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-5"
-              >
-                <FormField
-                  control={form.control}
-                  name="organizationName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-slate-700">Organization Name</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="ACME Inc." 
-                          className="h-11"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="organizationCountry"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-slate-700">Organization Country</FormLabel>
-                      <FormControl>
-                        <CountryDropdown
-                          placeholder="Select country"
-                          defaultValue="USA"
-                          value={field.value}
-                          onChange={(country) => field.onChange(country?.name)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="organizationTeamSize"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-slate-700">Team Size</FormLabel>
-                      <FormControl>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <SelectTrigger className="w-full h-11">
-                            <SelectValue placeholder="Select team size" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="< 2">&lt; 2</SelectItem>
-                            <SelectItem value="2 - 5">2 - 5</SelectItem>
-                            <SelectItem value="5 - 10">5 - 10</SelectItem>
-                            <SelectItem value="10 - 50">10 - 50</SelectItem>
-                            <SelectItem value="50+">50+</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button 
-                  type="submit" 
-                  className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-medium mt-2" 
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <ArrowPathIcon className="animate-spin mr-2 h-4 w-4" />
-                      Creating organization...
-                    </>
-                  ) : (
-                    "Complete Registration"
-                  )}
-                </Button>
-              </form>
-            </Form>
+    <div className="sign-in-wrap min-h-screen">
+      <div className="sign-in-auth">
+        <div className="flex items-center gap-3 mb-11">
+          <Image
+            src="/rez-logo.svg"
+            alt="Rez"
+            width={40}
+            height={40}
+            className="w-10 h-10 shrink-0"
+            priority
+          />
+          <div className="text-sm tracking-[0.14em] uppercase">
+            <span className="font-bold text-foreground">Rez</span>
+            <span className="text-muted-foreground font-normal"> · by canvassing</span>
           </div>
-
-          <p className="text-center text-sm text-slate-500 mt-6">
-            By continuing, you agree to our Terms of Service
-          </p>
         </div>
-      </div>
 
-      {/* Right Side - Hero */}
-      <div className="flex-1 hidden md:flex flex-col justify-center items-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
-        {/* Decorative grid pattern */}
-        <div 
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-            backgroundSize: '32px 32px'
-          }}
-        />
-        
-        {/* Content */}
-        <div className="relative z-10 text-center px-12 max-w-lg">
-          <div className="mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-[#EFECFD]/40 mb-6">
-              <svg className="w-10 h-10 text-[#5C29A3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
+        <h1 className="font-[family-name:var(--font-fraunces)] font-medium text-[44px] leading-[1.08] tracking-[-0.01em] max-w-[420px] mb-3.5">
+          Set up your
+          <br />
+          <em className="not-italic rez-gradient-text">research hub.</em>
+        </h1>
+        <p className="text-muted-foreground text-[15px] max-w-[420px] mb-10 leading-relaxed">
+          Create your organization once, then launch studies and collect insights with your workspace configured.
+        </p>
+
+        <div className="sign-in-ticket max-w-[420px]">
+          <div className="sign-in-ticket-perf" aria-hidden />
+          <div className="flex justify-between items-baseline mb-[22px]">
+            <span className="text-[11px] tracking-[0.08em] uppercase font-medium text-[color:var(--rez-pink)]">
+              Organization setup
+            </span>
+            <span className="text-[11px] tabular-nums text-muted-foreground">
+              STEP·01
+            </span>
           </div>
-          
-          <h2 className="text-3xl font-semibold text-white mb-4">
-            Set Up Your Research Hub
+
+          <h2 className="font-[family-name:var(--font-fraunces)] font-medium text-[19px] mb-1 mt-10">
+            Create organization
           </h2>
-          
-          <p className="text-lg text-slate-400 mb-8">
-            Create your organization to start launching surveys and collecting valuable insights from real users.
+          <p className="text-[13px] text-muted-foreground mb-[22px]">
+            {userName ? `Welcome, ${userName}.` : "Finish setup"} Add your organization details to continue.
           </p>
 
-          <div className="space-y-4 text-left">
-            <div className="flex items-center gap-3 text-slate-200">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#EFECFD]/40 flex items-center justify-center">
-                <svg className="w-3.5 h-3.5 text-[#5C29A3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <span>Launch surveys in minutes</span>
-            </div>
-            <div className="flex items-center gap-3 text-slate-200">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#EFECFD]/40 flex items-center justify-center">
-                <svg className="w-3.5 h-3.5 text-[#5C29A3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <span>Access verified participants globally</span>
-            </div>
-            <div className="flex items-center gap-3 text-slate-200">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#EFECFD]/40 flex items-center justify-center">
-                <svg className="w-3.5 h-3.5 text-[#5C29A3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <span>Get results within hours</span>
-            </div>
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-5"
+            >
+              <FormField
+                control={form.control}
+                name="organizationName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-foreground/90">Organization Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="ACME Inc."
+                        className="h-11 bg-card border-border"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="organizationCountry"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-foreground/90">Organization Country</FormLabel>
+                    <FormControl>
+                      <CountryDropdown
+                        placeholder="Select country"
+                        defaultValue="USA"
+                        value={field.value}
+                        onChange={(country) => field.onChange(country?.name)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="organizationTeamSize"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-foreground/90">Team Size</FormLabel>
+                    <FormControl>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger className="w-full h-11 bg-card border-border">
+                          <SelectValue placeholder="Select team size" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="< 2">&lt; 2</SelectItem>
+                          <SelectItem value="2 - 5">2 - 5</SelectItem>
+                          <SelectItem value="5 - 10">5 - 10</SelectItem>
+                          <SelectItem value="10 - 50">10 - 50</SelectItem>
+                          <SelectItem value="50+">50+</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="submit"
+                className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-medium mt-2"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <ArrowPathIcon className="animate-spin mr-2 h-4 w-4" />
+                    Creating organization...
+                  </>
+                ) : (
+                  "Complete Registration"
+                )}
+              </Button>
+            </form>
+          </Form>
+
+          <div className="flex justify-between mt-[18px] pt-4 border-t border-dashed border-border text-[11px] tabular-nums text-muted-foreground">
+            <span>READY · TODAY</span>
+            <span>REZ-ORG-SETUP</span>
           </div>
         </div>
+
+        <p className="max-w-[420px] mt-6 text-xs text-muted-foreground leading-relaxed">
+          By continuing, you agree to our{" "}
+          <Link href="/terms-of-service" className="text-primary underline underline-offset-2">
+            terms of service
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy-policy" className="text-primary underline underline-offset-2">
+            privacy policy
+          </Link>
+          .
+        </p>
       </div>
+
+      <aside className="sign-in-board sign-in-board--desktop-only">
+        <div className="flex justify-between items-start mb-8">
+          <h3 className="font-[family-name:var(--font-fraunces)] font-medium text-xl">Setup guidance</h3>
+          <div className="flex items-center">
+            <span className="sign-in-live-dot sign-in-live-dot-pulse" aria-hidden />
+            <span className="text-[11px] tracking-[0.06em] uppercase text-[color:var(--sidebar-muted)]">
+              Updating
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-px bg-sidebar-border border border-sidebar-border rounded-xl overflow-hidden mb-10">
+          <div className="bg-sidebar-accent p-5">
+            <div className="sign-in-stat-num rez-gradient-text">1</div>
+            <div className="text-xs text-[color:var(--sidebar-muted)]">Step left</div>
+          </div>
+          <div className="bg-sidebar-accent p-5">
+            <div className="sign-in-stat-num rez-gradient-text">2m</div>
+            <div className="text-xs text-[color:var(--sidebar-muted)]">Estimated setup</div>
+          </div>
+          <div className="bg-sidebar-accent p-5">
+            <div className="sign-in-stat-num rez-gradient-text">Today</div>
+            <div className="text-xs text-[color:var(--sidebar-muted)]">Launch-ready</div>
+          </div>
+        </div>
+
+        <div className="text-xs tracking-[0.06em] uppercase text-[color:var(--sidebar-muted)] mb-3.5">
+          What happens next
+        </div>
+        <div className="flex flex-col gap-px bg-sidebar-border border border-sidebar-border rounded-xl overflow-hidden mb-auto">
+          {[
+            "Save your organization profile",
+            "Invite collaborators to your workspace",
+            "Create your first task and publish",
+          ].map((item, index) => (
+            <div
+              key={item}
+              className="bg-sidebar-accent px-[18px] py-3.5 flex items-center justify-between gap-3 sign-in-feed-row-enter"
+              style={{ animationDelay: `${index * 80}ms` }}
+            >
+              <div className="text-sm min-w-0">
+                <span className="inline-block text-[10px] tracking-wide font-medium px-[7px] py-0.5 rounded mr-2.5 rez-tag-pink">
+                  NEXT
+                </span>
+                <span className="truncate">{item}</span>
+              </div>
+              <div className="text-[11px] tabular-nums text-[color:var(--sidebar-muted)] whitespace-nowrap shrink-0">
+                Step {index + 1}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-7 text-[11px] text-[color:var(--sidebar-muted)]">
+          Complete this setup once, then manage all research from your dashboard.
+        </div>
+      </aside>
+
+      <aside className="sign-in-board-compact">
+        <div className="flex justify-between items-start mb-6">
+          <h3 className="font-[family-name:var(--font-fraunces)] font-medium text-xl">Setup guidance</h3>
+          <div className="flex items-center">
+            <span className="sign-in-live-dot sign-in-live-dot-pulse" aria-hidden />
+            <span className="text-[11px] tracking-[0.06em] uppercase text-[color:var(--sidebar-muted)]">
+              Updating
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-px bg-sidebar-border border border-sidebar-border rounded-xl overflow-hidden mb-8">
+          <div className="bg-sidebar-accent p-4">
+            <div className="sign-in-stat-num rez-gradient-text text-2xl">1</div>
+            <div className="text-xs text-[color:var(--sidebar-muted)]">Step left</div>
+          </div>
+          <div className="bg-sidebar-accent p-4">
+            <div className="sign-in-stat-num rez-gradient-text text-2xl">2m</div>
+            <div className="text-xs text-[color:var(--sidebar-muted)]">Estimated</div>
+          </div>
+          <div className="bg-sidebar-accent p-4">
+            <div className="sign-in-stat-num rez-gradient-text text-2xl">Now</div>
+            <div className="text-xs text-[color:var(--sidebar-muted)]">Launch</div>
+          </div>
+        </div>
+      </aside>
     </div>
   );
 }
