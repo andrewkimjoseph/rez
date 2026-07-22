@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
 import { requireAuth } from '@/lib/api-auth';
-import { paxDB, rezDB } from '@/firebase/serverConfig';
-import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
+import { canAccessPollInsights, getPollInsightsActor } from '@/lib/poll-insights-access';
 import {
   fetchPollInsightsDemographicsByPaxTaskId,
   fetchPollInsightsSummaryByPaxTaskId,
@@ -41,27 +40,16 @@ export async function GET(
       return NextResponse.json({ error: 'Task ID is required' }, { status: 400 });
     }
 
+    const actor = await getPollInsightsActor(authResult);
+    const canAccess = await canAccessPollInsights(actor, taskId);
+    if (!canAccess) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const view = request.nextUrl.searchParams.get('view') ?? 'summary';
     const summary = await getCachedPollInsightsSummaryByPaxTaskId(taskId);
     if (!summary) {
       return NextResponse.json({ error: 'Poll not found in Insights' }, { status: 404 });
-    }
-
-    if (!summary.isPublished) {
-      const taskDoc = await paxDB.collection(COLLECTIONS.TASKS).doc(taskId).get();
-      if (!taskDoc.exists) {
-        return NextResponse.json({ error: 'Task not found' }, { status: 404 });
-      }
-
-      const taskData = taskDoc.data();
-      const userDoc = await rezDB.collection(COLLECTIONS.TASK_MASTERS).doc(authResult.uid).get();
-      const userEmail = (authResult.email || userDoc.data()?.emailAddress)?.toLowerCase().trim();
-      const taskMasterEmail = taskData?.rezTaskMasterEmailAddress?.toLowerCase().trim();
-      const isSuperAdmin = userDoc.data()?.isSuperAdmin === true;
-
-      if (!isSuperAdmin && userEmail !== taskMasterEmail) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      }
     }
 
     if (view === 'demographics') {

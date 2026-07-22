@@ -28,9 +28,9 @@ export default function InsightsPage() {
           <h1 className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight">
             Poll insights
           </h1>
-          <p className="text-muted-foreground mt-1 max-w-2xl">
-            Live poll results and demographic breakdowns from published polls answered by
-            verified Pax participants. Available to all Rez task masters.
+          <p className="text-muted-foreground mt-1 sm:whitespace-nowrap">
+            Poll results and demographics for your published polls.
+            Superadmins can view all published polls.
           </p>
         </div>
         <Button
@@ -68,7 +68,7 @@ export default function InsightsPage() {
       {!isLoading && !error && polls && polls.length === 0 && (
         <div className="enterprise-card rounded-lg border border-border/50 bg-card p-8">
           <p className="text-muted-foreground">
-            No published polls yet. Check back soon for live results.
+            No poll insights available for your account yet.
           </p>
         </div>
       )}
