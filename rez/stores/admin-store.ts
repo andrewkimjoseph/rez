@@ -86,6 +86,7 @@ interface AdminStore {
   updateTaskMaster: (taskMasterId: string, data: AdminUpdateTaskMasterData) => Promise<boolean>;
   toggleTaskMasterStatus: (taskMasterId: string, disabled: boolean) => Promise<boolean>;
   toggleParticipantStatus: (participantId: string, disabled: boolean) => Promise<boolean>;
+  patchParticipantStatus: (participantId: string, disabled: boolean) => void;
   clearError: () => void;
   clearCache: () => void;
 }
@@ -421,6 +422,15 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
       });
       return false;
     }
+  },
+
+  patchParticipantStatus: (participantId: string, disabled: boolean) => {
+    const currentParticipants = get().participants;
+    set({
+      participants: currentParticipants.map((participant) =>
+        participant.id === participantId ? { ...participant, disabled } : participant
+      ),
+    });
   },
 
   clearError: () => set({ error: null }),

@@ -58,6 +58,7 @@ export default function AdminParticipantsPage() {
     loadMoreParticipants,
     isTogglingParticipantStatus,
     toggleParticipantStatus,
+    patchParticipantStatus,
     error,
   } = useAdminStore();
 
@@ -112,21 +113,21 @@ export default function AdminParticipantsPage() {
     setDisableDialogOpen(true);
   };
 
-  const handleConfirmToggleStatus = async () => {
+  const handleConfirmToggleStatus = useCallback(async () => {
     if (!participantToToggle?.id) return;
 
     const newDisabledStatus = !participantToToggle.disabled;
     const success = await toggleParticipantStatus(participantToToggle.id, newDisabledStatus);
 
     if (success) {
+      patchParticipantStatus(participantToToggle.id, newDisabledStatus);
       setDisableDialogOpen(false);
       setParticipantToToggle(null);
       toast.success(`Participant ${newDisabledStatus ? "disabled" : "enabled"} successfully`);
-      await fetchAllParticipants(true, searchInput.trim() || "");
     } else {
       toast.error("Failed to update participant status");
     }
-  };
+  }, [participantToToggle, toggleParticipantStatus, patchParticipantStatus]);
 
   const copyToClipboard = (text: string, label: string) => {
     if (!text || text === "—" || text === "N/A") return;
@@ -424,7 +425,7 @@ export default function AdminParticipantsPage() {
           participantId={selectedParticipantId}
           open={participantPanelOpen}
           onOpenChange={setParticipantPanelOpen}
-          onUpdate={() => fetchAllParticipants(true, searchInput.trim() || "")}
+          onUpdate={({ participantId, disabled }) => patchParticipantStatus(participantId, disabled)}
         />
       </div>
     </div>

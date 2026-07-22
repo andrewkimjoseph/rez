@@ -34,7 +34,7 @@ interface ParticipantDetailPanelProps {
   participantId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate?: () => void;
+  onUpdate?: (update: { participantId: string; disabled: boolean }) => void;
 }
 
 interface ParticipantData {
@@ -132,8 +132,10 @@ export default function ParticipantDetailPanel({
         setConfirmDialogOpen(false);
         setPendingDisabledStatus(null);
         setDisabled(pendingDisabledStatus);
-        await fetchParticipant(); // Refresh data
-        onUpdate?.(); // Notify parent to refresh completions list
+        setParticipant((prev) =>
+          prev ? { ...prev, disabled: pendingDisabledStatus } : prev
+        );
+        onUpdate?.({ participantId, disabled: pendingDisabledStatus });
       } else {
         const errorData = await res.json();
         toast.error(errorData.error || "Failed to update participant status");

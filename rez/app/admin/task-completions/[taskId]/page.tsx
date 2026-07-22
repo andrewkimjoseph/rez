@@ -12,6 +12,7 @@ type TaskCompletionWithReward = TaskCompletion & {
   participantEmailAddress?: string | null;
   participantCountry?: string | null;
   participantAccountType?: string | null;
+  participantDisabled?: boolean | null;
   screeningTimeCreated?: unknown | null;
 };
 import {
@@ -757,6 +758,19 @@ export default function AdminTaskCompletionsDetailPage() {
       setIsLoadingAllCompletions(false);
     }
   }, [taskId, lastDocIdForCursor, hasMoreCompletions, taskCompletions, isLoadingAllCompletions, isLoadingCompletions, isLoadingMoreCompletions]);
+
+  const handleParticipantStatusUpdate = useCallback(
+    ({ participantId, disabled }: { participantId: string; disabled: boolean }) => {
+      setTaskCompletions((prev) =>
+        prev.map((completion) =>
+          completion.participantId === participantId
+            ? { ...completion, participantDisabled: disabled }
+            : completion
+        )
+      );
+    },
+    []
+  );
 
   if (!isHydrated || isAuthorized === null) {
     return (
@@ -1547,7 +1561,7 @@ export default function AdminTaskCompletionsDetailPage() {
           participantId={selectedParticipantId}
           open={participantPanelOpen}
           onOpenChange={setParticipantPanelOpen}
-          onUpdate={loadCompletions}
+          onUpdate={handleParticipantStatusUpdate}
         />
 
         <CompletionAnswersPanel
