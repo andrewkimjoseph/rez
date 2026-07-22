@@ -8,6 +8,7 @@ import {
   ArrowTopRightOnSquareIcon,
   ShieldCheckIcon,
   InformationCircleIcon,
+  DocumentTextIcon,
   PlusIcon,
   ChartBarIcon,
 } from "@heroicons/react/24/outline";
@@ -92,12 +93,22 @@ const externalItems: Array<{
   // },
 ];
 
-// Legal links (Terms & Privacy moved to navbar user dropdown)
+// Legal links
 const legalItems = [
   {
     title: "About",
     url: "/about",
     icon: InformationCircleIcon,
+  },
+  {
+    title: "Terms",
+    url: "/terms-of-service",
+    icon: DocumentTextIcon,
+  },
+  {
+    title: "Privacy",
+    url: "/privacy-policy",
+    icon: ShieldCheckIcon,
   },
 ];
 
