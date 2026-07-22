@@ -44,6 +44,8 @@
 /* Enterprise Color Palette - Sophisticated Slate/Navy Theme */
 :root {
   --radius: 0.5rem;
+  --rez-pink: #ff5c86;
+  --rez-orange: #ff9c4c;
   
   /* Backgrounds */
   --background: oklch(0.985 0.002 260);
@@ -97,6 +99,7 @@
   --sidebar-accent-foreground: oklch(0.92 0.01 260);
   --sidebar-border: oklch(0.35 0.08 278);
   --sidebar-ring: oklch(0.65 0.18 278);
+  --sidebar-muted: oklch(0.72 0.05 272);
 }
 
 .dark {
@@ -123,14 +126,15 @@
   --chart-3: oklch(0.75 0.12 85);
   --chart-4: oklch(0.60 0.18 300);
   --chart-5: oklch(0.65 0.18 25);
-  --sidebar: oklch(0.18 0.10 278);
+  --sidebar: oklch(0.32 0.06 278);
   --sidebar-foreground: oklch(0.92 0.01 260);
   --sidebar-primary: oklch(0.65 0.18 278);
   --sidebar-primary-foreground: oklch(0.985 0.002 260);
-  --sidebar-accent: oklch(0.22 0.08 278);
+  --sidebar-accent: oklch(0.36 0.05 278);
   --sidebar-accent-foreground: oklch(0.92 0.01 260);
-  --sidebar-border: oklch(0.30 0.06 278);
+  --sidebar-border: oklch(0.42 0.04 278);
   --sidebar-ring: oklch(0.65 0.18 278);
+  --sidebar-muted: oklch(0.62 0.04 272);
 }
 
 @layer base {
@@ -140,7 +144,16 @@
   
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sen), system-ui, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-fraunces), Georgia, serif;
+    letter-spacing: -0.01em;
   }
 
   /* Improved scrollbar styling */
@@ -165,21 +178,62 @@
 
 /* Enterprise utility classes */
 @layer utilities {
+  .font-display {
+    font-family: var(--font-fraunces), Georgia, serif;
+    letter-spacing: -0.01em;
+  }
+
+  .font-body {
+    font-family: var(--font-sen), system-ui, sans-serif;
+  }
+
+  .type-h1 {
+    font-family: var(--font-fraunces), Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(2rem, 3.5vw, 3.25rem);
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+  }
+
+  .type-h2 {
+    font-family: var(--font-fraunces), Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(1.5rem, 2.8vw, 2.25rem);
+    line-height: 1.15;
+    letter-spacing: -0.012em;
+  }
+
+  .type-h3 {
+    font-family: var(--font-fraunces), Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(1.2rem, 2vw, 1.5rem);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  .page-column-narrow {
+    @apply w-full max-w-3xl mx-auto;
+  }
+
+  .page-column-reading {
+    @apply w-full max-w-4xl mx-auto;
+  }
+
   .enterprise-gradient {
     background: linear-gradient(135deg, oklch(0.985 0.002 260) 0%, oklch(0.955 0.008 250) 100%);
   }
   
   /* Rez Logo Gradient - Pink to Orange */
   .rez-gradient {
-    background: linear-gradient(135deg, #ff5c86 0%, #ff9c4c 100%);
+    background: linear-gradient(135deg, var(--rez-pink) 0%, var(--rez-orange) 100%);
   }
   
   .rez-gradient-subtle {
-    background: linear-gradient(135deg, rgba(255, 92, 134, 0.08) 0%, rgba(255, 156, 76, 0.08) 100%);
+    background: linear-gradient(135deg, color-mix(in oklch, var(--rez-pink) 8%, transparent) 0%, color-mix(in oklch, var(--rez-orange) 8%, transparent) 100%);
   }
   
   .rez-gradient-text {
-    background: linear-gradient(135deg, #ff5c86 0%, #ff9c4c 100%);
+    background: linear-gradient(135deg, var(--rez-pink) 0%, var(--rez-orange) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -199,6 +253,450 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  .rez-tag-pink {
+    background: color-mix(in oklch, var(--rez-pink) 18%, transparent);
+    color: var(--rez-pink);
+  }
+
+  .rez-tag-orange {
+    background: color-mix(in oklch, var(--rez-orange) 20%, transparent);
+    color: var(--rez-orange);
+  }
+
+  .rez-tag-violet {
+    background: color-mix(in oklch, var(--sidebar-foreground) 16%, transparent);
+    color: color-mix(in oklch, var(--sidebar-foreground) 92%, var(--primary) 8%);
+    border: 1px solid color-mix(in oklch, var(--sidebar-foreground) 22%, transparent);
+  }
+
+  .sign-in-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  @media (max-width: 900px) {
+    .sign-in-wrap {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .sign-in-auth {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 6vh 5vw;
+    background: var(--background);
+    color: var(--foreground);
+  }
+
+  .sign-in-ticket {
+    position: relative;
+    background: var(--card);
+    color: var(--foreground);
+    border: 0.5px solid var(--border);
+    border-radius: 14px;
+    max-width: 380px;
+    padding: 28px 28px 24px;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+  }
+
+  .sign-in-ticket::before,
+  .sign-in-ticket::after {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: var(--background);
+    border: 0.5px solid var(--border);
+    border-radius: 50%;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .sign-in-ticket::before {
+    left: -10px;
+  }
+
+  .sign-in-ticket::after {
+    right: -10px;
+  }
+
+  .sign-in-ticket-perf {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    top: 66px;
+    height: 0;
+    border-top: 1.5px dashed var(--border);
+  }
+
+  .sign-in-board {
+    position: relative;
+    background: var(--sidebar);
+    color: var(--sidebar-foreground);
+    padding: 6vh 4.5vw;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid var(--sidebar-border);
+  }
+
+  @media (max-width: 900px) {
+    .sign-in-board {
+      border-left: none;
+      border-top: 1px solid var(--sidebar-border);
+    }
+
+    .sign-in-board--desktop-only {
+      display: none;
+    }
+  }
+
+  .sign-in-board-compact {
+    display: none;
+  }
+
+  @media (max-width: 900px) {
+    .sign-in-board-compact {
+      display: flex;
+      flex-direction: column;
+      background: var(--sidebar);
+      color: var(--sidebar-foreground);
+      padding: 4vh 5vw 6vh;
+      border-top: 1px solid var(--sidebar-border);
+    }
+  }
+
+  .sign-in-stat-num {
+    font-family: var(--font-sen), system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+    font-size: 28px;
+    margin-bottom: 6px;
+  }
+
+  .sign-in-board .sign-in-stats-grid,
+  .sign-in-board-compact .sign-in-stats-grid {
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklch, var(--rez-pink) 35%, var(--sidebar-border)),
+      color-mix(in oklch, var(--rez-orange) 35%, var(--sidebar-border))
+    );
+    border: 1px solid color-mix(in oklch, var(--rez-pink) 22%, var(--sidebar-border));
+    box-shadow: 0 10px 30px color-mix(in oklch, var(--sidebar) 55%, transparent);
+  }
+
+  .sign-in-board .sign-in-stat-tile,
+  .sign-in-board-compact .sign-in-stat-tile {
+    padding: 1.25rem;
+    background: var(--sidebar-accent);
+  }
+
+  .sign-in-board .sign-in-stat-tile--pink,
+  .sign-in-board-compact .sign-in-stat-tile--pink {
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--rez-pink) 18%, var(--sidebar-accent)) 0%,
+      var(--sidebar-accent) 100%
+    );
+    box-shadow: inset 0 2px 0 color-mix(in oklch, var(--rez-pink) 70%, transparent);
+  }
+
+  .sign-in-board .sign-in-stat-tile--orange,
+  .sign-in-board-compact .sign-in-stat-tile--orange {
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--rez-orange) 18%, var(--sidebar-accent)) 0%,
+      var(--sidebar-accent) 100%
+    );
+    box-shadow: inset 0 2px 0 color-mix(in oklch, var(--rez-orange) 75%, transparent);
+  }
+
+  .sign-in-board .sign-in-stat-tile--violet,
+  .sign-in-board-compact .sign-in-stat-tile--violet {
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--sidebar-primary) 22%, var(--sidebar-accent)) 0%,
+      var(--sidebar-accent) 100%
+    );
+    box-shadow: inset 0 2px 0 color-mix(in oklch, var(--sidebar-primary) 80%, transparent);
+  }
+
+  .sign-in-board .sign-in-stat-num--pink,
+  .sign-in-board-compact .sign-in-stat-num--pink {
+    background: linear-gradient(135deg, var(--rez-pink) 0%, #ff8aa8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .sign-in-board .sign-in-stat-num--orange,
+  .sign-in-board-compact .sign-in-stat-num--orange {
+    background: linear-gradient(135deg, var(--rez-orange) 0%, #ffc06f 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .sign-in-board .sign-in-stat-num--violet,
+  .sign-in-board-compact .sign-in-stat-num--violet {
+    background: linear-gradient(135deg, var(--sidebar-primary) 0%, var(--rez-pink) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .sign-in-board .sign-in-stat-label,
+  .sign-in-board-compact .sign-in-stat-label {
+    font-size: 0.75rem;
+    color: color-mix(in oklch, var(--sidebar-muted) 80%, var(--sidebar-foreground) 20%);
+  }
+
+  .sign-in-board .sign-in-section-label,
+  .sign-in-board-compact .sign-in-section-label {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: color-mix(in oklch, var(--rez-orange) 55%, var(--sidebar-muted) 45%);
+  }
+
+  .sign-in-board .sign-in-section-label::before,
+  .sign-in-board-compact .sign-in-section-label::before {
+    content: "";
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, var(--rez-pink) 0%, var(--rez-orange) 100%);
+    box-shadow: 0 0 10px color-mix(in oklch, var(--rez-pink) 45%, transparent);
+  }
+
+  .sign-in-board .sign-in-feed-grid,
+  .sign-in-board-compact .sign-in-feed-grid {
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklch, var(--rez-pink) 28%, var(--sidebar-border)),
+      color-mix(in oklch, var(--sidebar-primary) 28%, var(--sidebar-border))
+    );
+    border: 1px solid color-mix(in oklch, var(--rez-orange) 18%, var(--sidebar-border));
+  }
+
+  .sign-in-board .sign-in-feed-row,
+  .sign-in-board-compact .sign-in-feed-row {
+    background: var(--sidebar-accent);
+  }
+
+  .sign-in-board .sign-in-feed-row:nth-child(odd),
+  .sign-in-board-compact .sign-in-feed-row:nth-child(odd) {
+    background: linear-gradient(
+      90deg,
+      color-mix(in oklch, var(--rez-pink) 10%, var(--sidebar-accent)) 0%,
+      var(--sidebar-accent) 100%
+    );
+  }
+
+  .sign-in-board .sign-in-feed-row:nth-child(even),
+  .sign-in-board-compact .sign-in-feed-row:nth-child(even) {
+    background: linear-gradient(
+      90deg,
+      color-mix(in oklch, var(--rez-orange) 10%, var(--sidebar-accent)) 0%,
+      var(--sidebar-accent) 100%
+    );
+  }
+
+  .sign-in-board .sign-in-feed-location,
+  .sign-in-board-compact .sign-in-feed-location {
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: color-mix(in oklch, var(--rez-orange) 55%, var(--sidebar-muted) 45%);
+  }
+
+  .sign-in-board .rez-tag-pink,
+  .sign-in-board-compact .rez-tag-pink {
+    background: color-mix(in oklch, var(--rez-pink) 30%, transparent);
+    color: color-mix(in oklch, var(--rez-pink) 25%, white);
+    border: 1px solid color-mix(in oklch, var(--rez-pink) 50%, transparent);
+  }
+
+  .sign-in-board .rez-tag-orange,
+  .sign-in-board-compact .rez-tag-orange {
+    background: color-mix(in oklch, var(--rez-orange) 30%, transparent);
+    color: color-mix(in oklch, var(--rez-orange) 20%, white);
+    border: 1px solid color-mix(in oklch, var(--rez-orange) 50%, transparent);
+  }
+
+  .sign-in-board .rez-tag-violet,
+  .sign-in-board-compact .rez-tag-violet {
+    background: color-mix(in oklch, var(--sidebar-primary) 42%, transparent);
+    color: color-mix(in oklch, var(--sidebar-primary) 20%, white);
+    border: 1px solid color-mix(in oklch, var(--sidebar-primary) 65%, var(--rez-pink) 35%);
+  }
+
+  .sign-in-board .sign-in-live-badge-label,
+  .sign-in-board-compact .sign-in-live-badge-label {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: color-mix(in oklch, var(--rez-pink) 70%, var(--sidebar-foreground) 30%);
+    font-weight: 500;
+  }
+
+  .sign-in-board .sign-in-panel-footer,
+  .sign-in-board-compact .sign-in-panel-footer {
+    font-size: 11px;
+    color: var(--sidebar-muted);
+  }
+
+  .sign-in-board .sign-in-panel-footer-highlight,
+  .sign-in-board-compact .sign-in-panel-footer-highlight {
+    font-weight: 500;
+    background: linear-gradient(135deg, var(--rez-pink) 0%, var(--rez-orange) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .sign-in-live-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--rez-pink);
+    margin-right: 7px;
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--rez-pink) 25%, transparent);
+  }
+
+  .sign-in-live-dot-pulse {
+    animation: signInLiveDotPulse 2.2s ease-in-out infinite;
+  }
+
+  .sign-in-feed-row-enter {
+    opacity: 0;
+    transform: translateY(6px);
+    animation: signInFeedRowEnter 420ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .sign-in-human-photo {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    border: 1px solid color-mix(in oklch, var(--rez-pink) 30%, var(--sidebar-border));
+    flex-shrink: 0;
+    margin-top: 1.5rem;
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--rez-orange) 12%, transparent),
+      0 12px 28px color-mix(in oklch, var(--sidebar) 45%, transparent);
+  }
+
+  .sign-in-human-photo--desktop {
+    flex: 1;
+    min-height: 180px;
+    max-height: 220px;
+  }
+
+  .sign-in-human-photo--compact {
+    height: 140px;
+    flex: none;
+  }
+
+  .sign-in-human-photo-image {
+    object-fit: cover;
+    object-position: center 35%;
+  }
+
+  .sign-in-human-photo-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      color-mix(in oklch, var(--sidebar) 78%, transparent),
+      color-mix(in oklch, var(--rez-pink) 10%, transparent) 45%,
+      color-mix(in oklch, var(--sidebar) 10%, transparent)
+    );
+    pointer-events: none;
+  }
+
+  .sign-in-human-photo-caption {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 1rem 1.125rem;
+    color: var(--sidebar-foreground);
+    z-index: 1;
+  }
+
+  .sign-in-human-photo-caption-title {
+    display: block;
+    font-family: var(--font-fraunces), serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--sidebar-foreground);
+  }
+
+  .sign-in-human-photo-caption-meta {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 11px;
+    color: var(--sidebar-muted);
+  }
+
+  .sign-in-human-photo-caption-accent {
+    color: color-mix(in oklch, var(--rez-orange) 65%, var(--sidebar-foreground) 35%);
+    font-weight: 600;
+  }
+
+  .sign-in-human-photo-enter {
+    opacity: 0;
+    transform: translateY(4px);
+    animation: signInHumanPhotoEnter 360ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+}
+
+@keyframes signInLiveDotPulse {
+  0%,
+  100% {
+    opacity: 0.85;
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--rez-pink) 22%, transparent);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 0 7px color-mix(in oklch, var(--rez-pink) 8%, transparent);
+  }
+}
+
+@keyframes signInFeedRowEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes signInHumanPhotoEnter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sign-in-live-dot-pulse,
+  .sign-in-feed-row-enter,
+  .sign-in-human-photo-enter {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 

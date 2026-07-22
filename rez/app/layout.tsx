@@ -1,6 +1,6 @@
 "use client";
 
-import { Sen } from "next/font/google";
+import { Fraunces, Sen } from "next/font/google";
 import "./globals.css";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -19,6 +19,12 @@ const sen = Sen({
   weight: ["400", "500", "600", "700", "800"],
 });
 
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,8 +32,9 @@ export default function RootLayout({
 }>) {
   const pathname = usePathname();
   const { user } = useTaskMasterStore();
+  const isSignInPage = pathname === "/sign-in";
   const isSignInPageOrOnboarding =
-    pathname === "/sign-in" || pathname === "/organization-onboarding";
+    isSignInPage || pathname === "/organization-onboarding";
   
   // Hide navbar/sidebar for terms/privacy/about pages when user is not logged in
   const isPublicLegalPage = pathname === "/terms-of-service" || pathname === "/privacy-policy" || pathname === "/about";
@@ -43,15 +50,19 @@ export default function RootLayout({
         <meta property="og:description" content="Rez, by Canvassing" />
         <meta property="og:image" content="/rez-favicon.svg" />
       </head>
-      <body className={`${sen.variable} font-[family-name:var(--font-sen)] antialiased`}>
+      <body className={`${sen.variable} ${fraunces.variable} font-[family-name:var(--font-sen)] antialiased`}>
         <AuthHydrator />
         <AmplitudeProvider>
           <SidebarProvider>
             {!shouldHideNavAndSidebar && <AppSidebar />}
             <main className="flex flex-col w-full min-h-screen overflow-x-hidden">
               {!shouldHideNavAndSidebar && <AppNavbar />}
-              <div className="flex-1 enterprise-gradient relative overflow-x-hidden">
-                <div className="absolute inset-0 rez-gradient-subtle pointer-events-none" />
+              <div
+                className={`flex-1 relative overflow-x-hidden ${isSignInPage ? "bg-background" : "enterprise-gradient"}`}
+              >
+                {!isSignInPage && (
+                  <div className="absolute inset-0 rez-gradient-subtle pointer-events-none" />
+                )}
                 <div className="relative overflow-x-hidden">{children}</div>
               </div>
             </main>
