@@ -58,9 +58,9 @@ export default function RootLayout({
             <main className="flex flex-col w-full min-h-screen overflow-x-hidden">
               {!shouldHideNavAndSidebar && <AppNavbar />}
               <div
-                className={`flex-1 relative overflow-x-hidden ${isSignInPage ? "bg-background" : "enterprise-gradient"}`}
+                className={`flex-1 relative overflow-x-hidden ${isSignInPageOrOnboarding ? "bg-background" : "enterprise-gradient"}`}
               >
-                {!isSignInPage && (
+                {!isSignInPageOrOnboarding && (
                   <div className="absolute inset-0 rez-gradient-subtle pointer-events-none" />
                 )}
                 <div className="relative overflow-x-hidden">{children}</div>
