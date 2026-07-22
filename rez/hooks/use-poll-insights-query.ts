@@ -49,7 +49,19 @@ export function usePollInsightsQuery<T>(
       const existing = inFlightByUrl.get(url);
       if (existing) {
         await existing.catch(() => undefined);
-        return;
+        const cached = dataCacheByUrl.get(url) as T | undefined;
+        if (cached != null) {
+          setData(cached);
+          hasDataRef.current = true;
+          setError(null);
+          setRefreshError(null);
+          setIsLoading(false);
+          setIsRefreshing(false);
+          return;
+        }
+        // If there is still no cache after awaiting an in-flight request
+        // (e.g., it was aborted during Strict Mode effect cleanup),
+        // continue and issue a fresh request.
       }
 
       if (isBackground) {
