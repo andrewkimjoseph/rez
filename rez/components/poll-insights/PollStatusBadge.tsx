@@ -17,10 +17,10 @@ export function PollStatusBadge({
     return (
       <span
         className={`inline-flex items-center gap-1.5 shrink-0 ${className}`}
-        aria-label="Poll is archived"
+        aria-label="Poll has ended"
       >
         <span className="relative inline-flex h-2 w-2 rounded-full bg-muted-foreground/60" />
-        <span className="text-sm font-medium text-muted-foreground">Archived</span>
+        <span className="text-sm font-medium text-muted-foreground">Ended</span>
       </span>
     );
   }
