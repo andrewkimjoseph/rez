@@ -1,5 +1,6 @@
 import { signInWithPopup, GoogleAuthProvider, signOut, User } from 'firebase/auth';
 import { auth, initFirebase } from '@/firebase/clientConfig';
+import { clearAuthCookies, setFirebaseTokenCookie } from '@/lib/auth-cookies';
 
 initFirebase();
 
@@ -18,8 +19,7 @@ export async function signOutTaskMaster() {
   await signOut(auth);
   
   // Clear cookies created during authentication
-  document.cookie = 'firebaseToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
-  document.cookie = 'organizationId=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+  clearAuthCookies();
 }
 
 export function getCurrentTaskMaster(): User | null {
@@ -39,8 +39,7 @@ export async function ensureFreshToken(): Promise<string | null> {
   try {
     // Force token refresh to get a fresh token
     const token = await user.getIdToken(true);
-    // Update cookie with fresh token
-    document.cookie = `firebaseToken=${token}; path=/; max-age=604800; SameSite=Lax`;
+    setFirebaseTokenCookie(token);
     return token;
   } catch (error) {
     console.error('Error refreshing token:', error);
