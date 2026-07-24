@@ -83,7 +83,7 @@ export function PollInsightSummaryCard({ poll }: PollInsightSummaryCardProps) {
         </div>
       </div>
 
-      <p className="text-xs text-[#5C29A3] mt-3 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <p className="text-xs text-[#5C29A3] mt-3 font-medium flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
         View results <ArrowRightIcon className="h-3 w-3" />
       </p>
     </Link>
