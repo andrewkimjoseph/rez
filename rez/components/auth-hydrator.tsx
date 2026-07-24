@@ -4,23 +4,26 @@ import { auth, firestore } from "@/firebase/clientConfig";
 import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { doc, getDoc } from "firebase/firestore";
 import { COLLECTIONS } from "@/firebase/firestore/constants/collections";
-import { TaskMasterStoreUser } from "@/stores/taskmaster-store";
+import {
+  clearAuthCookies,
+  clearOrganizationIdCookie,
+  setFirebaseTokenCookie,
+  setOrganizationIdCookie,
+} from "@/lib/auth-cookies";
 
 /**
  * Updates the firebaseToken cookie with the current ID token
  */
-async function updateTokenCookie(user: any) {
+async function updateTokenCookie(user: { getIdToken: () => Promise<string> } | null) {
   if (user) {
     try {
       const token = await user.getIdToken();
-      // Set cookie with secure flags (httpOnly is not set so client can read it)
-      document.cookie = `firebaseToken=${token}; path=/; max-age=604800; SameSite=Lax`;
+      setFirebaseTokenCookie(token);
     } catch (error) {
-      console.error('Error updating token cookie:', error);
+      console.error("Error updating token cookie:", error);
     }
   } else {
-    // Clear cookie if user is null
-    document.cookie = 'firebaseToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+    clearAuthCookies();
   }
 }
 
@@ -35,23 +38,30 @@ export function AuthHydrator() {
       if (user) {
         // Update token cookie whenever auth state changes
         await updateTokenCookie(user);
-        
+
         // Try to fetch the full TaskMaster from Firestore
         const ref = doc(db, COLLECTIONS.TASK_MASTERS, user.uid);
         const snap = await getDoc(ref);
         if (snap.exists()) {
           const data = snap.data();
+          const organizationId = data.organizationId || null;
+          if (organizationId) {
+            setOrganizationIdCookie(organizationId);
+          } else {
+            clearOrganizationIdCookie();
+          }
           // Explicitly map all fields including isSuperAdmin
           setUser({
             id: data.id || user.uid,
             name: data.name || null,
             emailAddress: data.emailAddress || null,
             profilePictureURI: data.profilePictureURI || null,
-            organizationId: data.organizationId || null,
+            organizationId,
             privyDid: data.privyDid || null,
             isSuperAdmin: data.isSuperAdmin === true,
           });
         } else {
+          clearOrganizationIdCookie();
           setUser({
             id: user.uid,
             name: user.displayName || null,
@@ -83,4 +93,4 @@ export function AuthHydrator() {
   }, [setUser]);
 
   return null;
-} 
+}
