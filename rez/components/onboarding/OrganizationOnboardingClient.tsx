@@ -29,6 +29,7 @@ import { useTaskMasterStore } from "@/stores/taskmaster-store";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { updateTaskMasterOrganizationId } from "@/firebase/firestore/services/updateTaskMasterOrganizationId";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
+import { setOrganizationIdCookie } from "@/lib/auth-cookies";
 
 const FormSchema = z.object({
   organizationName: z.string().min(2, {
@@ -91,7 +92,7 @@ export function OrganizationOnboardingClient() {
     const orgId = await createOrganizationInFirestore(orgData);
     const org = { ...orgData, id: orgId };
     setOrganization(org);
-    document.cookie = `organizationId=${orgId}; path=/;`;
+    setOrganizationIdCookie(orgId);
     if (user.uid) {
       await updateTaskMasterOrganizationId(user.uid, orgId);
       if (taskMasterUser) {
