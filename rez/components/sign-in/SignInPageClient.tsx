@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { signInTaskMasterWithGoogle } from "@/firebase/auth/auth";
 import { createTaskMasterInFirestore } from "@/firebase/firestore/services/createTaskMasterInFirestore";
@@ -13,6 +13,13 @@ import { linkTaskMasterToLead } from "@/firebase/firestore/services/linkTaskMast
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 import { useTasksStore } from "@/stores/tasks-store";
 import { formatTicketId } from "@/components/sign-in/sign-in-field-panel-parts";
+import {
+  setFirebaseTokenCookie,
+  setOrganizationIdCookie,
+  clearOrganizationIdCookie,
+} from "@/lib/auth-cookies";
+import { auth } from "@/firebase/clientConfig";
+import { onAuthStateChanged } from "firebase/auth";
 
 const VALID_LEAD_SOURCES = ["Premium CTA", "Playbook", "Calculator"] as const;
 type LeadSource = (typeof VALID_LEAD_SOURCES)[number];
@@ -114,6 +121,7 @@ export function SignInPageClient() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [ticketId, setTicketId] = useState("------");
+  const signingInRef = useRef(false);
   const setTaskMasterUser = useTaskMasterStore((state) => state.setUser);
   const {
     signInWithGoogleClicked,
@@ -129,9 +137,58 @@ export function SignInPageClient() {
     setTicketId(formatTicketId(new Date(), getCountryCodeFromLocale()));
   }, [pathname]);
 
+  // When Firebase session survives but cookies were dropped (common on mobile),
+  // restore cookies and leave /sign-in without requiring a refresh.
+  useEffect(() => {
+    if (!auth) return;
+
+    let cancelled = false;
+
+    const redirectFromRestoredSession = async () => {
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser || cancelled || signingInRef.current) return;
+
+      try {
+        const token = await firebaseUser.getIdToken();
+        if (cancelled || signingInRef.current) return;
+        setFirebaseTokenCookie(token);
+
+        const existing = await getTaskMasterFromFirestore(firebaseUser.uid);
+        if (cancelled || signingInRef.current) return;
+
+        if (existing?.organizationId) {
+          setOrganizationIdCookie(existing.organizationId);
+          setTaskMasterUser(existing);
+          router.replace("/dashboard");
+          return;
+        }
+
+        clearOrganizationIdCookie();
+        if (existing) {
+          setTaskMasterUser(existing);
+        }
+        router.replace("/organization-onboarding");
+      } catch {
+        // Stay on sign-in; user can sign in manually
+      }
+    };
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user && !signingInRef.current) {
+        void redirectFromRestoredSession();
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [router, setTaskMasterUser]);
+
   async function handleGoogleSignIn() {
     setError(null);
     setLoading(true);
+    signingInRef.current = true;
     signInWithGoogleClicked();
 
     try {
@@ -141,13 +198,19 @@ export function SignInPageClient() {
         const existingTaskMaster = await getTaskMasterFromFirestore(user.uid);
 
         if (existingTaskMaster) {
-          document.cookie = `firebaseToken=${token}; path=/;`;
+          setFirebaseTokenCookie(token);
           if (existingTaskMaster.organizationId) {
-            document.cookie = `organizationId=${existingTaskMaster.organizationId}; path=/;`;
+            setOrganizationIdCookie(existingTaskMaster.organizationId);
+          } else {
+            clearOrganizationIdCookie();
           }
           setTaskMasterUser(existingTaskMaster);
           fetchTasksAndCompletions(true);
-          router.push("/dashboard");
+          router.push(
+            existingTaskMaster.organizationId
+              ? "/dashboard"
+              : "/organization-onboarding"
+          );
           setTaskMasterId(user.uid);
           identifyTaskMaster({
             rez_task_master_id: existingTaskMaster.id,
@@ -177,7 +240,8 @@ export function SignInPageClient() {
 
         await createTaskMasterInFirestore(taskMaster);
         setTaskMasterUser(taskMaster);
-        document.cookie = `firebaseToken=${token}; path=/;`;
+        setFirebaseTokenCookie(token);
+        clearOrganizationIdCookie();
         setTaskMasterId(user.uid);
         identifyTaskMaster({
           rez_task_master_id: taskMaster.id,
@@ -208,6 +272,7 @@ export function SignInPageClient() {
       signInWithGoogleFailed({
         error_message: authError?.message,
       });
+      signingInRef.current = false;
 
       if (authError?.code === "auth/popup-closed-by-user") {
         setError("Sign-in was cancelled.");
