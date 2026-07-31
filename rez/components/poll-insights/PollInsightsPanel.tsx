@@ -76,12 +76,12 @@ export default function PollInsightsPanel({ taskId }: PollInsightsPanelProps) {
 
   const handleExport = () => {
     if (!data || !demographics) return;
-    const csv = toCsv(data, genderData, countryData, ageData);
+    const csv = toCsv(data);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `poll-insights-${taskId}.csv`;
+    link.download = `poll-responses-${taskId}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };

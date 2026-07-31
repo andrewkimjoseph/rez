@@ -157,40 +157,67 @@ export function aggregatePollResults(
   }));
 }
 
-export function toCsv(
-  data: PollInsightsData,
-  genderData: ChartDatum[],
-  countryData: ChartDatum[],
-  ageData: ChartDatum[],
-): string {
-  const lines = [
-    'Poll Insights Export',
-    `Title,${JSON.stringify(data.taskTitle)}`,
-    `Total completed responses,${completedParticipantCount(data)}`,
-    '',
+function csvCell(value: string | number | null | undefined): string {
+  if (value == null) return '';
+  return JSON.stringify(value);
+}
+
+export function toCsv(data: PollInsightsData): string {
+  const header = [
+    'participant_id',
+    'question_number',
+    'question_text',
+    'selected_option',
+    'answered_at',
+    'gender',
+    'country',
+    'age',
+    'age_bucket',
   ];
 
+  const optionTextById = new Map<string, string>();
   for (const question of data.questions) {
-    const pollResults = aggregatePollResults(question.rows, question.options);
-    lines.push(`Question,${JSON.stringify(question.questionText)}`);
-    lines.push('Option,Count');
-    lines.push(...pollResults.map((row) => `${JSON.stringify(row.label)},${row.value}`));
-    lines.push('');
+    for (const option of question.options) {
+      optionTextById.set(option.id, option.option_text);
+    }
   }
 
-  lines.push(
-    'Gender',
-    'Gender,Count',
-    ...genderData.map((row) => `${JSON.stringify(row.label)},${row.value}`),
-    '',
-    'Country',
-    'Country,Count',
-    ...countryData.map((row) => `${JSON.stringify(row.label)},${row.value}`),
-    '',
-    'Age',
-    'Age bucket,Count',
-    ...ageData.map((row) => `${JSON.stringify(row.label)},${row.value}`),
+  const exportRows = data.questions.flatMap((question) =>
+    question.rows.map((row) => ({
+      row,
+      questionNumber: question.sortOrder + 1,
+      questionText: question.questionText,
+      selectedOption: row.question_option_id
+        ? (optionTextById.get(row.question_option_id) ?? '')
+        : '',
+      sortOrder: question.sortOrder,
+    })),
   );
+
+  exportRows.sort((a, b) => {
+    const participantCompare = (a.row.participant_id ?? '').localeCompare(
+      b.row.participant_id ?? '',
+    );
+    if (participantCompare !== 0) return participantCompare;
+    return a.sortOrder - b.sortOrder;
+  });
+
+  const lines = [
+    header.join(','),
+    ...exportRows.map(({ row, questionNumber, questionText, selectedOption }) =>
+      [
+        csvCell(row.participant_id),
+        csvCell(questionNumber),
+        csvCell(questionText),
+        csvCell(selectedOption),
+        csvCell(row.answered_at),
+        csvCell(row.gender),
+        csvCell(row.country),
+        csvCell(row.age),
+        csvCell(ageBucket(row.age)),
+      ].join(','),
+    ),
+  ];
 
   return lines.join('\n');
 }
