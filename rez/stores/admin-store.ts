@@ -49,8 +49,17 @@ export interface AdminParticipant {
 // Cache duration: 30 minutes
 const CACHE_DURATION = 30 * 60 * 1000;
 
+export type TasksFetchSource = 'algolia' | 'firestore';
+
+function dedupeTasksById(existing: Task[], incoming: Task[]): Task[] {
+  const seen = new Set(existing.map((t) => t.id).filter(Boolean));
+  const uniqueIncoming = (incoming || []).filter((t) => t.id && !seen.has(t.id));
+  return [...existing, ...uniqueIncoming];
+}
+
 interface AdminStore {
   tasks: Task[];
+  tasksFetchSource: TasksFetchSource | null;
   taskMasters: TaskMaster[];
   participants: AdminParticipant[];
   isLoadingTasks: boolean;
@@ -107,6 +116,7 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
   tasksNextCursor: null,
   taskMastersNextCursor: null,
   participantsNextCursor: null,
+  tasksFetchSource: null,
   participantsSearchQuery: '',
   isUpdating: false,
   isDeleting: false,
@@ -133,13 +143,16 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
       const params = new URLSearchParams({ limit: '50' });
       if (preferFirestore) params.set('source', 'firestore');
       const response = await fetchWithAuthRetry(`/api/admin/fetchAllTasks?${params.toString()}`);
-      const { tasks: newTasks, hasMore, nextCursor } = await response.json();
+      const { tasks: newTasks, hasMore, nextCursor, source } = await response.json();
+      const tasksFetchSource: TasksFetchSource =
+        source === 'firestore' || preferFirestore ? 'firestore' : 'algolia';
       set({
         tasks: newTasks || [],
         isLoadingTasks: false,
         lastTasksFetch: Date.now(),
         hasMoreTasks: !!hasMore,
         tasksNextCursor: nextCursor,
+        tasksFetchSource,
       });
     } catch (error) {
       console.error('Error fetching tasks:', error);
@@ -151,21 +164,28 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
   },
 
   loadMoreTasks: async () => {
-    const { tasksNextCursor, isLoadingMoreTasks, hasMoreTasks } = get();
+    const { tasksNextCursor, isLoadingMoreTasks, hasMoreTasks, tasksFetchSource } = get();
     if (!tasksNextCursor || isLoadingMoreTasks || !hasMoreTasks) return;
 
     set({ isLoadingMoreTasks: true, error: null });
 
     try {
-      const url = `/api/admin/fetchAllTasks?limit=50&startAfterDocId=${encodeURIComponent(tasksNextCursor.startAfterDocId)}`;
-      const response = await fetchWithAuthRetry(url);
-      const { tasks: moreTasks, hasMore, nextCursor } = await response.json();
+      const params = new URLSearchParams({
+        limit: '50',
+        startAfterDocId: tasksNextCursor.startAfterDocId,
+      });
+      if (tasksFetchSource === 'firestore') {
+        params.set('source', 'firestore');
+      }
+      const response = await fetchWithAuthRetry(`/api/admin/fetchAllTasks?${params.toString()}`);
+      const { tasks: moreTasks, hasMore, nextCursor, source } = await response.json();
       const currentTasks = get().tasks;
       set({
-        tasks: [...currentTasks, ...(moreTasks || [])],
+        tasks: dedupeTasksById(currentTasks, moreTasks || []),
         isLoadingMoreTasks: false,
         hasMoreTasks: !!hasMore,
         tasksNextCursor: nextCursor,
+        tasksFetchSource: source === 'firestore' ? 'firestore' : tasksFetchSource,
       });
     } catch (error) {
       console.error('Error loading more tasks:', error);
@@ -448,6 +468,7 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
     tasksNextCursor: null,
     taskMastersNextCursor: null,
     participantsNextCursor: null,
+    tasksFetchSource: null,
     participantsSearchQuery: '',
   }),
 }));

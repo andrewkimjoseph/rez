@@ -28,6 +28,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { fetchWithAuthRetry } from "@/lib/api-fetch";
 import AdminAccessDenied from "@/components/admin/AdminAccessDenied";
+import { formatAdminTimestamp } from "@/lib/format-admin-timestamp";
 
 // Simple in-memory cache for completion counts per task ID set, keyed by
 // a stable, comma-separated list of task IDs.
@@ -102,23 +103,7 @@ export default function AdminTaskCompletionsPage() {
     }
   };
 
-  const formatTimestamp = (timestamp: unknown) => {
-    if (!timestamp) return "N/A";
-    try {
-      const ts = timestamp as { seconds?: number; _seconds?: number };
-      const seconds = ts.seconds || ts._seconds;
-      if (seconds) {
-        return new Date(seconds * 1000).toLocaleDateString("en-US", {
-          month: "short",
-          day: "2-digit",
-          year: "numeric",
-        });
-      }
-      return "N/A";
-    } catch {
-      return "N/A";
-    }
-  };
+  const formatTimestamp = (timestamp: unknown) => formatAdminTimestamp(timestamp);
 
   const activeTasks = tasks.filter((t) => t.isAvailable === true);
   const filteredTasks = activeTasks.filter((task) => {

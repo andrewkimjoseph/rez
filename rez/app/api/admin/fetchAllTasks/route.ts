@@ -22,12 +22,28 @@ export async function GET(request: NextRequest) {
     );
     const startAfterDocId = searchParams.get('startAfterDocId') || undefined;
     const preferFirestore = searchParams.get('source') === 'firestore';
+    const isAlgoliaCursor = startAfterDocId?.startsWith(ALGOLIA_PAGE_PREFIX) ?? false;
+    const isFirestoreCursor = !!startAfterDocId && !isAlgoliaCursor;
+
+    if (!preferFirestore && isFirestoreCursor) {
+      return NextResponse.json(
+        { error: 'Pagination cursor requires source=firestore.' },
+        { status: 400 }
+      );
+    }
+
+    if (preferFirestore && isAlgoliaCursor) {
+      return NextResponse.json(
+        { error: 'Algolia pagination cursor requires the default Algolia source.' },
+        { status: 400 }
+      );
+    }
 
     if (isAlgoliaConfigured() && !preferFirestore) {
       try {
         const client = getAlgoliaClient();
-        const page = startAfterDocId?.startsWith(ALGOLIA_PAGE_PREFIX)
-          ? Math.max(0, parseInt(startAfterDocId.slice(ALGOLIA_PAGE_PREFIX.length), 10) || 0)
+        const page = isAlgoliaCursor
+          ? Math.max(0, parseInt(startAfterDocId!.slice(ALGOLIA_PAGE_PREFIX.length), 10) || 0)
           : 0;
         const response = await client.searchSingleIndex({
           indexName: COLLECTIONS.TASKS,
@@ -44,8 +60,15 @@ export async function GET(request: NextRequest) {
         const nbPages = response.nbPages ?? 0;
         const hasMore = page + 1 < nbPages;
         const nextCursor = hasMore ? { startAfterDocId: `${ALGOLIA_PAGE_PREFIX}${page + 1}` } : null;
-        return NextResponse.json({ tasks, hasMore, nextCursor });
+        return NextResponse.json({ tasks, hasMore, nextCursor, source: 'algolia' });
       } catch (algoliaError) {
+        if (isAlgoliaCursor) {
+          console.error('Algolia fetch failed during pagination:', algoliaError);
+          return NextResponse.json(
+            { error: 'Failed to load more tasks from search index.' },
+            { status: 503 }
+          );
+        }
         console.warn('Algolia fetch failed, falling back to Firestore:', algoliaError);
       }
     }
@@ -53,8 +76,8 @@ export async function GET(request: NextRequest) {
     const tasksRef = paxDB.collection(COLLECTIONS.TASKS);
     let query = tasksRef.orderBy('timeCreated', 'desc').limit(limit);
 
-    if (startAfterDocId && !startAfterDocId.startsWith(ALGOLIA_PAGE_PREFIX)) {
-      const lastDoc = await tasksRef.doc(startAfterDocId).get();
+    if (isFirestoreCursor) {
+      const lastDoc = await tasksRef.doc(startAfterDocId!).get();
       if (lastDoc.exists) {
         query = query.startAfter(lastDoc);
       }
@@ -70,7 +93,7 @@ export async function GET(request: NextRequest) {
     const hasMore = tasksSnapshot.docs.length === limit;
     const nextCursor = hasMore && lastDoc ? { startAfterDocId: lastDoc.id } : null;
 
-    return NextResponse.json({ tasks, hasMore, nextCursor });
+    return NextResponse.json({ tasks, hasMore, nextCursor, source: 'firestore' });
   } catch (error) {
     console.error('Error fetching all tasks:', error);
     return NextResponse.json(

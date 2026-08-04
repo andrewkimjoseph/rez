@@ -56,6 +56,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 import { AlgoliaAttribution } from "@/components/algolia-attribution";
+import { formatAdminTimestamp } from "@/lib/format-admin-timestamp";
 
 export default function AdminTasksPage() {
   const router = useRouter();
@@ -450,23 +451,7 @@ export default function AdminTasksPage() {
     }
   };
 
-  const formatTimestamp = (timestamp: unknown) => {
-    if (!timestamp) return 'N/A';
-    try {
-      const ts = timestamp as { seconds?: number; _seconds?: number };
-      const seconds = ts.seconds || ts._seconds;
-      if (seconds) {
-        return new Date(seconds * 1000).toLocaleDateString('en-US', {
-          month: 'short',
-          day: '2-digit',
-          year: 'numeric'
-        });
-      }
-      return 'N/A';
-    } catch {
-      return 'N/A';
-    }
-  };
+  const formatTimestamp = (timestamp: unknown) => formatAdminTimestamp(timestamp);
 
   // Track search with debouncing
   useEffect(() => {
