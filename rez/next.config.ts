@@ -1,11 +1,28 @@
 import {withSentryConfig} from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
+const NOINDEX_HEADER = { key: "X-Robots-Tag", value: "noindex, nofollow" };
+
 const nextConfig: NextConfig = {
-  /* config options here */
   devIndicators: false,
   env: {
     NEXT_PUBLIC_APP_VERSION: process.env.npm_package_version || "0.0.0",
+  },
+  async headers() {
+    return [
+      {
+        source: "/favicon.ico",
+        headers: [NOINDEX_HEADER],
+      },
+      {
+        source: "/rez-favicon.svg",
+        headers: [NOINDEX_HEADER],
+      },
+      {
+        source: "/:path*\\.(ico|svg|png|jpg|jpeg|gif|webp|woff|woff2)",
+        headers: [NOINDEX_HEADER],
+      },
+    ];
   },
 };
 
