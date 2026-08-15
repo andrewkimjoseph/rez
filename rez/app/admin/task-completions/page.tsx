@@ -254,7 +254,7 @@ export default function AdminTaskCompletionsPage() {
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
                   <TableHead className="w-[50px] font-semibold">#</TableHead>
-                  <TableHead className="font-semibold min-w-[250px]">Title</TableHead>
+                  <TableHead className="font-semibold min-w-[420px]">Title</TableHead>
                   <TableHead className="font-semibold">Creator</TableHead>
                   <TableHead className="font-semibold">Type</TableHead>
                   <TableHead className="font-semibold text-center w-[100px]">Completions</TableHead>
@@ -272,10 +272,10 @@ export default function AdminTaskCompletionsPage() {
                       {index + 1}
                     </TableCell>
                     <TableCell>
-                      <div className="max-w-[250px] truncate font-medium" title={task.title || ""}>
+                      <div className="max-w-[420px] truncate font-medium" title={task.title || ""}>
                         {task.title || "Untitled Task"}
                       </div>
-                      <div className="text-xs text-muted-foreground truncate max-w-[250px]" title={task.id || ""}>
+                      <div className="text-xs text-muted-foreground truncate max-w-[420px]" title={task.id || ""}>
                         {task.id}
                       </div>
                     </TableCell>
