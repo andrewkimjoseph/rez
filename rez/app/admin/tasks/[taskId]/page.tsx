@@ -676,43 +676,6 @@ export default function AdminTaskDetailsPage() {
             </dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">Task Manager Contract Address</dt>
-            <dd className="mt-0.5 min-w-0">
-              {formattedData.managerContractAddress ? (
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <a
-                    href={formattedData.blockscoutUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-primary hover:underline font-mono text-xs min-w-0"
-                    title={formattedData.managerContractAddress}
-                  >
-                    <span className="truncate min-w-0 flex-1">
-                      {formattedData.managerContractAddress}
-                    </span>
-                    <ArrowTopRightOnSquareIcon className="h-3 w-3 flex-shrink-0" />
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      copyToClipboard(
-                        formattedData.managerContractAddress ?? "",
-                        "Contract address"
-                      )
-                    }
-                    className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                    title="Copy contract address"
-                    aria-label="Copy contract address"
-                  >
-                    <ClipboardDocumentIcon className="h-4 w-4" aria-hidden />
-                  </button>
-                </div>
-              ) : (
-                <span className="text-muted-foreground text-sm">—</span>
-              )}
-            </dd>
-          </div>
-          <div>
             <dt className="text-xs text-muted-foreground">Task Link</dt>
             <dd className="mt-0.5">
               {formattedData.link ? (
