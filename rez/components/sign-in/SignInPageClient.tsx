@@ -56,21 +56,30 @@ function clearLeadCookie(): void {
   document.cookie = "leadEmail=; domain=.thecanvassing.xyz; path=/; max-age=0";
 }
 
-function fireLeadAutomation(leadSource: LeadSource | null) {
+function fireLeadAutomation(leadSource: LeadSource | null, leadEmail: string | null) {
+  const body = JSON.stringify(leadEmail ? { leadEmail } : {});
+  const headers = { "Content-Type": "application/json" };
+
   if (leadSource === "Premium CTA") {
     fetch("/api/fireTriggerForAutomationP2", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
+      credentials: "include",
+      body,
     }).catch(() => {});
   } else if (leadSource === "Playbook") {
     fetch("/api/fireTriggerForAutomationB2", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
+      credentials: "include",
+      body,
     }).catch(() => {});
   } else if (leadSource === "Calculator") {
     fetch("/api/fireTriggerForAutomationC2", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
+      credentials: "include",
+      body,
     }).catch(() => {});
   }
 }
@@ -86,8 +95,8 @@ function handleLeadLinking(userId: string) {
     credentials: "include",
     body: JSON.stringify({ leadEmail }),
   }).catch(() => {});
+  fireLeadAutomation(getLeadSource(), leadEmail);
   clearLeadCookie();
-  fireLeadAutomation(getLeadSource());
 }
 
 function getCountryCodeFromLocale(): string | null {

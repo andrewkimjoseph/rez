@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/api-auth';
+import { paxDB } from '@/firebase/serverConfig';
+import { FieldValue, type QueryDocumentSnapshot } from 'firebase-admin/firestore';
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
 
 /**
  * Updates the Brevo contact (identified by leadEmail) with the signed-in user's email.
  * Called when linking a lead from thecanvassing.xyz to a Rez account.
  * The lead may have used a different email on the form than their Google sign-in email.
+ *
+ * Also persists rezAccountEmail on the Firestore lead so both addresses stay
+ * blocked from re-registering on the marketing site after the Brevo identifier changes.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -28,6 +37,44 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'leadEmail is required' },
         { status: 400 }
+      );
+    }
+
+    const leadEmailLower = normalizeEmail(leadEmail);
+    const userEmailLower = normalizeEmail(userEmail);
+    const leadsRef = paxDB.collection('taskmaster_leads');
+
+    const snapshots = await Promise.all([
+      leadsRef.where('leadEmailAddress', '==', leadEmail).get(),
+      leadsRef.where('leadEmailAddress', '==', leadEmailLower).get(),
+      leadsRef.where('leadEmailAddressLower', '==', leadEmailLower).get(),
+    ]);
+
+    const leadDocs = new Map<string, QueryDocumentSnapshot>();
+    for (const snap of snapshots) {
+      for (const doc of snap.docs) {
+        leadDocs.set(doc.id, doc);
+      }
+    }
+
+    if (leadDocs.size > 0) {
+      await Promise.all(
+        [...leadDocs.values()].map((leadDoc) => {
+          const existingLower =
+            typeof leadDoc.data().leadEmailAddressLower === 'string'
+              ? leadDoc.data().leadEmailAddressLower
+              : normalizeEmail(
+                  typeof leadDoc.data().leadEmailAddress === 'string'
+                    ? leadDoc.data().leadEmailAddress
+                    : leadEmail
+                );
+          return leadsRef.doc(leadDoc.id).update({
+            rezAccountEmail: userEmail,
+            rezAccountEmailLower: userEmailLower,
+            leadEmailAddressLower: existingLower,
+            lastActivityDate: FieldValue.serverTimestamp(),
+          });
+        })
       );
     }
 
