@@ -675,12 +675,12 @@ export default function AdminTasksPage() {
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
                   <TableHead className="w-[50px] font-semibold">#</TableHead>
-                  <TableHead className="font-semibold min-w-[420px]">Title</TableHead>
-                  <TableHead className="font-semibold">Creator</TableHead>
+                  <TableHead className="font-semibold min-w-[220px]">Title</TableHead>
+                  <TableHead className="font-semibold w-[160px] max-w-[160px]">Creator</TableHead>
                   <TableHead className="font-semibold">Type</TableHead>
                   <TableHead className="font-semibold min-w-[110px]">Review</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
-                  <TableHead className="text-right font-semibold">Target</TableHead>
+                  <TableHead className="font-semibold">Target</TableHead>
                   <TableHead className="text-right font-semibold">Reward</TableHead>
                   <TableHead className="font-semibold w-[100px]">Created</TableHead>
                   <TableHead className="font-semibold w-[100px]">Expires on</TableHead>
@@ -698,16 +698,16 @@ export default function AdminTasksPage() {
                         onClick={() => handleViewDetails(task)}
                         className="text-left group"
                       >
-                        <div className="max-w-[420px] truncate font-medium group-hover:text-primary transition-colors" title={task.title || ''}>
+                        <div className="font-medium group-hover:text-primary transition-colors whitespace-normal">
                           {task.title || 'Untitled Task'}
                         </div>
-                        <div className="text-xs text-muted-foreground truncate max-w-[420px]" title={task.id || ''}>
+                        <div className="text-xs text-muted-foreground truncate" title={task.id || ''}>
                           {task.id}
                         </div>
                       </button>
                     </TableCell>
-                    <TableCell>
-                      <div className="text-sm text-muted-foreground truncate max-w-[150px]" title={task.rezTaskMasterEmailAddress || ''}>
+                    <TableCell className="max-w-[160px]">
+                      <div className="text-sm text-muted-foreground truncate" title={task.rezTaskMasterEmailAddress || ''}>
                         {task.rezTaskMasterEmailAddress || 'N/A'}
                       </div>
                     </TableCell>
@@ -727,7 +727,7 @@ export default function AdminTasksPage() {
                         {task.isAvailable ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">
+                    <TableCell className="tabular-nums">
                       {task.targetNumberOfParticipants || 0}
                     </TableCell>
                     <TableCell className="text-right">
