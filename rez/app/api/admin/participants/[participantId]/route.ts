@@ -94,27 +94,66 @@ export async function GET(
     }
 
     const verifiedWalletAddresses: string[] = [];
+    const paymentMethods: Array<{
+      id: string;
+      name: string | null;
+      walletAddress: string | null;
+      predefinedId: number | null;
+      verified: boolean;
+    }> = [];
     try {
       const paymentMethodsRef = paxDB.collection(COLLECTIONS.PAYMENT_METHODS);
       const paymentSnap = await paymentMethodsRef
         .where('participantId', '==', participantId)
         .get();
-      const addresses = new Set<string>();
-      paymentSnap.docs.forEach((doc) => {
+
+      const normalizeAddress = (value: unknown): string | null => {
+        if (typeof value !== 'string' || !value.trim()) return null;
+        const trimmed = value.trim();
+        return trimmed.startsWith('0x') ? trimmed : `0x${trimmed}`;
+      };
+
+      const rawMethods = paymentSnap.docs.map((doc) => {
         const d = doc.data();
-        const addr = (d?.walletAddress ?? d?.address ?? d?.wallet) as string | undefined;
-        if (typeof addr === 'string' && addr.trim()) {
-          addresses.add(addr.trim());
-        }
+        const name = typeof d?.name === 'string' && d.name.trim() ? d.name.trim() : null;
+        const predefinedId =
+          typeof d?.predefinedId === 'number' && Number.isFinite(d.predefinedId)
+            ? d.predefinedId
+            : null;
+        return {
+          id: (typeof d?.id === 'string' && d.id) || doc.id,
+          name,
+          walletAddress: normalizeAddress(d?.walletAddress ?? d?.address ?? d?.wallet),
+          predefinedId,
+        };
       });
-      for (const address of addresses) {
+
+      const uniqueAddresses = [
+        ...new Set(rawMethods.map((m) => m.walletAddress).filter((a): a is string => !!a)),
+      ];
+      const verifiedSet = new Set<string>();
+      for (const address of uniqueAddresses) {
         const root = await getWhitelistedRoot(address);
         if (isWhitelisted(root)) {
-          verifiedWalletAddresses.push(address.startsWith('0x') ? address : `0x${address}`);
+          verifiedSet.add(address.toLowerCase());
+          verifiedWalletAddresses.push(address);
         }
       }
+
+      paymentMethods.push(
+        ...rawMethods
+          .map((m) => ({
+            ...m,
+            verified: m.walletAddress ? verifiedSet.has(m.walletAddress.toLowerCase()) : false,
+          }))
+          .sort((a, b) => {
+            const ai = a.predefinedId ?? Number.MAX_SAFE_INTEGER;
+            const bi = b.predefinedId ?? Number.MAX_SAFE_INTEGER;
+            return ai - bi;
+          })
+      );
     } catch (err) {
-      console.warn('Failed to fetch verified wallets for participant:', err);
+      console.warn('Failed to fetch payment methods for participant:', err);
     }
 
     return NextResponse.json({
@@ -127,6 +166,7 @@ export async function GET(
       timeCreated: participantData.timeCreated,
       timeUpdated: participantData.timeUpdated,
       verifiedWalletAddresses,
+      paymentMethods,
     });
   } catch (error) {
     console.error('Error fetching participant:', error);

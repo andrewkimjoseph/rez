@@ -47,6 +47,13 @@ interface ParticipantData {
   timeCreated: any | null;
   timeUpdated: any | null;
   verifiedWalletAddresses?: string[];
+  paymentMethods?: Array<{
+    id: string;
+    name: string | null;
+    walletAddress: string | null;
+    predefinedId: number | null;
+    verified: boolean;
+  }>;
 }
 
 export default function ParticipantDetailPanel({
@@ -262,6 +269,67 @@ export default function ParticipantDetailPanel({
                 </ul>
               ) : (
                 <p className="text-sm text-red-600 font-medium">NONE</p>
+              )}
+            </div>
+
+            {/* Withdrawal Methods */}
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+                Withdrawal Methods
+              </Label>
+              {participant.paymentMethods?.length ? (
+                <ul className="space-y-3">
+                  {participant.paymentMethods.map((method) => {
+                    const heading =
+                      method.name ||
+                      (method.predefinedId != null ? `Method ${method.predefinedId}` : "Unnamed");
+                    const addr = method.walletAddress;
+                    return (
+                      <li key={method.id} className="space-y-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <p className="text-sm font-medium truncate">{heading}</p>
+                          {method.verified ? (
+                            <Badge className="bg-green-100 text-green-700 hover:bg-green-100/80 border-0 shrink-0">
+                              Verified
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" className="border-0 shrink-0">
+                              Not verified
+                            </Badge>
+                          )}
+                        </div>
+                        {addr ? (
+                          <div className="flex items-center gap-2 min-w-0">
+                            <a
+                              href={`https://celoscan.io/address/${addr}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title={addr}
+                              className="text-primary hover:underline font-mono text-sm flex-1 min-w-0 truncate"
+                            >
+                              {addr}
+                            </a>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                copyToClipboard(addr, "Wallet address");
+                              }}
+                              className="shrink-0 rounded p-1 hover:bg-muted/80 transition-colors text-muted-foreground hover:text-foreground"
+                              title="Copy address"
+                            >
+                              <ClipboardDocumentIcon className="h-4 w-4" aria-hidden />
+                            </button>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">—</p>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">None</p>
               )}
             </div>
 
