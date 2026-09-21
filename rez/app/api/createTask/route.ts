@@ -6,6 +6,10 @@ import { requireAuth } from '@/lib/api-auth';
 import { validatePollQuestions } from '@/types/poll';
 import { rezDB, paxDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
+import {
+  DEFAULT_TARGET_NUMBER_OF_PARTICIPANTS,
+  DEFAULT_REWARD_AMOUNT_PER_PARTICIPANT,
+} from '@/data/constants';
 
 export async function POST(request: NextRequest) {
   try {
@@ -159,8 +163,8 @@ export async function POST(request: NextRequest) {
         rezTaskMasterEmailAddress: taskMasterEmail, // Person assigned to the task (assignee)
         link: body.link,
         estimatedTimeOfCompletionInMinutes: 5, // Default from service
-        targetNumberOfParticipants: body.targetNumberOfParticipants || 100,
-        rewardAmountPerParticipant: 100, // Default from service
+        targetNumberOfParticipants: body.targetNumberOfParticipants || DEFAULT_TARGET_NUMBER_OF_PARTICIPANTS,
+        rewardAmountPerParticipant: DEFAULT_REWARD_AMOUNT_PER_PARTICIPANT,
       };
 
       // Send notification without awaiting (fire and forget)

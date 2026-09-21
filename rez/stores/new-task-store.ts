@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Task } from '@/firebase/firestore/models/Task';
 import type { PollQuestionDraft } from '@/types/poll';
+import { DEFAULT_TARGET_NUMBER_OF_PARTICIPANTS } from '@/data/constants';
 
 export type TaskStep = 1 | 2 | 3 | 4 | 5;
 
@@ -45,9 +46,13 @@ interface NewTaskStore {
   hasPollQuestionsChanged: () => boolean;
 }
 
+const initialNewTaskData: NewTaskData = {
+  targetNumberOfParticipants: DEFAULT_TARGET_NUMBER_OF_PARTICIPANTS,
+};
+
 export const useNewTaskStore = create<NewTaskStore>()((set, get) => ({
   step: 1,
-  data: {},
+  data: initialNewTaskData,
   editMode: false,
   editingTaskId: null,
   editingTaskReasons: undefined,
@@ -104,7 +109,7 @@ export const useNewTaskStore = create<NewTaskStore>()((set, get) => ({
   reset: () =>
     set({
       step: 1,
-      data: {},
+      data: initialNewTaskData,
       editMode: false,
       editingTaskId: null,
       editingTaskReasons: undefined,

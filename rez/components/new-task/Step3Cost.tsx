@@ -26,7 +26,7 @@ export default function Step3Cost() {
   const questionsLabel = isOnlineSurvey ? 'Questions' : isPoll ? 'Poll' : 'Feedback questions';
   const questionsPlaceholder = isOnlineSurvey ? 'e.g. 10' : isPoll ? '' : 'e.g. 5';
   const participantsLabel = isOnlineSurvey || isPoll ? 'Participants' : 'Testers';
-  const participantsPlaceholder = isOnlineSurvey || isPoll ? 'e.g. 100' : 'e.g. 100';
+  const participantsPlaceholder = 'e.g. 150';
 
   const participantsTooltip = isOnlineSurvey ? TOOLTIP_TEXTS.participantsSurvey : isPoll ? TOOLTIP_TEXTS.participantsSurvey : TOOLTIP_TEXTS.participantsProduct;
   const questionsTooltip = isOnlineSurvey ? TOOLTIP_TEXTS.questionsSurvey : isPoll ? '' : TOOLTIP_TEXTS.questionsProduct;

@@ -26,6 +26,7 @@ import {
 import { useAmplitudeEvents } from "@/hooks/use-amplitude-events";
 import Link from "next/link";
 import { validatePollQuestions } from "@/types/poll";
+import { DEFAULT_TARGET_COUNTRY } from "@/data/constants";
 
 const stepConfig = [
   { title: "Type", description: "Choose task type", icon: Squares2X2Icon },
@@ -438,7 +439,7 @@ export default function NewTask() {
             feedback: data.feedback ?? null,
             paymentTerms: null,
             instructions: data.instructions ?? null,
-            targetCountry: null,
+            targetCountry: DEFAULT_TARGET_COUNTRY,
             numberOfCooldownHours: 24,
             rezTaskMasterEmailAddress: user?.emailAddress ?? null,
           };

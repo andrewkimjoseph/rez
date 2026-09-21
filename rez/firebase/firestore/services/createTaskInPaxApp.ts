@@ -2,7 +2,14 @@ import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { Task } from '../models/Task';
 import { paxDB } from '../../serverConfig';
 import { COLLECTIONS } from '../constants/collections';
-import { TASK_MASTER_ID, TASK_MANAGER_CONTRACT_ADDRESS } from '../../../data/constants';
+import {
+  TASK_MASTER_ID,
+  TASK_MANAGER_CONTRACT_ADDRESS,
+  DEFAULT_TARGET_NUMBER_OF_PARTICIPANTS,
+  DEFAULT_TARGET_COUNTRY,
+  DEFAULT_REWARD_AMOUNT_PER_PARTICIPANT,
+  DEFAULT_REWARD_CURRENCY_ID,
+} from '../../../data/constants';
 
 export interface CreateTaskData {
   type: 'fillAForm' | 'checkOutApp' | 'doVideoInterview' | 'answerPoll';
@@ -45,15 +52,15 @@ export async function createTaskInPaxApp(taskData: CreateTaskData): Promise<stri
     type: taskData.type,
     category: taskData.category,
     estimatedTimeOfCompletionInMinutes: 5,
-    targetNumberOfParticipants: taskData.targetNumberOfParticipants || 100,
+    targetNumberOfParticipants: taskData.targetNumberOfParticipants || DEFAULT_TARGET_NUMBER_OF_PARTICIPANTS,
     numberOfQuestions: taskData.numberOfQuestions || null,
     numberOfFeedbackQuestions: taskData.numberOfFeedbackQuestions || null,
     link: taskData.link || null,
     levelOfDifficulty: taskData.difficulty || "Easy",
     deadline: Timestamp.fromDate(new Date(Date.now() + 12 * 60 * 60 * 1000)), // 12 hours from now
     managerContractAddress: TASK_MANAGER_CONTRACT_ADDRESS,
-    rewardAmountPerParticipant: 100, // Not collected in form
-    rewardCurrencyId: 1, // G$
+    rewardAmountPerParticipant: DEFAULT_REWARD_AMOUNT_PER_PARTICIPANT, // Not collected in form
+    rewardCurrencyId: DEFAULT_REWARD_CURRENCY_ID, // cUSD
     isAvailable: false, // Default to not available until approved
     reviewStatus: 'pending', // Tasks require superadmin approval
     timeCreated: FieldValue.serverTimestamp(),
@@ -62,7 +69,7 @@ export async function createTaskInPaxApp(taskData: CreateTaskData): Promise<stri
     feedback: taskData.feedback || null,
     paymentTerms: 'delayed',
     instructions: instructions,
-    targetCountry: "ALL",
+    targetCountry: DEFAULT_TARGET_COUNTRY,
     numberOfCooldownHours: 24,
     rezTaskMasterEmailAddress: taskData.rezTaskMasterEmailAddress || null,
   };
