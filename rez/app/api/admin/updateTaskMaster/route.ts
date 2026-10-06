@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rezDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
-import { FieldValue } from '@/firebase/admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { requireSuperAdmin } from '@/lib/api-auth';
 
 export interface AdminUpdateTaskMasterData {

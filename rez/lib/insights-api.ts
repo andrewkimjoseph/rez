@@ -8,7 +8,7 @@ export class InsightsApiError extends Error {
   }
 }
 
-export async function insightsApiResponse(path: string, init?: RequestInit): Promise<Response> {
+export async function insightsApi<T>(path: string, init?: RequestInit): Promise<T> {
   const base = process.env.INSIGHTS_API_BASE_URL?.replace(/\/$/, "");
   const key = process.env.INSIGHTS_API_KEY;
   if (!base || !key) {
@@ -21,11 +21,7 @@ export async function insightsApiResponse(path: string, init?: RequestInit): Pro
     headers.set("Content-Type", "application/json");
   }
 
-  return fetch(`${base}${path}`, { ...init, headers });
-}
-
-export async function insightsApi<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await insightsApiResponse(path, init);
+  const response = await fetch(`${base}${path}`, { ...init, headers });
   const text = await response.text();
   let body: unknown = null;
   if (text) {

@@ -1,4 +1,4 @@
-import { FieldValue, FirestoreFieldValue, Timestamp } from '@/firebase/admin';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { Task } from '../models/Task';
 import { paxDB } from '../../serverConfig';
 import { COLLECTIONS } from '../constants/collections';
@@ -42,9 +42,9 @@ export async function createTaskInPaxApp(taskData: CreateTaskData): Promise<stri
   
   // Map the form data to Task model fields
   const task: Omit<Task, 'timeCreated' | 'timeUpdated' | 'deadline'> & {
-    timeCreated: FirestoreFieldValue;
-    timeUpdated: FirestoreFieldValue;
-    deadline: FirestoreFieldValue;
+    timeCreated: FieldValue;
+    timeUpdated: FieldValue;
+    deadline: FieldValue;
   } = {
     id: null, // Will be set after creation
     taskMasterId: TASK_MASTER_ID,
@@ -77,9 +77,9 @@ export async function createTaskInPaxApp(taskData: CreateTaskData): Promise<stri
   await taskRef.set(task);
   
   const taskWithId: Omit<Task, 'timeCreated' | 'timeUpdated' | 'deadline'> & {
-    timeCreated: FirestoreFieldValue;
-    timeUpdated: FirestoreFieldValue;
-    deadline: FirestoreFieldValue;
+    timeCreated: FieldValue;
+    timeUpdated: FieldValue;
+    deadline: FieldValue;
   } = {
     ...task,
     id: taskRef.id,

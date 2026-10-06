@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { paxDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
 import { requireSuperAdmin } from '@/lib/api-auth';
-import { FieldValue, Timestamp } from '@/firebase/admin';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 
 /**
  * Updates isValid on a task completion (admin only).

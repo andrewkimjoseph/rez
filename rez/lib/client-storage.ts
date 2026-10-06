@@ -13,21 +13,21 @@ export async function downloadFileFromStorage(filePath: string, filename: string
 export async function downloadResourceBySlug(slug: string, filename: string): Promise<void> {
   const apiPath = `/api/download/${slug}`;
   try {
-    const res = await fetch(apiPath, { credentials: 'include', redirect: 'manual' });
-    if (res.status === 401) throw new Error('Please sign in to download this file');
-    if (res.status !== 302 && res.status !== 307) {
-      throw new Error(`Failed to load file: ${res.statusText || res.status}`);
+    const res = await fetch(apiPath, { credentials: 'include' });
+    if (!res.ok) {
+      if (res.status === 401) throw new Error('Please sign in to download this file');
+      throw new Error(`Failed to load file: ${res.statusText}`);
     }
-    const url = res.headers.get('location');
-    if (!url) throw new Error('Failed to load file');
+    const blob = await res.blob();
+    const blobURL = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
+    a.href = blobURL;
     a.download = filename;
-    a.rel = 'noopener';
     a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    URL.revokeObjectURL(blobURL);
   } catch (error) {
     console.error('Error downloading file:', error);
     throw error;
