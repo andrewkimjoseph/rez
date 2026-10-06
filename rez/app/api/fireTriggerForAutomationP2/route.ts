@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/api-auth';
 import { paxDB } from '@/firebase/serverConfig';
-import { FieldValue } from '@/firebase/admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import {
   findLeadsForConversion,
   parseOptionalLeadEmail,

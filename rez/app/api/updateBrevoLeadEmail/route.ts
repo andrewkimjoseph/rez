@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/api-auth';
 import { paxDB } from '@/firebase/serverConfig';
-import { FieldValue, type QueryDocumentSnapshot } from '@/firebase/admin';
+import { FieldValue, type QueryDocumentSnapshot } from 'firebase-admin/firestore';
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();

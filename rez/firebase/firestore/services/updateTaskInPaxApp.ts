@@ -1,4 +1,4 @@
-import { FieldValue } from '@/firebase/admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { paxDB } from '../../serverConfig';
 import { COLLECTIONS } from '../constants/collections';
 

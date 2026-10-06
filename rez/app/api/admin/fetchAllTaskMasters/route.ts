@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rezDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
-import { getApp, getAuth } from '@/firebase/admin';
+import { getAuth } from 'firebase-admin/auth';
+import { getApp } from 'firebase-admin/app';
 import { requireSuperAdmin } from '@/lib/api-auth';
 import { getAlgoliaClient, isAlgoliaConfigured } from '@/lib/algolia-server';
 

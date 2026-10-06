@@ -1,6 +1,6 @@
 import { paxDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
-import { FieldValue } from '@/firebase/admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 interface UpdateTaskStatusParams {
   taskId: string;
