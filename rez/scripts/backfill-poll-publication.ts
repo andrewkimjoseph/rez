@@ -1,5 +1,5 @@
 /**
- * One-time backfill: sync all answerPoll tasks from Pax Firestore to Supabase Insights.
+ * One-time backfill: sync all answerPoll tasks from Pax Firestore to Insights.
  *
  * Usage (from rez/rez with env configured):
  *   npx tsx scripts/backfill-poll-publication.ts
