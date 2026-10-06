@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { paxDB, rezDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
-import { FieldValue, Timestamp } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp } from '@/firebase/admin';
 import { syncPollFromFirestoreTask, updatePollInInsights } from '@/services/syncPollPublication';
 import { requireSuperAdmin } from '@/lib/api-auth';
 import type { PollQuestionDraft } from '@/types/poll';

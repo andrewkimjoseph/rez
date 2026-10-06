@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from 'firebase-admin/auth';
-import { getApp } from 'firebase-admin/app';
+import { FieldValue, getApp, getAuth } from '@/firebase/admin';
 import { requireSuperAdmin } from '@/lib/api-auth';
 import { paxDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
-import { FieldValue } from 'firebase-admin/firestore';
 
 export async function PATCH(request: NextRequest) {
   try {

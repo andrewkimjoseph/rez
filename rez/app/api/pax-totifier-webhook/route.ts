@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from 'firebase-admin/auth';
-import { getApp } from 'firebase-admin/app';
+import { FieldValue, getApp, getAuth } from '@/firebase/admin';
 import { paxDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
-import { FieldValue } from 'firebase-admin/firestore';
-import '@/firebase/serverConfig';
 
 /** Telegram Update object (minimal shape we use) */
 interface TelegramUpdate {

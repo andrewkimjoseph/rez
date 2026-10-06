@@ -117,8 +117,8 @@ Rez connects researchers with real users—especially stablecoin and digital-pay
 | Forms | React Hook Form + Zod |
 | State | Zustand (persisted stores) |
 | Charts | Recharts |
-| Backend | Next.js Route Handlers, Firebase Admin, Insights API |
-| Deployment | Vercel |
+| Backend | Next.js Route Handlers, Firestore/Auth/Storage adapter, Insights API |
+| Deployment | Cloudflare Workers |
 
 ---
 
@@ -154,7 +154,7 @@ rez/                          ← git repository root (this README)
 
 ### Prerequisites
 
-- Node.js 20+ (22 recommended for local dev; matches current Vercel runtime target)
+- Node.js 20+ (22 recommended for local dev)
 - npm
 - Firebase projects for **Rez** and **Pax** with service account credentials
 - `INSIGHTS_API_BASE_URL` and `INSIGHTS_API_KEY` (for poll features)
@@ -185,7 +185,7 @@ npm run lint     # ESLint
 
 ## Environment variables
 
-Create **`rez/rez/.env.local`** (or `.env` for local-only). Never commit secrets. Configure the same keys in the Vercel project for production.
+Create **`rez/rez/.env.local`** (or `.env` for local-only). Never commit secrets. Set the same keys as Worker secrets for production. `NEXT_PUBLIC_*` values also have to be present when `npm run build:vinext` runs, because the client bundle inlines them.
 
 ### App
 
@@ -244,7 +244,7 @@ Create **`rez/rez/.env.local`** (or `.env` for local-only). Never commit secrets
 | `NEXT_PUBLIC_AMPLITUDE_API_KEY` | Amplitude browser SDK |
 | Sentry | Configured via `@sentry/nextjs` and `.env.sentry-build-plugin` |
 
-> **Note:** Do not add `FIREBASE_*`-prefixed CLI-only variables to `.env` files used for Cloud Functions-style loading. Vercel reserves certain prefixes.
+> **Note:** Do not add `FIREBASE_*`-prefixed CLI-only variables to `.env` files. Rez reads `PAX_FIREBASE_*` and `REZ_FIREBASE_*`.
 
 ---
 
@@ -265,27 +265,30 @@ Requires `.env` / `.env.local` with Firebase credentials and `INSIGHTS_API_BASE_
 
 ## Deployment
 
-Rez is deployed on **Vercel** (team: The Canvassing's projects), connected to the GitHub repository.
+Rez runs on **Cloudflare Workers** with [vinext](https://github.com/cloudflare/vinext), from the inner `rez/` app directory. Production is the Worker named `rez` at `https://rez.thecanvassing.xyz`.
 
-### Git push (recommended)
+The Workers account is on the Free plan (10ms of CPU per request). Keep route handlers within that budget: stream large Insights responses, and send guide/playbook downloads through a short-lived signed Storage URL instead of proxying the file through the Worker.
 
-Push to `main`; Vercel builds and promotes production automatically.
+### Workers Builds
 
-### Vercel CLI
+Set the build root to the inner `rez/` directory (the Next.js app, not the git root).
 
-From `rez/rez`:
+- Build command: `npm run build:vinext`
+- Deploy command: `npx wrangler deploy`
+- `NEXT_PUBLIC_*` variables must be available to the build. Server secrets (`PAX_FIREBASE_*`, `REZ_FIREBASE_*`, `INSIGHTS_API_*`, and the rest of `.env`) are Worker secrets, not committed files.
+
+### Wrangler
+
+From `rez/rez`, with Wrangler logged in:
 
 ```bash
-vercel          # preview deployment
-vercel --prod   # production
+npm run build:vinext
+npx wrangler deploy --config wrangler.jsonc --secrets-file .env
 ```
 
-Ensure the Vercel project **root directory** is set to `rez` (the inner app folder) if the linked repo is the git root.
+`wrangler.jsonc` is the production Worker (`rez`) and routes `rez.thecanvassing.xyz/*` on the `thecanvassing.xyz` zone. `wrangler.preview.jsonc` deploys `rez-preview` without moving that hostname.
 
-### Build notes
-
-- Do **not** add platform-specific packages like `@next/swc-darwin-arm64` to `dependencies`; Next.js selects the correct SWC binary automatically.
-- The repository must be **public** (or the Vercel team must be on a plan that supports private-repo collaborators) for Hobby-tier Git deployments from non-owner commit authors.
+`firebase/serverConfig.ts` exposes Pax and Rez Firestore through a Workers-safe adapter (`collection`, `where`, `orderBy`, `startAfter`, `limit`, `getAll`, `count`, `select`, `FieldValue.serverTimestamp`, `Timestamp.fromDate`). Auth and Storage use the same service accounts.
 
 ---
 
@@ -293,7 +296,7 @@ Ensure the Vercel project **root directory** is set to `rez` (the inner app fold
 
 ### Dual Firestore
 
-`firebase/serverConfig.ts` initializes two Firebase Admin apps:
+`firebase/serverConfig.ts` initializes two Firestore clients for the Workers runtime:
 
 - **`paxApp`** — tasks and completions in the Pax participant app
 - **`rezApp`** — Task Masters, organizations, and Rez-specific data

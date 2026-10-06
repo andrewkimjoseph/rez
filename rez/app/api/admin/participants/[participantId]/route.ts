@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { paxDB } from '@/firebase/serverConfig';
 import { COLLECTIONS } from '@/firebase/firestore/constants/collections';
-import { getAuth } from 'firebase-admin/auth';
-import { getApp } from 'firebase-admin/app';
+import { FieldValue, getApp, getAuth } from '@/firebase/admin';
 import { requireSuperAdmin } from '@/lib/api-auth';
-import { FieldValue } from 'firebase-admin/firestore';
 import { getWhitelistedRoot, isWhitelisted } from '@/lib/checkWalletVerification';
 import { getAlgoliaClient, isAlgoliaConfigured } from '@/lib/algolia-server';
 
