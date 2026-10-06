@@ -25,7 +25,7 @@
 
 ## Overview
 
-Rez connects researchers with real users—especially stablecoin and digital-payment users in emerging markets—who complete tasks on Pax. Researchers sign in with Google, join or create an organization, then create and monitor tasks from a multi-step wizard. Completions, demographics, and rewards flow through Firebase (Pax + Rez Firestore) and, for poll tasks, into Supabase for aggregated insights.
+Rez connects researchers with real users—especially stablecoin and digital-payment users in emerging markets—who complete tasks on Pax. Researchers sign in with Google, join or create an organization, then create and monitor tasks from a multi-step wizard. Completions, demographics, and rewards flow through Firebase (Pax + Rez Firestore). Poll insights are read and written through the Insights API.
 
 ### Task types
 
@@ -34,7 +34,7 @@ Rez connects researchers with real users—especially stablecoin and digital-pay
 | Fill a Form | `fillAForm` | Survey / questionnaire via external form link |
 | Check Out App | `checkOutApp` | Product or app testing with instructions and feedback URL |
 | Do Video Interview | `doVideoInterview` | Qualitative research (planned / limited) |
-| Answer Poll | `answerPoll` | Multi-question polls with Supabase-backed insights and public reporting |
+| Answer Poll | `answerPoll` | Multi-question polls with Insights API-backed reporting |
 
 ### Primary users
 
@@ -55,7 +55,7 @@ Rez connects researchers with real users—especially stablecoin and digital-pay
          │ poll sync / insights                       │ completions
          ▼                                            ▼
 ┌─────────────────┐                        ┌──────────────────┐
-│ Supabase        │ ◄── public insights ── │ Pax Flutter app  │
+│ Insights API    │ ◄── poll insights ──── │ Pax Flutter app  │
 │ (poll schema)   │     thecanvassing.xyz  │ (participants)   │
 └─────────────────┘                        └──────────────────┘
 ```
@@ -80,7 +80,7 @@ Rez connects researchers with real users—especially stablecoin and digital-pay
 ### Polls & insights
 
 - Create **Answer Poll** tasks with multiple questions and options
-- Sync poll metadata and publication state from Pax Firestore → Supabase
+- Sync poll metadata and publication state from Pax Firestore → Insights API
 - In-app insights at `/tasks/insights/[taskId]` and `/insights`
 - Public insights links on [thecanvassing.xyz/insights](https://thecanvassing.xyz/insights)
 - Charts: response breakdown, demographics, country distribution (Recharts)
@@ -97,7 +97,7 @@ Rez connects researchers with real users—especially stablecoin and digital-pay
 | Service | Purpose |
 |---------|---------|
 | Firebase Auth + Firestore | Rez users; dual admin SDK for Rez + Pax databases |
-| Supabase | Poll content, answers, insights aggregation |
+| Insights API | Poll content, answers, insights aggregation |
 | Algolia | Search (client + server helpers) |
 | Amplitude | Product analytics |
 | Sentry | Error monitoring (`canvassing/the-rez-app`) |
@@ -117,7 +117,7 @@ Rez connects researchers with real users—especially stablecoin and digital-pay
 | Forms | React Hook Form + Zod |
 | State | Zustand (persisted stores) |
 | Charts | Recharts |
-| Backend | Next.js Route Handlers, Firebase Admin, Supabase service role |
+| Backend | Next.js Route Handlers, Firebase Admin, Insights API |
 | Deployment | Vercel |
 
 ---
@@ -139,7 +139,7 @@ rez/                          ← git repository root (this README)
     ├── components/           ← UI and feature components
     ├── firebase/             ← Client + Admin Firebase config
     ├── hooks/
-    ├── lib/                  ← Supabase, Algolia, poll helpers
+    ├── lib/                  ← Insights API client, Algolia, poll helpers
     ├── services/             ← Poll sync, content fetch, insights
     ├── stores/               ← Zustand stores
     ├── scripts/              ← One-off maintenance scripts
@@ -157,7 +157,7 @@ rez/                          ← git repository root (this README)
 - Node.js 20+ (22 recommended for local dev; matches current Vercel runtime target)
 - npm
 - Firebase projects for **Rez** and **Pax** with service account credentials
-- Supabase project (for poll features)
+- `INSIGHTS_API_BASE_URL` and `INSIGHTS_API_KEY` (for poll features)
 - Environment file (see below)
 
 ### Install and run
@@ -217,12 +217,12 @@ Create **`rez/rez/.env.local`** (or `.env` for local-only). Never commit secrets
 | `PAX_FIREBASE_CLIENT_EMAIL` | Pax service account email |
 | `PAX_FIREBASE_PRIVATE_KEY` | Pax service account private key |
 
-### Supabase (polls)
+### Insights API (polls)
 
 | Variable | Description |
 |----------|-------------|
-| `SUPABASE_URL` | Project URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role key (server only) |
+| `INSIGHTS_API_BASE_URL` | `https://api.thecanvassing.xyz/insights` |
+| `INSIGHTS_API_KEY` | Admin bearer token (server only) |
 
 ### Search, email, notifications
 
@@ -252,14 +252,14 @@ Create **`rez/rez/.env.local`** (or `.env` for local-only). Never commit secrets
 
 ### Backfill poll publication
 
-Syncs all `answerPoll` tasks from Pax Firestore into Supabase (one-time or maintenance):
+Syncs all `answerPoll` tasks from Pax Firestore into Insights (one-time or maintenance):
 
 ```bash
 cd rez
 npx tsx scripts/backfill-poll-publication.ts
 ```
 
-Requires `.env` / `.env.local` with Firebase and Supabase credentials.
+Requires `.env` / `.env.local` with Firebase credentials and `INSIGHTS_API_BASE_URL` / `INSIGHTS_API_KEY`.
 
 ---
 
@@ -306,7 +306,7 @@ Task creation writes to Pax Firestore; Rez reads and filters by `rezTaskMasterEm
 
 ### Poll publication
 
-Poll tasks sync to Supabase via `services/syncPollPublication.ts`. Publication is driven by `reviewStatus`, `isAvailable`, and `deadline` (`lib/poll-publication-state.ts`). Insights APIs live under `/api/pollInsights` and `/api/pollContent`.
+Poll tasks sync to the Insights API via `services/syncPollPublication.ts`. Publication is driven by `reviewStatus`, `isAvailable`, and `deadline` (`lib/poll-publication-state.ts`). Rez routes live under `/api/pollInsights` and `/api/pollContent`.
 
 ---
 
