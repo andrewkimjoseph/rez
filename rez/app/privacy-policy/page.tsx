@@ -61,7 +61,7 @@ export default function PrivacyPolicyPage() {
             <section>
               <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Canvassing (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) operates Rez, a research management platform. 
+                CNV (formerly Canvassing) is the brand of CNV Labs KO XYZ Limited, a private company limited by shares incorporated in Kenya (company number PVT-DM1ZJJJM). CNV Labs KO XYZ Limited (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) is the data controller and operates Rez, a research management platform. 
                 We are committed to protecting your privacy and ensuring the security of your personal 
                 information. This Privacy Policy explains how we collect, use, disclose, and safeguard 
                 your information when you use our service.
@@ -320,7 +320,7 @@ export default function PrivacyPolicyPage() {
           {/* Footer */}
           <div className="mt-12 text-center text-sm text-muted-foreground">
               <p>
-                Rez is operated by Canvassing. For more information, visit{" "}
+                Rez is operated by CNV Labs KO XYZ Limited (company number PVT-DM1ZJJJM). For more information, visit{" "}
                 <a href="https://thecanvassing.xyz" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                   thecanvassing.xyz
                 </a>

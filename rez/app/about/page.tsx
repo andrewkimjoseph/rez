@@ -139,7 +139,7 @@ export default function AboutPage() {
               <h1 className="type-h1 rez-gradient-text">
                 Rez
               </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground">by Canvassing</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">by CNV, formerly Canvassing</p>
             </div>
           </div>
           <h2 className="type-h2 text-foreground px-2">

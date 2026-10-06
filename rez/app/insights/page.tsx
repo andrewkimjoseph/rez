@@ -22,7 +22,7 @@ export default function InsightsPage() {
           <div className="flex items-center gap-2 mb-2">
             <ChartBarIcon className="w-5 h-5 text-[#5C29A3]" />
             <p className="text-sm uppercase tracking-wide text-[#5C29A3] font-medium">
-              Canvassing Insights
+              CNV Insights
             </p>
           </div>
           <h1 className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight">

@@ -324,7 +324,7 @@ export function SignInPageClient() {
       </h1>
 
       <p className="text-muted-foreground text-[15px] max-w-[520px] mb-10 leading-relaxed">
-        Sign in to manage the research tasks running across your Canvassing network right now.
+        Sign in to manage the research tasks running across your CNV network right now.
       </p>
 
       <div className="sign-in-ticket">

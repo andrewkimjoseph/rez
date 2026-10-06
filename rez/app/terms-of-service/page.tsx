@@ -61,7 +61,7 @@ export default function TermsOfServicePage() {
             <section>
               <h2 className="text-2xl font-semibold mb-4">1. Agreement to Terms</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Welcome to Rez, a research platform operated by Canvassing (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;). 
+                CNV (formerly Canvassing) is the brand of CNV Labs KO XYZ Limited, a private company limited by shares incorporated in Kenya (company number PVT-DM1ZJJJM). Welcome to Rez, a research platform operated by CNV Labs KO XYZ Limited (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;). 
                 By accessing or using our service, you agree to be bound by these Terms of Service 
                 (&quot;Terms&quot;). If you disagree with any part of these terms, you may not access the service.
               </p>
@@ -147,7 +147,7 @@ export default function TermsOfServicePage() {
               <div className="space-y-4 text-muted-foreground leading-relaxed">
                 <p>
                   The service, including its original content, features, and functionality, is owned 
-                  by Canvassing and is protected by international copyright, trademark, patent, trade 
+                  by CNV Labs KO XYZ Limited and is protected by international copyright, trademark, patent, trade 
                   secret, and other intellectual property laws.
                 </p>
                 <p>
@@ -164,7 +164,7 @@ export default function TermsOfServicePage() {
               <h2 className="text-2xl font-semibold mb-4">7. Limitation of Liability</h2>
               <div className="space-y-4 text-muted-foreground leading-relaxed">
                 <p>
-                  To the fullest extent permitted by law, Canvassing and its affiliates shall not be 
+                  To the fullest extent permitted by law, CNV Labs KO XYZ Limited and its affiliates shall not be 
                   liable for any indirect, incidental, special, consequential, or punitive damages, 
                   including loss of profits, data, use, goodwill, or other intangible losses, 
                   resulting from your use of the service.
@@ -181,7 +181,7 @@ export default function TermsOfServicePage() {
             <section>
               <h2 className="text-2xl font-semibold mb-4">8. Indemnification</h2>
               <p className="text-muted-foreground leading-relaxed">
-                You agree to indemnify, defend, and hold harmless Canvassing, its affiliates, 
+                You agree to indemnify, defend, and hold harmless CNV Labs KO XYZ Limited, its affiliates, 
                 officers, directors, employees, and agents from and against any claims, liabilities, 
                 damages, losses, and expenses, including reasonable attorneys&apos; fees, arising out of 
                 or in any way connected with your use of the service or violation of these Terms.
@@ -224,9 +224,7 @@ export default function TermsOfServicePage() {
             <section>
               <h2 className="text-2xl font-semibold mb-4">11. Governing Law</h2>
               <p className="text-muted-foreground leading-relaxed">
-                These Terms shall be governed by and construed in accordance with the laws of the 
-                jurisdiction in which Canvassing operates, without regard to its conflict of law 
-                provisions.
+                These Terms shall be governed by and construed in accordance with the laws of Kenya, without regard to its conflict of law provisions.
               </p>
             </section>
 
@@ -246,7 +244,7 @@ export default function TermsOfServicePage() {
           {/* Footer */}
           <div className="mt-12 text-center text-sm text-muted-foreground">
               <p>
-                Rez is operated by Canvassing. For more information, visit{" "}
+                Rez is operated by CNV Labs KO XYZ Limited (company number PVT-DM1ZJJJM). For more information, visit{" "}
                 <a href="https://thecanvassing.xyz" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                   thecanvassing.xyz
                 </a>

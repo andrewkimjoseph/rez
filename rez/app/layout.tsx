@@ -44,10 +44,10 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <title>Rez</title>
-        <meta name="description" content="Rez, by Canvassing" />
+        <meta name="description" content="Rez, by CNV" />
         <link rel="icon" href="/rez-favicon.svg" sizes="any" />
         <meta property="og:title" content="Rez" />
-        <meta property="og:description" content="Rez, by Canvassing" />
+        <meta property="og:description" content="Rez, by CNV" />
         <meta property="og:image" content="/rez-favicon.svg" />
       </head>
       <body className={`${sen.variable} ${fraunces.variable} font-[family-name:var(--font-sen)] antialiased`}>
