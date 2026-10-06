@@ -231,7 +231,7 @@ export function FieldPanelFooter({ data }: { data: SignInFieldPanelData }) {
     <div className="sign-in-panel-footer mt-7">
       Panel refreshed{' '}
       <span className="sign-in-panel-footer-highlight">{formatRelativeRefreshTime(data.refreshedAt)}</span>
-      {' · '}sourced from live Canvassing tasks
+      {' · '}sourced from live CNV tasks
     </div>
   );
 }
