@@ -1,4 +1,4 @@
-import type { CollectionReference, QueryDocumentSnapshot } from 'firebase-admin/firestore';
+import type { CollectionReference, QueryDocumentSnapshot } from '@/firebase/admin';
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
