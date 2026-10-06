@@ -221,7 +221,7 @@ Create **`rez/rez/.env.local`** (or `.env` for local-only). Never commit secrets
 
 | Variable | Description |
 |----------|-------------|
-| `INSIGHTS_API_BASE_URL` | `https://api.thecanvassing.xyz/insights` |
+| `INSIGHTS_API_BASE_URL` | `https://api.insights.thecanvassing.xyz` |
 | `INSIGHTS_API_KEY` | Admin bearer token (server only) |
 
 ### Search, email, notifications
