@@ -1,6 +1,6 @@
 # Rez
 
-**Rez by [CNV Labs KO XYZ](https://github.com/thecanvassing)** is the researcher dashboard for creating, managing, and analyzing field research tasks completed by participants in the **Pax** mobile app. Task Masters (researchers, UX teams, product managers) use Rez to launch surveys, app tests, and polls; monitor completions; and review poll insights synced to the public insights site.
+**Rez by [CNV Labs KO XYZ](https://thecanvassing.xyz)** is the researcher dashboard for creating, managing, and analyzing field research tasks completed by participants in the **Pax** mobile app. Task Masters (researchers, UX teams, product managers) use Rez to launch surveys, app tests, and polls; monitor completions; and review poll insights synced to the public insights site.
 
 **Production:** [https://rez.thecanvassing.xyz](https://rez.thecanvassing.xyz)
 
